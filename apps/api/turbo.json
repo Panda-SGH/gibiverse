@@ -1,0 +1,15 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "env": ["DATABASE_URL", "PORT"]
+    },
+    "dev": {
+      "env": ["DATABASE_URL", "PORT"],
+      "passThroughEnv": ["DATABASE_URL", "PORT"]
+    },
+    "typecheck": {
+      "env": ["DATABASE_URL"]
+    }
+  }
+}

@@ -1,1 +1,1 @@
-export { default } from "@workspace/ui/postcss.config";
+export { default } from "@gibiverse/ui/postcss.config";
