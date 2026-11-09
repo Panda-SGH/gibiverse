@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gibiverse Data Model Prototype</title>
+<style>
+  :root { --accent: #6366f1; --bg: #fafafa; --card: #fff; --border: #e5e7eb; --text: #1f2937; --muted: #6b7280; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+  .subtitle { color: var(--muted); margin-bottom: 2rem; font-size: 0.95rem; }
+  h2 { font-size: 1.25rem; margin-bottom: 1rem; color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 0.25rem; }
+  h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+
+  .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+  @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem; }
+  .card-header { font-weight: 600; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
+
+  button { padding: 0.4rem 0.8rem; border: 1px solid var(--border); border-radius: 6px; background: var(--card); cursor: pointer; font-size: 0.85rem; transition: all 0.15s; }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  button.primary:hover { background: #4f46e5; }
+  button.danger { color: var(--danger); border-color: var(--danger); }
+  button.danger:hover { background: var(--danger); color: white; }
+  button.success { color: var(--success); border-color: var(--success); }
+  button.success:hover { background: var(--success); color: white; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-group { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+
+  .entity { background: #f9fafb; border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; margin-bottom: 0.5rem; font-size: 0.85rem; }
+  .entity .label { font-weight: 600; color: var(--accent); }
+  .entity .field { color: var(--muted); }
+  .entity .field span { color: var(--text); }
+
+  .empty { color: var(--muted); font-style: italic; font-size: 0.85rem; padding: 0.5rem 0; }
+
+  .log { background: #f3f4f6; border-radius: 6px; padding: 0.75rem; margin-top: 1rem; max-height: 200px; overflow-y: auto; font-size: 0.8rem; font-family: monospace; }
+  .log-entry { padding: 2px 0; border-bottom: 1px solid #e5e7eb; }
+  .log-entry:last-child { border-bottom: none; }
+  .log-entry.action { color: var(--accent); }
+  .log-entry.error { color: var(--danger); }
+  .log-entry.info { color: var(--success); }
+
+  .tabs { display: flex; gap: 0; margin-bottom: 1rem; border-bottom: 2px solid var(--border); }
+  .tab { padding: 0.5rem 1rem; cursor: pointer; border: none; background: none; font-size: 0.9rem; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -2px; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .scenario-desc { background: #eef2ff; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; font-size: 0.85rem; color: #4338ca; }
+  .scenario-steps { display: flex; flex-direction: column; gap: 0.5rem; }
+  .scenario-step { display: flex; align-items: center; gap: 0.75rem; }
+  .step-num { background: var(--accent); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; flex-shrink: 0; }
+  .step-num.done { background: var(--success); }
+  .step-num.current { background: var(--warning); }
+
+  .vote-display { display: inline-flex; align-items: center; gap: 0.25rem; }
+  .vote-score { font-weight: 700; min-width: 1.5em; text-align: center; }
+  .vote-score.positive { color: var(--success); }
+  .vote-score.negative { color: var(--danger); }
+
+  .badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; }
+  .badge.accepted { background: #d1fae5; color: #065f46; }
+  .badge.type { background: #e0e7ff; color: #3730a3; }
+</style>
+</head>
+<body>
+
+<h1>🎓 Gibiverse Data Model Prototype</h1>
+<p class="subtitle">
+  <strong>Question:</strong> Does this schema — University → Department → Course, with Resources, Questions, Answers, and Votes — handle the MVP cases correctly?
+  Click through the scenarios or free-play to find out.
+</p>
+
+<div class="layout">
+  <!-- LEFT: State Panel -->
+  <div>
+    <h2>📊 Current State</h2>
+    <div id="state-panel"></div>
+
+    <h2 style="margin-top:1.5rem">📝 Event Log</h2>
+    <div class="log" id="log"></div>
+  </div>
+
+  <!-- RIGHT: Controls -->
+  <div>
+    <h2>🎮 Free Play</h2>
+    <div class="card">
+      <div class="card-header">Academic Hierarchy</div>
+      <div class="btn-group">
+        <button onclick="actions.createUniversity()">+ University</button>
+        <button onclick="actions.createDepartment()">+ Department</button>
+        <button onclick="actions.createCourse()">+ Course</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">Users</div>
+      <div class="btn-group">
+        <button onclick="actions.createUser()">+ User (email/pass)</button>
+        <button onclick="actions.createUser('google')">+ User (Google OAuth)</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">Resources</div>
+      <div class="btn-group">
+        <button onclick="actions.uploadResource()">📄 Upload Resource</button>
+        <button onclick="actions.deleteResource()">🗑️ Delete Resource</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">Q&A</div>
+      <div class="btn-group">
+        <button onclick="actions.askQuestion()">❓ Ask Question</button>
+        <button onclick="actions.postAnswer()">💬 Post Answer</button>
+        <button onclick="actions.acceptAnswer()">✅ Accept Answer</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">Voting</div>
+      <div class="btn-group">
+        <button onclick="actions.vote('question', 1)">👍 Upvote Question</button>
+        <button onclick="actions.vote('question', -1)">👎 Downvote Question</button>
+        <button onclick="actions.vote('answer', 1)">👍 Upvote Answer</button>
+        <button onclick="actions.vote('answer', -1)">👎 Downvote Answer</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">System</div>
+      <div class="btn-group">
+        <button class="danger" onclick="actions.reset()">🔄 Reset All</button>
+      </div>
+    </div>
+
+    <h2 style="margin-top:1.5rem">🗺️ Guided Walkthroughs</h2>
+    <div class="tabs" id="scenario-tabs"></div>
+    <div id="scenario-content"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// PURE DATA MODEL — liftable into the real codebase
+// ═══════════════════════════════════════════════════════════════
+
+const ResourceType = Object.freeze({
+  EXAM: 'exam', NOTES: 'notes', SLIDES: 'slides',
+  ASSIGNMENT: 'assignment', LAB: 'lab', OTHER: 'other'
+});
+
+const Semester = Object.freeze({
+  S1: '1', S2: '2', SUMMER: 'summer'
+});
+
+const VoteTarget = Object.freeze({
+  QUESTION: 'question', ANSWER: 'answer'
+});
+
+function createId() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+function createDb() {
+  return {
+    users: [],
+    universities: [],
+    departments: [],
+    courses: [],
+    resources: [],
+    questions: [],
+    answers: [],
+    votes: [],
+  };
+}
+
+// --- University → Department → Course hierarchy ---
+
+function addUniversity(db, { name }) {
+  const id = createId();
+  const uni = { id, name, createdAt: new Date() };
+  db.universities.push(uni);
+  return uni;
+}
+
+function addDepartment(db, { name, universityId }) {
+  const uni = db.universities.find(u => u.id === universityId);
+  if (!uni) throw new Error(`University not found`);
+  const id = createId();
+  const dept = { id, name, universityId, createdAt: new Date() };
+  db.departments.push(dept);
+  return dept;
+}
+
+function addCourse(db, { name, code, departmentId }) {
+  const dept = db.departments.find(d => d.id === departmentId);
+  if (!dept) throw new Error(`Department not found`);
+  const id = createId();
+  const course = { id, name, code, departmentId, createdAt: new Date() };
+  db.courses.push(course);
+  return course;
+}
+
+// --- Users (simplified Better Auth shape) ---
+
+function addUser(db, { name, email, provider }) {
+  if (db.users.find(u => u.email === email)) throw new Error(`Email already taken: ${email}`);
+  const id = createId();
+  const user = {
+    id, name, email,
+    emailVerified: provider === 'google',
+    image: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    // account info (simplified)
+    provider: provider || 'credential',
+  };
+  db.users.push(user);
+  return user;
+}
+
+// --- Resources ---
+
+function addResource(db, { title, description, courseId, userId, resourceType, year, semester, fileName, mimeType, fileSize }) {
+  const course = db.courses.find(c => c.id === courseId);
+  if (!course) throw new Error(`Course not found`);
+  const user = db.users.find(u => u.id === userId);
+  if (!user) throw new Error(`User not found`);
+
+  const id = createId();
+  const resource = {
+    id, title, description, courseId, userId,
+    resourceType: resourceType || ResourceType.OTHER,
+    year: year || new Date().getFullYear(),
+    semester: semester || Semester.S1,
+    filePath: `/uploads/${id}/${fileName}`,
+    fileName, mimeType, fileSize,
+    createdAt: new Date(), updatedAt: new Date(),
+  };
+  db.resources.push(resource);
+  return resource;
+}
+
+function removeResource(db, resourceId) {
+  const idx = db.resources.findIndex(r => r.id === resourceId);
+  if (idx === -1) throw new Error(`Resource not found`);
+  db.resources.splice(idx, 1); // hard delete
+  return true;
+}
+
+// --- Questions ---
+
+function addQuestion(db, { title, body, courseId, userId }) {
+  const course = db.courses.find(c => c.id === courseId);
+  if (!course) throw new Error(`Course not found`);
+  const user = db.users.find(u => u.id === userId);
+  if (!user) throw new Error(`User not found`);
+
+  const id = createId();
+  const question = {
+    id, title, body, courseId, userId,
+    acceptedAnswerId: null,
+    createdAt: new Date(), updatedAt: new Date(),
+  };
+  db.questions.push(question);
+  return question;
+}
+
+// --- Answers ---
+
+function addAnswer(db, { body, questionId, userId }) {
+  const question = db.questions.find(q => q.id === questionId);
+  if (!question) throw new Error(`Question not found`);
+  const user = db.users.find(u => u.id === userId);
+  if (!user) throw new Error(`User not found`);
+
+  const id = createId();
+  const answer = {
+    id, body, questionId, userId,
+    createdAt: new Date(), updatedAt: new Date(),
+  };
+  db.answers.push(answer);
+  return answer;
+}
+
+function acceptAnswer(db, { questionId, answerId, userId }) {
+  const question = db.questions.find(q => q.id === questionId);
+  if (!question) throw new Error(`Question not found`);
+  if (question.userId !== userId) throw new Error(`Only the question author can accept an answer`);
+  const answer = db.answers.find(a => a.id === answerId && a.questionId === questionId);
+  if (!answer) throw new Error(`Answer not found on this question`);
+
+  question.acceptedAnswerId = answerId;
+  question.updatedAt = new Date();
+  return question;
+}
+
+// --- Votes ---
+
+function castVote(db, { userId, targetType, targetId, value }) {
+  if (value !== 1 && value !== -1) throw new Error(`Vote value must be 1 or -1`);
+  if (targetType !== VoteTarget.QUESTION && targetType !== VoteTarget.ANSWER) {
+    throw new Error(`Invalid vote target type`);
+  }
+
+  // verify target exists
+  const pool = targetType === VoteTarget.QUESTION ? db.questions : db.answers;
+  const target = pool.find(t => t.id === targetId);
+  if (!target) throw new Error(`${targetType} not found`);
+
+  // can't vote on your own content
+  if (target.userId === userId) throw new Error(`Cannot vote on your own ${targetType}`);
+
+  // check for existing vote
+  const existing = db.votes.find(
+    v => v.userId === userId && v.targetType === targetType && v.targetId === targetId
+  );
+
+  if (existing) {
+    if (existing.value === value) {
+      // same vote again → remove (toggle off)
+      db.votes.splice(db.votes.indexOf(existing), 1);
+      return { action: 'removed', vote: null };
+    } else {
+      // different vote → flip
+      existing.value = value;
+      existing.updatedAt = new Date();
+      return { action: 'flipped', vote: existing };
+    }
+  }
+
+  const id = createId();
+  const vote = {
+    id, userId, targetType, targetId, value,
+    createdAt: new Date(), updatedAt: new Date(),
+  };
+  db.votes.push(vote);
+  return { action: 'created', vote };
+}
+
+function getScore(db, targetType, targetId) {
+  return db.votes
+    .filter(v => v.targetType === targetType && v.targetId === targetId)
+    .reduce((sum, v) => sum + v.value, 0);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PAGE SHELL — throwaway, wires buttons to the pure model above
+// ═══════════════════════════════════════════════════════════════
+
+let db = createDb();
+let logEntries = [];
+
+function log(msg, type = 'action') {
+  logEntries.unshift({ msg, type, time: new Date() });
+  if (logEntries.length > 50) logEntries.pop();
+  renderLog();
+}
+
+function renderLog() {
+  const el = document.getElementById('log');
+  el.innerHTML = logEntries.map(e =>
+    `<div class="log-entry ${e.type}">${e.time.toLocaleTimeString()} — ${e.msg}</div>`
+  ).join('');
+}
+
+function renderState() {
+  const panel = document.getElementById('state-panel');
+  let html = '';
+
+  // Universities
+  html += `<div class="card"><div class="card-header">🏛️ Universities (${db.universities.length})</div>`;
+  if (db.universities.length === 0) html += `<div class="empty">No universities yet</div>`;
+  db.universities.forEach(u => {
+    const depts = db.departments.filter(d => d.universityId === u.id);
+    html += `<div class="entity"><span class="label">${u.name}</span>
+      <div class="field">Departments: <span>${depts.length}</span></div></div>`;
+  });
+  html += `</div>`;
+
+  // Departments
+  html += `<div class="card"><div class="card-header">🏢 Departments (${db.departments.length})</div>`;
+  if (db.departments.length === 0) html += `<div class="empty">No departments yet</div>`;
+  db.departments.forEach(d => {
+    const uni = db.universities.find(u => u.id === d.universityId);
+    const courses = db.courses.filter(c => c.departmentId === d.id);
+    html += `<div class="entity"><span class="label">${d.name}</span>
+      <div class="field">University: <span>${uni?.name || '?'}</span> · Courses: <span>${courses.length}</span></div></div>`;
+  });
+  html += `</div>`;
+
+  // Courses
+  html += `<div class="card"><div class="card-header">📚 Courses (${db.courses.length})</div>`;
+  if (db.courses.length === 0) html += `<div class="empty">No courses yet</div>`;
+  db.courses.forEach(c => {
+    const dept = db.departments.find(d => d.id === c.departmentId);
+    const uni = dept ? db.universities.find(u => u.id === dept.universityId) : null;
+    const resources = db.resources.filter(r => r.courseId === c.id);
+    const questions = db.questions.filter(q => q.courseId === c.id);
+    html += `<div class="entity"><span class="label">${c.code} — ${c.name}</span>
+      <div class="field">${uni?.name || '?'} → ${dept?.name || '?'}</div>
+      <div class="field">Resources: <span>${resources.length}</span> · Questions: <span>${questions.length}</span></div></div>`;
+  });
+  html += `</div>`;
+
+  // Users
+  html += `<div class="card"><div class="card-header">👤 Users (${db.users.length})</div>`;
+  if (db.users.length === 0) html += `<div class="empty">No users yet</div>`;
+  db.users.forEach(u => {
+    html += `<div class="entity"><span class="label">${u.name}</span>
+      <div class="field">Email: <span>${u.email}</span> · Provider: <span>${u.provider}</span> · Verified: <span>${u.emailVerified ? '✅' : '❌'}</span></div></div>`;
+  });
+  html += `</div>`;
+
+  // Resources
+  html += `<div class="card"><div class="card-header">📄 Resources (${db.resources.length})</div>`;
+  if (db.resources.length === 0) html += `<div class="empty">No resources yet</div>`;
+  db.resources.forEach(r => {
+    const course = db.courses.find(c => c.id === r.courseId);
+    const user = db.users.find(u => u.id === r.userId);
+    html += `<div class="entity"><span class="label">${r.title}</span> <span class="badge type">${r.resourceType}</span>
+      <div class="field">Course: <span>${course?.code || '?'}</span> · By: <span>${user?.name || '?'}</span></div>
+      <div class="field">Period: <span>${r.year} S${r.semester}</span> · File: <span>${r.fileName}</span> (${r.mimeType}, ${(r.fileSize/1024).toFixed(0)}KB)</div></div>`;
+  });
+  html += `</div>`;
+
+  // Questions & Answers
+  html += `<div class="card"><div class="card-header">❓ Questions (${db.questions.length})</div>`;
+  if (db.questions.length === 0) html += `<div class="empty">No questions yet</div>`;
+  db.questions.forEach(q => {
+    const course = db.courses.find(c => c.id === q.courseId);
+    const user = db.users.find(u => u.id === q.userId);
+    const answers = db.answers.filter(a => a.questionId === q.id);
+    const score = getScore(db, 'question', q.id);
+    const scoreClass = score > 0 ? 'positive' : score < 0 ? 'negative' : '';
+
+    html += `<div class="entity"><span class="label">${q.title}</span>
+      <div class="vote-display">Score: <span class="vote-score ${scoreClass}">${score >= 0 ? '+' : ''}${score}</span></div>
+      <div class="field">Course: <span>${course?.code || '?'}</span> · By: <span>${user?.name || '?'}</span></div>`;
+
+    answers.forEach(a => {
+      const aUser = db.users.find(u => u.id === a.userId);
+      const aScore = getScore(db, 'answer', a.id);
+      const aScoreClass = aScore > 0 ? 'positive' : aScore < 0 ? 'negative' : '';
+      const accepted = q.acceptedAnswerId === a.id;
+      html += `<div style="margin-left:1rem;margin-top:0.25rem;padding:0.25rem 0.5rem;border-left:2px solid ${accepted ? '#10b981' : '#e5e7eb'}">
+        💬 ${a.body.slice(0, 60)}${a.body.length > 60 ? '...' : ''} ${accepted ? '<span class="badge accepted">✅ Accepted</span>' : ''}
+        <div class="vote-display" style="font-size:0.8rem">Score: <span class="vote-score ${aScoreClass}">${aScore >= 0 ? '+' : ''}${aScore}</span></div>
+        <div class="field" style="font-size:0.8rem">By: <span>${aUser?.name || '?'}</span></div></div>`;
+    });
+    html += `</div>`;
+  });
+  html += `</div>`;
+
+  // Votes summary
+  html += `<div class="card"><div class="card-header">🗳️ Votes (${db.votes.length})</div>`;
+  if (db.votes.length === 0) html += `<div class="empty">No votes yet</div>`;
+  else {
+    const qVotes = db.votes.filter(v => v.targetType === 'question');
+    const aVotes = db.votes.filter(v => v.targetType === 'answer');
+    html += `<div class="field" style="font-size:0.85rem">Question votes: <span>${qVotes.length}</span> · Answer votes: <span>${aVotes.length}</span></div>`;
+  }
+  html += `</div>`;
+
+  panel.innerHTML = html;
+}
+
+// --- Sample data generators ---
+const sampleNames = ['Abebe', 'Sara', 'Dawit', 'Hana', 'Yonas', 'Meron', 'Kidus', 'Bethel'];
+const sampleDepts = ['Computer Science', 'Electrical Engineering', 'Mathematics', 'Physics', 'Civil Engineering'];
+const sampleCourses = [
+  { name: 'Data Structures', code: 'CS201' },
+  { name: 'Database Systems', code: 'CS301' },
+  { name: 'Operating Systems', code: 'CS302' },
+  { name: 'Calculus I', code: 'MATH101' },
+  { name: 'Circuit Analysis', code: 'EE201' },
+];
+let nameIdx = 0;
+let deptIdx = 0;
+let courseIdx = 0;
+
+const actions = {
+  createUniversity() {
+    try {
+      const uni = addUniversity(db, { name: 'Addis Ababa University' });
+      log(`Created university: ${uni.name}`, 'info');
+    } catch (e) { log(e.message, 'error'); }
+    renderState();
+  },
+
+  createDepartment() {
+    try {
+      const uni = db.universities[db.universities.length - 1];
+      if (!uni) throw new Error('Create a university first');
+      const name = sampleDepts[deptIdx++ % sampleDepts.length];
+      const dept = addDepartment(db, { name, universityId: uni.id });
+      log(`Created department: ${dept.name} → ${uni.name}`, 'info');
+    } catch (e) { log(e.message, 'error'); }
+    renderState();
+  },
+
+  createCourse() {
+    try {
+      const dept = db.departments[db.departments.length - 1];
+      if (!dept) throw new Error('Create a department first');
+      const sample = sampleCourses[courseIdx++ % sampleCourses.length];
+      const course = addCourse(db, { name: sample.name, code: sample.code, departmentId: dept.id });
+      log(`Created course: ${course.code} — ${course.name}`, 'info');
+    } catch (e) { log(e.message, 'error'); }
+    renderState();
+  },
+
+  createUser(provider) {
+    try {
+      const name = sampleNames[nameIdx++ % sampleNames.length];
+      const email = `${name.toLowerCase()}@aau.edu.et`;
+      const user = addUser(db, { name, email, provider: provider || 'credential' });
+      log(`Created user: ${user.name} (${user.provider})`, 'info');
+    } catch (e) { log(e.message, 'error'); }
+    renderState();
+  },
+
+  uploadResource() {
+    try {
+      const course = db.courses[db.courses.length - 1];
+      if (!course) throw new Error('Create a course first');
+      const user = db.users[db.users.length - 1];
+      if (!user) throw new Error('Create a user first');
+      const types = Object.values(ResourceType);
+      const type = types[Math.floor(Math.random() * types.length)];
+      const r = addResource(db, {
+        title: `${type.charAt(0).toUpperCase() + type.slice(1)} — ${course.code}`,
+        description: `${type} material for ${course.name}`,
+        courseId: course.id, userId: user.id,
+        resourceType: type,
+        year: 2024, semester: Semester.S1,
+        fileName: `${type}_${course.code.toLowerCase()}.pdf`,
+        mimeType: 'application/pdf', fileSize: 1024 * (50 + Math.floor(Math.random() * 500)),
+      });
+      log(`Uploaded resource: "${r.title}" (${r.resourceType})`, 'info');
+    } catch (e) { log(e.message, 'error'); }
+    renderState();
+  },
+
+  deleteResource() {
+    try {
+      const r = db.resources[db.resources.length - 1];
+      if (!r) throw new Error('No resources to delete');
+      removeResource(db, r.id);
+      log(`Deleted resource: "${r.title}" (hard delete — gone forever)`, 'action');
+    } catch (e) { log(e.message, 'error'); }
+    renderState();
+  },
+
+  askQuestion() {
+    try {
+      const course = db.courses[0];
+      if (!course) throw new Error('Create a course first');
+      const user = db.users[0];
+      if (!user) throw new Error('Create a user first');
+      const q = addQuestion(db, {
+        title: `How does ${course.name} handle edge cases?`,
+        body: `I'm studying ${course.code} and wondering about the tricky parts. Can anyone help?`,
+        courseId: course.id, userId: user.id,
+      });
+      log(`Asked question: "${q.title}"`, 'info');
+    } catch (e) { log(e.message, 'error'); }
+    renderState();
+  },
+
+  postAnswer() {
+    try {
+      const q = db.questions[db.questions.length - 1];
+      if (!q) throw new Error('Ask a question first');
+      const user = db.users.length > 1 ? db.users[1] : db.users[0];
+      if (!user) throw new Error('Create a user first');
+      const a = addAnswer(db, {
+        body: `Great question! Here's how I understand it: the key concept is to break it into smaller parts and reason about each one.`,
+        questionId: q.id, userId: user.id,
+      });
+      log(`Posted answer to "${q.title}" by ${user.name}`, 'info');
+    } catch (e) { log(e.message, 'error'); }
+    renderState();
+  },
+
+  acceptAnswer() {
+    try {
+      const q = db.questions[db.questions.length - 1];
+      if (!q) throw new Error('No questions exist');
+      const answers = db.answers.filter(a => a.questionId === q.id);
+      if (answers.length === 0) throw new Error('No answers to accept');
+      const a = answers[answers.length - 1];
+      acceptAnswer(db, { questionId: q.id, answerId: a.id, userId: q.userId });
+      const aUser = db.users.find(u => u.id === a.userId);
+      log(`Accepted answer by ${aUser?.name} on "${q.title}"`, 'info');
+    } catch (e) { log(e.message, 'error'); }
+    renderState();
+  },
+
+  vote(targetType, value) {
+    try {
+      const pool = targetType === 'question' ? db.questions : db.answers;
+      const target = pool[pool.length - 1];
+      if (!target) throw new Error(`No ${targetType}s to vote on`);
+      // use a different user than the target author
+      const voter = db.users.find(u => u.id !== target.userId) || db.users[db.users.length - 1];
+      if (!voter) throw new Error('Create a user first');
+      const result = castVote(db, { userId: voter.id, targetType, targetId: target.id, value });
+      const arrow = value === 1 ? '👍' : '👎';
+      if (result.action === 'removed') {
+        log(`${voter.name} removed their vote on ${targetType}`, 'action');
+      } else if (result.action === 'flipped') {
+        log(`${voter.name} flipped vote to ${arrow} on ${targetType}`, 'action');
+      } else {
+        log(`${voter.name} ${arrow} ${targetType}`, 'action');
+      }
+    } catch (e) { log(e.message, 'error'); }
+    renderState();
+  },
+
+  reset() {
+    db = createDb();
+    logEntries = [];
+    nameIdx = 0; deptIdx = 0; courseIdx = 0;
+    log('Reset all data', 'action');
+    renderState();
+    renderLog();
+  }
+};
+
+// --- Scenarios ---
+
+const scenarios = [
+  {
+    name: 'Happy Path',
+    desc: 'The full lifecycle: create a university hierarchy, sign up, upload a resource, ask a question, get an answer, vote, and accept.',
+    steps: [
+      { label: 'Create university', fn: () => actions.createUniversity() },
+      { label: 'Add CS department', fn: () => actions.createDepartment() },
+      { label: 'Add Data Structures course', fn: () => actions.createCourse() },
+      { label: 'Sign up Abebe (email)', fn: () => actions.createUser() },
+      { label: 'Sign up Sara (Google)', fn: () => actions.createUser('google') },
+      { label: 'Abebe uploads exam PDF', fn: () => actions.uploadResource() },
+      { label: 'Abebe asks a question', fn: () => actions.askQuestion() },
+      { label: 'Sara posts an answer', fn: () => actions.postAnswer() },
+      { label: 'Sara upvotes the question', fn: () => actions.vote('question', 1) },
+      { label: 'Abebe upvotes the answer', fn: () => actions.vote('answer', 1) },
+      { label: 'Abebe accepts Sara\'s answer', fn: () => actions.acceptAnswer() },
+    ]
+  },
+  {
+    name: 'Vote Toggle',
+    desc: 'Tests that voting twice with the same value removes the vote (toggle off), and voting with opposite value flips it.',
+    steps: [
+      { label: 'Create university', fn: () => actions.createUniversity() },
+      { label: 'Add department', fn: () => actions.createDepartment() },
+      { label: 'Add course', fn: () => actions.createCourse() },
+      { label: 'Create Abebe', fn: () => actions.createUser() },
+      { label: 'Create Sara', fn: () => actions.createUser('google') },
+      { label: 'Abebe asks question', fn: () => actions.askQuestion() },
+      { label: 'Sara upvotes (score → +1)', fn: () => actions.vote('question', 1) },
+      { label: 'Sara upvotes again (toggle off → 0)', fn: () => actions.vote('question', 1) },
+      { label: 'Sara downvotes (score → -1)', fn: () => actions.vote('question', -1) },
+      { label: 'Sara upvotes (flip → +1)', fn: () => actions.vote('question', 1) },
+    ]
+  },
+  {
+    name: 'Self-Vote Block',
+    desc: 'Verifies that users cannot vote on their own questions or answers.',
+    steps: [
+      { label: 'Create university', fn: () => actions.createUniversity() },
+      { label: 'Add department', fn: () => actions.createDepartment() },
+      { label: 'Add course', fn: () => actions.createCourse() },
+      { label: 'Create Abebe (only user)', fn: () => actions.createUser() },
+      { label: 'Abebe asks question', fn: () => actions.askQuestion() },
+      { label: '⚠️ Abebe tries to upvote own question', fn: () => actions.vote('question', 1) },
+    ]
+  },
+  {
+    name: 'Accept-Answer Guard',
+    desc: 'Only the question author can accept an answer. Tests the guard.',
+    steps: [
+      { label: 'Create university', fn: () => actions.createUniversity() },
+      { label: 'Add department', fn: () => actions.createDepartment() },
+      { label: 'Add course', fn: () => actions.createCourse() },
+      { label: 'Create Abebe', fn: () => actions.createUser() },
+      { label: 'Create Sara', fn: () => actions.createUser('google') },
+      { label: 'Abebe asks question', fn: () => actions.askQuestion() },
+      { label: 'Sara answers', fn: () => actions.postAnswer() },
+      { label: 'Abebe accepts (should work ✅)', fn: () => actions.acceptAnswer() },
+    ]
+  },
+  {
+    name: 'Hard Delete',
+    desc: 'Upload a resource, then delete it. It vanishes completely — no soft-delete recovery.',
+    steps: [
+      { label: 'Create university', fn: () => actions.createUniversity() },
+      { label: 'Add department', fn: () => actions.createDepartment() },
+      { label: 'Add course', fn: () => actions.createCourse() },
+      { label: 'Create user', fn: () => actions.createUser() },
+      { label: 'Upload resource', fn: () => actions.uploadResource() },
+      { label: '🗑️ Delete resource (gone forever)', fn: () => actions.deleteResource() },
+    ]
+  },
+];
+
+let activeScenario = 0;
+let scenarioStep = 0;
+
+function renderScenarios() {
+  const tabsEl = document.getElementById('scenario-tabs');
+  tabsEl.innerHTML = scenarios.map((s, i) =>
+    `<div class="tab ${i === activeScenario ? 'active' : ''}" onclick="switchScenario(${i})">${s.name}</div>`
+  ).join('');
+
+  const contentEl = document.getElementById('scenario-content');
+  contentEl.innerHTML = scenarios.map((s, i) => {
+    let html = `<div class="tab-content ${i === activeScenario ? 'active' : ''}" id="scenario-${i}">`;
+    html += `<div class="scenario-desc">${s.desc}</div>`;
+    html += `<div style="margin-bottom:0.75rem"><button class="primary" onclick="resetScenario(${i})">↺ Reset & Start</button></div>`;
+    html += `<div class="scenario-steps">`;
+    s.steps.forEach((step, j) => {
+      const cls = j < scenarioStep && i === activeScenario ? 'done' : j === scenarioStep && i === activeScenario ? 'current' : '';
+      html += `<div class="scenario-step">
+        <div class="step-num ${cls}">${j + 1}</div>
+        <button onclick="runScenarioStep(${i}, ${j})" ${i !== activeScenario || j !== scenarioStep ? 'disabled' : ''}>${step.label}</button>
+      </div>`;
+    });
+    html += `</div></div>`;
+    return html;
+  }).join('');
+}
+
+function switchScenario(i) {
+  activeScenario = i;
+  scenarioStep = 0;
+  renderScenarios();
+}
+
+function resetScenario(i) {
+  actions.reset();
+  activeScenario = i;
+  scenarioStep = 0;
+  renderScenarios();
+}
+
+function runScenarioStep(scenarioIdx, stepIdx) {
+  if (scenarioIdx !== activeScenario || stepIdx !== scenarioStep) return;
+  scenarios[scenarioIdx].steps[stepIdx].fn();
+  scenarioStep++;
+  renderScenarios();
+}
+
+// Initial render
+renderState();
+renderScenarios();
+</script>
+</body>
+</html>
