@@ -1,7 +1,8 @@
-import { Geist, Geist_Mono, Inter } from "next/font/google"
+import { Geist_Mono, Inter } from "next/font/google"
 
 import "@gibiverse/ui/globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Header } from "@/components/header"
 import { cn } from "@gibiverse/ui/lib/utils"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
@@ -27,8 +28,13 @@ export default function RootLayout({
         inter.variable
       )}
     >
-      <body>
-        <ThemeProvider>{children}</ThemeProvider>
+      <body className="min-h-screen bg-background font-sans antialiased">
+        <ThemeProvider>
+          <div className="relative flex min-h-screen flex-col">
+            <Header />
+            <main className="flex-1">{children}</main>
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   )
