@@ -1,0 +1,57 @@
+# Gibiverse
+
+Academic resource-sharing and Q&A platform for university students.
+
+## Language
+
+### Academic hierarchy
+
+**University**:
+An institution of higher education. The top of the academic hierarchy.
+_Avoid_: School, institution, college
+
+**Department**:
+An academic unit within a university that groups related courses.
+_Avoid_: Faculty, school, division
+
+**Course**:
+A single class or subject offered by a department, identified by a code (e.g., CS201).
+_Avoid_: Class, subject, module
+
+### Content
+
+**Resource**:
+A file uploaded by a student and tied to a course — past exams, lecture notes, slides, assignments, or lab materials.
+_Avoid_: File, document, material, upload
+
+**Resource Type**:
+A classification of what kind of academic material a resource is: exam, notes, slides, assignment, lab, or other.
+_Avoid_: Category, kind
+
+**Academic Period**:
+The year and semester (1, 2, or summer) a resource is associated with.
+_Avoid_: Term, quarter
+
+### People
+
+**Student**:
+A university learner using the platform. An authenticated user who can upload resources, ask questions, post answers, and vote.
+_Avoid_: User, member, account, profile
+
+### Q&A
+
+**Question**:
+A student's academic query tied to a course, with a title and body.
+_Avoid_: Post, thread, topic
+
+**Answer**:
+A response to a question, posted by any student.
+_Avoid_: Reply, comment, response
+
+**Accepted Answer**:
+The single answer the question author marks as best. At most one per question.
+_Avoid_: Best answer, correct answer, solution
+
+**Vote**:
+An upvote (+1) or downvote (−1) cast by a student on a question or answer. One vote per student per target, togglable.
+_Avoid_: Like, reaction, rating

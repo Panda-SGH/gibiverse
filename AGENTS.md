@@ -1,6 +1,20 @@
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues on `Panda-SGH/gibiverse` (via `gh`). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default roles: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: root `GLOSSARY.md` + `docs/adr/`. See `docs/agents/domain.md`.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
-# This is NOT the Next.js you know
+## This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
@@ -10,7 +24,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- BEGIN:turborepo-agent-rules -->
 
-# This is NOT the Turborepo you know
+## This is NOT the Turborepo you know
 
 Turborepo configuration, task behavior, and CLI commands can vary between installed versions and may differ from your training data. Resolve the `turbo` package from this file's directory or relevant workspace; in monorepos, it may not be visible from the repository root. For example, run `node -p "require.resolve('turbo/package.json')"` from a workspace that depends on `turbo`.
 
@@ -21,11 +35,12 @@ This block is written and re-added by `turbo` before repository-scoped commands 
 
 
 <!-- BEGIN:hono-agent-rules -->
-# Hono CLI
+## hono
+### Hono CLI
 
 Run `npx hono --help` first, and use the CLI instead of a dev server.
 
-# Hono Documentation for Agents
+### Hono Documentation for Agents
 When looking up Hono documentation or API reference:
 - Start with `https://hono.dev/llms.txt` for an index of all documentation pages with descriptions.
 - Use `https://hono.dev/llms-full.txt` for the complete documentation set in a single file.
@@ -36,19 +51,19 @@ When looking up Hono documentation or API reference:
 
 <!-- BEGIN:database-and-migration-agent-rules -->
 
-# Database & Migrations
+## Database & Migrations
 Always use the `drizzle` skill when modifying database schemas, writing queries, or generating migrations.
 
 Rules for database changes:
-## 1. Rapid Local Prototyping Phase -> Use `push`
+### 1. Rapid Local Prototyping Phase -> Use `push`
 - Use `pnpm drizzle-kit push` when iteratively creating new feature branches, adding test tables, or prototyping local schema changes.
 - Do NOT generate migration files for temporary local adjustments or minor type tweaks.
 
-## 2. Feature Completion / Team Shared Phase -> Use `generate` + `migrate`
+### 2. Feature Completion / Team Shared Phase -> Use `generate` + `migrate`
 - Once a schema change is finalized or ready to commit to git, use the `drizzle` skill to run `pnpm drizzle-kit generate` to generate version-controlled SQL migration files.
 - Always inspect and display the generated SQL migration file to the user before running or committing it.
 
-## 3. Data Safety & Renames
+### 3. Data Safety & Renames
 - When renaming columns or changing column types, use the interactive decision guide in the `drizzle` skill to prevent dropping existing columns and losing local data.
 - NEVER run `push` against staging or production environments.
 <!-- END:database-and-migration-agent-agent-rules -->
