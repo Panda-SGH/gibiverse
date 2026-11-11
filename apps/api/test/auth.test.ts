@@ -178,3 +178,56 @@ test("POST /api/auth/sign-in/social initiates Google OAuth flow with redirect ur
     "Should target Google OAuth authorization endpoint"
   )
 })
+
+test("Auth endpoints accept requests from frontend origin http://localhost:3001", async () => {
+  const email = `port3001_${Date.now()}@university.edu`
+  const password = "Port3001Password123!"
+
+  // 1. Sign up with origin: http://localhost:3001
+  const signUpRes = await app.request("/api/auth/sign-up/email", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      origin: "http://localhost:3001",
+    },
+    body: JSON.stringify({ name: "Port 3001 Student", email, password }),
+  })
+  assert.strictEqual(signUpRes.status, 200, "Sign up from http://localhost:3001 should succeed")
+  const sessionCookie = signUpRes.headers.get("set-cookie")!
+  const cookieHeader = sessionCookie.split(";")[0]
+
+  // 2. Sign in with origin: http://localhost:3001
+  const signInRes = await app.request("/api/auth/sign-in/email", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      origin: "http://localhost:3001",
+    },
+    body: JSON.stringify({ email, password }),
+  })
+  assert.strictEqual(signInRes.status, 200, "Sign in from http://localhost:3001 should succeed")
+
+  // 3. Sign out with origin: http://localhost:3001
+  const signOutRes = await app.request("/api/auth/sign-out", {
+    method: "POST",
+    headers: {
+      cookie: cookieHeader,
+      origin: "http://localhost:3001",
+    },
+  })
+  assert.strictEqual(signOutRes.status, 200, "Sign out from http://localhost:3001 should succeed")
+
+  // 4. Social sign in with origin and callback on http://localhost:3001
+  const socialRes = await app.request("/api/auth/sign-in/social", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      origin: "http://localhost:3001",
+    },
+    body: JSON.stringify({
+      provider: "google",
+      callbackURL: "http://localhost:3001/",
+    }),
+  })
+  assert.strictEqual(socialRes.status, 200, "Social sign in from http://localhost:3001 should succeed")
+})

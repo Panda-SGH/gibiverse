@@ -16,12 +16,18 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  trustedOrigins: ["http://localhost:3000", "http://localhost:8787"],
+  trustedOrigins: [
+    ...(process.env.BETTER_AUTH_TRUSTED_ORIGINS
+      ? process.env.BETTER_AUTH_TRUSTED_ORIGINS.split(",").map((s) => s.trim())
+      : []),
+  ],
+  baseURL: process.env.BETTER_AUTH_URL,
   socialProviders: {
     google: {
-      clientId: process.env.GOOGLE_CLIENT_ID || "google-client-id-placeholder",
+      clientId:
+        process.env.GOOGLE_CLIENT_ID as string,
       clientSecret:
-        process.env.GOOGLE_CLIENT_SECRET || "google-client-secret-placeholder",
+        process.env.GOOGLE_CLIENT_SECRET as string,
     },
   },
 })
