@@ -14,7 +14,7 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => {
 // Academic hierarchy (public reads)
 app.route("/api", academic)
 
-// Resource uploads (authenticated)
+// Resource catalog (public list) and uploads (authenticated create)
 app.route("/api/resources", resources)
 
 // Public root
