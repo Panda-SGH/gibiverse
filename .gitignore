@@ -24,6 +24,9 @@ dist
 # turbo
 .turbo
 
+# local file storage
+uploads/
+
 # misc
 .DS_Store
 *.pem
