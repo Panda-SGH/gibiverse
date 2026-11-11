@@ -2,7 +2,12 @@ import { NextResponse } from "next/server.js"
 import type { NextRequest } from "next/server.js"
 
 // Routes that require authentication
-const protectedPrefixes = ["/resources/upload", "/qa/ask", "/settings"]
+const protectedPrefixes = [
+  "/resources/upload",
+  "/questions/ask",
+  "/qa/ask",
+  "/settings",
+]
 
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl

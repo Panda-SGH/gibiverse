@@ -2,6 +2,7 @@ import { Hono } from "hono"
 import { auth } from "./lib/auth.js"
 import { requireAuth, optionalAuth } from "./middleware/auth.js"
 import { academic } from "./routes/academic.js"
+import { questions } from "./routes/questions.js"
 import { resources } from "./routes/resources.js"
 
 export const app = new Hono()
@@ -16,6 +17,9 @@ app.route("/api", academic)
 
 // Resource catalog (public list) and uploads (authenticated create)
 app.route("/api/resources", resources)
+
+// Question catalog (public list) and posting (authenticated create)
+app.route("/api/questions", questions)
 
 // Public root
 app.get("/", (c) => {

@@ -1,0 +1,56 @@
+import test from "node:test"
+import assert from "node:assert/strict"
+import {
+  buildQuestionsQuery,
+  hasActiveQuestionFilters,
+  questionCatalogEmptyState,
+} from "../lib/question-catalog"
+
+test("buildQuestionsQuery includes course and non-default sort", () => {
+  assert.strictEqual(
+    buildQuestionsQuery({
+      courseId: null,
+      departmentId: null,
+      sort: "newest",
+    }),
+    "/api/questions"
+  )
+  assert.strictEqual(
+    buildQuestionsQuery({
+      courseId: "course_1",
+      departmentId: "dept_1",
+      sort: "most_voted",
+    }),
+    "/api/questions?courseId=course_1&departmentId=dept_1&sort=most_voted"
+  )
+})
+
+test("questionCatalogEmptyState distinguishes filtered vs empty catalog", () => {
+  assert.deepStrictEqual(
+    questionCatalogEmptyState({
+      courseId: null,
+      departmentId: null,
+      sort: "newest",
+    }),
+    {
+      title: "No questions yet",
+      description:
+        "Be the first to ask an academic question for your courses.",
+    }
+  )
+  assert.ok(
+    hasActiveQuestionFilters({
+      courseId: "course_1",
+      departmentId: null,
+      sort: "newest",
+    })
+  )
+  assert.match(
+    questionCatalogEmptyState({
+      courseId: "course_1",
+      departmentId: null,
+      sort: "newest",
+    }).title,
+    /match/i
+  )
+})

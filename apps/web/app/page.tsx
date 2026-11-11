@@ -27,7 +27,7 @@ export default function HomePage() {
               <span>Browse Resources</span>
             </Button>
           </Link>
-          <Link href="/qa">
+          <Link href="/questions">
             <Button variant="outline" size="lg" className="gap-2">
               <MessageSquareQuote className="size-4" />
               <span>Ask Questions</span>
