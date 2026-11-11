@@ -10,6 +10,7 @@ import {
   LogOut,
   ChevronDown,
   BookOpen,
+  Library,
   MessageSquareQuote,
   Search,
 } from "lucide-react"
@@ -24,6 +25,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: "Home", href: "/", icon: GraduationCap },
+  { label: "Courses", href: "/courses", icon: Library },
   { label: "Resources", href: "/resources", icon: BookOpen },
   { label: "Q&A", href: "/qa", icon: MessageSquareQuote },
   { label: "Search", href: "/search", icon: Search },

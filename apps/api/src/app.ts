@@ -1,6 +1,7 @@
 import { Hono } from "hono"
 import { auth } from "./lib/auth.js"
 import { requireAuth, optionalAuth } from "./middleware/auth.js"
+import { academic } from "./routes/academic.js"
 
 export const app = new Hono()
 
@@ -8,6 +9,9 @@ export const app = new Hono()
 app.on(["POST", "GET"], "/api/auth/*", (c) => {
   return auth.handler(c.req.raw)
 })
+
+// Academic hierarchy (public reads)
+app.route("/api", academic)
 
 // Public root
 app.get("/", (c) => {
