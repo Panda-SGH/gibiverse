@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { Hono } from "hono"
-import { eq } from "drizzle-orm"
+import { and, desc, eq, type SQL } from "drizzle-orm"
 import db from "../db/index.js"
 import { course } from "../db/schema/academic.js"
 import { resource } from "../db/schema/resource.js"
@@ -13,6 +13,49 @@ import { requireAuth } from "../middleware/auth.js"
 import { createStorage } from "../storage/index.js"
 
 const resources = new Hono()
+
+resources.get("/", async (c) => {
+  const resourceTypeRaw = c.req.query("resourceType")?.trim()
+  const departmentId = c.req.query("departmentId")?.trim() || undefined
+  const courseId = c.req.query("courseId")?.trim() || undefined
+
+  if (resourceTypeRaw && !isResourceType(resourceTypeRaw)) {
+    return c.json({ error: "Invalid resource type" }, 400)
+  }
+
+  const filters: SQL[] = []
+  if (resourceTypeRaw) {
+    filters.push(eq(resource.resourceType, resourceTypeRaw))
+  }
+  if (departmentId) {
+    filters.push(eq(course.departmentId, departmentId))
+  }
+  if (courseId) {
+    filters.push(eq(resource.courseId, courseId))
+  }
+
+  const query = db
+    .select({
+      id: resource.id,
+      title: resource.title,
+      resourceType: resource.resourceType,
+      year: resource.year,
+      semester: resource.semester,
+      createdAt: resource.createdAt,
+      courseId: resource.courseId,
+      courseCode: course.code,
+      courseName: course.name,
+      departmentId: course.departmentId,
+    })
+    .from(resource)
+    .innerJoin(course, eq(resource.courseId, course.id))
+    .orderBy(desc(resource.createdAt))
+
+  const rows =
+    filters.length > 0 ? await query.where(and(...filters)) : await query
+
+  return c.json(rows)
+})
 
 resources.post("/", requireAuth, async (c) => {
   const user = c.get("user")
