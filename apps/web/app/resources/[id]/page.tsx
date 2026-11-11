@@ -14,6 +14,7 @@ export default async function ResourceDetailPage({ params }: ResourcePageProps) 
       <Button
         variant="ghost"
         className="mb-6"
+        nativeButton={false}
         render={<Link href="/resources" />}
       >
         <ArrowLeft data-icon="inline-start" />

@@ -434,7 +434,10 @@ export function UploadResourceWizard({
                   “{title}” is ready for your course.
                 </p>
               </div>
-              <Button render={<Link href={`/resources/${createdResourceId}`} />}>
+              <Button
+                nativeButton={false}
+                render={<Link href={`/resources/${createdResourceId}`} />}
+              >
                 View resource
               </Button>
             </div>
