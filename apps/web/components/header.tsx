@@ -27,7 +27,7 @@ const navItems: NavItem[] = [
   { label: "Home", href: "/", icon: GraduationCap },
   { label: "Courses", href: "/courses", icon: Library },
   { label: "Resources", href: "/resources", icon: BookOpen },
-  { label: "Q&A", href: "/qa", icon: MessageSquareQuote },
+  { label: "Q&A", href: "/questions", icon: MessageSquareQuote },
   { label: "Search", href: "/search", icon: Search },
 ]
 
