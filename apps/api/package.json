@@ -9,13 +9,16 @@
     "./hc": "./src/hc.ts"
   },
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "NODE_OPTIONS=\"--dns-result-order=ipv4first\" tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "eslint .",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "test": "node --import tsx --test test/**/*.test.ts",
-    "typecheck": "tsc --noEmit"
+    "test": "node --import tsx --test --test-concurrency=1 --test-force-exit test/**/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate --output json",
+    "db:push": "drizzle-kit push --output json",
+    "db:seed": "tsx src/db/seed.ts"
   },
   "dependencies": {
     "@hono/node-server": "catalog:",

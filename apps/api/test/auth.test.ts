@@ -1,11 +1,6 @@
-import test, { after } from "node:test"
+import test from "node:test"
 import assert from "node:assert/strict"
 import { app } from "../src/app.js"
-import { pool } from "../src/db/index.js"
-
-after(async () => {
-  await pool.end()
-})
 
 test("POST /api/auth/sign-up/email registers student and returns session cookie", async () => {
   const uniqueEmail = `student_${Date.now()}@university.edu`
@@ -68,12 +63,12 @@ test("Student authentication lifecycle: sign-in, session query, and sign-out", a
   assert.ok(sessionBody?.user)
   assert.strictEqual(sessionBody.user.email, email)
 
-  // 4. Sign out
+  // 4. Sign out (origin must be a trusted browser-facing origin)
   const signOutRes = await app.request("/api/auth/sign-out", {
     method: "POST",
     headers: {
       cookie: cookieHeader,
-      origin: "http://localhost:8787",
+      origin: "http://localhost:3000",
     },
   })
   assert.strictEqual(signOutRes.status, 200)
