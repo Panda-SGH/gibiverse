@@ -1,16 +1,45 @@
 import Link from "next/link"
-import { ArrowLeft, BookOpen } from "lucide-react"
+import { notFound } from "next/navigation"
+import { ArrowLeft, Download } from "lucide-react"
+import { Badge } from "@gibiverse/ui/components/badge"
 import { Button } from "@gibiverse/ui/components/button"
+import { ResourcePreview } from "@/components/resource-preview"
+import {
+  formatAcademicPeriod,
+  formatRelativeUploadDate,
+} from "@/lib/resource-catalog"
+import {
+  getResource,
+  resolvePreviewType,
+  resourceDownloadUrl,
+} from "@/lib/resource-detail"
+import { resourceTypeOptions } from "@/lib/resource-options"
+import { formatBytes } from "@/lib/resource-validation"
 
 type ResourcePageProps = {
   params: Promise<{ id: string }>
 }
 
+function formatUploadDate(createdAt: string): string {
+  return new Intl.DateTimeFormat("en", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(createdAt))
+}
+
 export default async function ResourceDetailPage({ params }: ResourcePageProps) {
   const { id } = await params
+  const resource = await getResource(id)
+  if (!resource) notFound()
+
+  const previewType = resolvePreviewType(resource.fileName, resource.mimeType)
+  const typeLabel =
+    resourceTypeOptions.find((option) => option.value === resource.resourceType)
+      ?.label ?? resource.resourceType
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
       <Button
         variant="ghost"
         className="mb-6"
@@ -20,20 +49,91 @@ export default async function ResourceDetailPage({ params }: ResourcePageProps) 
         <ArrowLeft data-icon="inline-start" />
         Back to resources
       </Button>
-      <div className="flex items-start gap-3">
-        <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <BookOpen className="size-6" />
+
+      <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="secondary">{resource.courseCode}</Badge>
+            <Badge variant="outline">{typeLabel}</Badge>
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            {resource.title}
+          </h1>
+          {resource.description ? (
+            <p className="max-w-2xl text-sm text-muted-foreground">
+              {resource.description}
+            </p>
+          ) : null}
+          <dl className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+            <div>
+              <dt className="font-medium text-foreground">Student</dt>
+              <dd>{resource.studentName}</dd>
+            </div>
+            <div>
+              <dt className="font-medium text-foreground">Course</dt>
+              <dd>
+                {resource.courseCode} · {resource.courseName}
+              </dd>
+            </div>
+            <div>
+              <dt className="font-medium text-foreground">Academic period</dt>
+              <dd>
+                {formatAcademicPeriod(resource.year, resource.semester)}
+              </dd>
+            </div>
+            <div>
+              <dt className="font-medium text-foreground">Upload date</dt>
+              <dd>
+                <time dateTime={resource.createdAt}>
+                  {formatUploadDate(resource.createdAt)}
+                  <span aria-hidden="true"> · </span>
+                  {formatRelativeUploadDate(resource.createdAt)}
+                </time>
+              </dd>
+            </div>
+            <div>
+              <dt className="font-medium text-foreground">Size</dt>
+              <dd>
+                {resource.fileName}
+                <span aria-hidden="true"> · </span>
+                {formatBytes(resource.fileSize)}
+              </dd>
+            </div>
+          </dl>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Resource</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Resource ID: <code className="font-mono text-foreground">{id}</code>
-          </p>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Full preview and download land in a follow-up ticket.
-          </p>
-        </div>
+
+        <Button
+          size="lg"
+          className="shrink-0"
+          nativeButton={false}
+          render={
+            <a
+              href={resourceDownloadUrl(resource.id)}
+              download={resource.fileName}
+            />
+          }
+          data-testid="download-button"
+        >
+          <Download data-icon="inline-start" />
+          Download
+        </Button>
       </div>
+
+      <section aria-labelledby="preview-heading" className="flex flex-col gap-3">
+        <h2
+          id="preview-heading"
+          className="text-lg font-semibold text-foreground"
+        >
+          Preview
+        </h2>
+        <ResourcePreview
+          resourceId={resource.id}
+          fileName={resource.fileName}
+          fileSize={resource.fileSize}
+          previewType={previewType}
+          title={resource.title}
+        />
+      </section>
     </div>
   )
 }

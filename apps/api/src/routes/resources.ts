@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto"
-import { Hono } from "hono"
+import { Hono, type Context } from "hono"
 import { and, desc, eq, type SQL } from "drizzle-orm"
 import db from "../db/index.js"
 import { course } from "../db/schema/academic.js"
+import { user as student } from "../db/schema/auth.js"
 import { resource } from "../db/schema/resource.js"
 import {
   isResourceType,
@@ -13,6 +14,49 @@ import { requireAuth } from "../middleware/auth.js"
 import { createStorage } from "../storage/index.js"
 
 const resources = new Hono()
+
+function contentDisposition(
+  disposition: "inline" | "attachment",
+  fileName: string
+): string {
+  const escaped = fileName.replace(/\\/g, "\\\\").replace(/"/g, '\\"')
+  return `${disposition}; filename="${escaped}"`
+}
+
+async function streamResourceFile(
+  c: Context,
+  disposition: "inline" | "attachment"
+) {
+  const id = c.req.param("id")
+  if (!id) {
+    return c.json({ error: "Resource not found" }, 404)
+  }
+
+  const [row] = await db
+    .select({
+      filePath: resource.filePath,
+      fileName: resource.fileName,
+      mimeType: resource.mimeType,
+    })
+    .from(resource)
+    .where(eq(resource.id, id))
+    .limit(1)
+
+  if (!row) {
+    return c.json({ error: "Resource not found" }, 404)
+  }
+
+  const storage = createStorage()
+  const stored = await storage.get(row.filePath)
+  if (!stored) {
+    return c.json({ error: "Resource content not found" }, 404)
+  }
+
+  c.header("Content-Type", row.mimeType)
+  c.header("Content-Disposition", contentDisposition(disposition, row.fileName))
+  c.header("Content-Length", String(stored.size))
+  return c.body(stored.stream)
+}
 
 resources.get("/", async (c) => {
   const resourceTypeRaw = c.req.query("resourceType")?.trim()
@@ -55,6 +99,47 @@ resources.get("/", async (c) => {
     filters.length > 0 ? await query.where(and(...filters)) : await query
 
   return c.json(rows)
+})
+
+resources.get("/:id/download", async (c) => streamResourceFile(c, "attachment"))
+
+resources.get("/:id/preview", async (c) => streamResourceFile(c, "inline"))
+
+resources.get("/:id", async (c) => {
+  const id = c.req.param("id")
+  if (!id) {
+    return c.json({ error: "Resource not found" }, 404)
+  }
+
+  const [row] = await db
+    .select({
+      id: resource.id,
+      title: resource.title,
+      description: resource.description,
+      resourceType: resource.resourceType,
+      year: resource.year,
+      semester: resource.semester,
+      fileName: resource.fileName,
+      mimeType: resource.mimeType,
+      fileSize: resource.fileSize,
+      createdAt: resource.createdAt,
+      courseId: resource.courseId,
+      courseCode: course.code,
+      courseName: course.name,
+      studentId: resource.userId,
+      studentName: student.name,
+    })
+    .from(resource)
+    .innerJoin(course, eq(resource.courseId, course.id))
+    .innerJoin(student, eq(resource.userId, student.id))
+    .where(eq(resource.id, id))
+    .limit(1)
+
+  if (!row) {
+    return c.json({ error: "Resource not found" }, 404)
+  }
+
+  return c.json(row)
 })
 
 resources.post("/", requireAuth, async (c) => {

@@ -21,7 +21,9 @@ catalog:
   better-auth: ^1.7.18
   class-variance-authority: ^0.7.1
   cn: ^0.5.2
+  '@types/dompurify': ^3.2.0
   dotenv: ^18.0.9
+  dompurify: ^3.4.17
   drizzle-kit: 1.0.0-rc.5
   drizzle-orm: 1.0.0-rc.5
   eslint: ^10
@@ -32,13 +34,16 @@ catalog:
   globals: ^17.14.0
   hono: ^4.13.16
   lucide-react: ^1.70.0
+  mammoth: ^1.13.0
   next: 16.4.4
+  pdfjs-dist: 6.3.289
   next-themes: ^0.4.6
   pg: ^8.23.1
   prettier: ^3.9.10
   prettier-plugin-tailwindcss: ^0.8.1
   react: 19.3.1
   react-dom: 19.3.1
+  react-pdf: ^11.0.0
   shadcn: ^4.23.0
   tailwindcss: ^4
   tsx: ^4.23.15
