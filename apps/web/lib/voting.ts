@@ -15,7 +15,8 @@ export interface VotePayload {
 
 export interface VoteResponse {
   score: number
-  userVote: CurrentVote
+  studentVote: CurrentVote
+  userVote?: CurrentVote
   targetType: VoteTargetType
   targetId: string
 }

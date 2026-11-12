@@ -15,11 +15,12 @@ export interface VoteControlsProps {
   targetType: VoteTargetType
   targetId: string
   initialScore: number
+  initialStudentVote?: number | null
   initialUserVote?: number | null
   orientation?: "vertical" | "horizontal"
   size?: "sm" | "default"
   className?: string
-  onVoteChange?: (score: number, userVote: CurrentVote) => void
+  onVoteChange?: (score: number, currentVote: CurrentVote) => void
 }
 
 function normalizeVote(v?: number | null): CurrentVote {
@@ -32,15 +33,17 @@ export function VoteControls({
   targetType,
   targetId,
   initialScore,
-  initialUserVote = null,
+  initialStudentVote,
+  initialUserVote,
   orientation = "vertical",
   size = "default",
   className = "",
   onVoteChange,
 }: VoteControlsProps) {
+  const initialVote = initialStudentVote ?? initialUserVote ?? null
   const [score, setScore] = React.useState<number>(initialScore)
-  const [userVote, setUserVote] = React.useState<CurrentVote>(
-    normalizeVote(initialUserVote)
+  const [activeVote, setActiveVote] = React.useState<CurrentVote>(
+    normalizeVote(initialVote)
   )
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
@@ -50,8 +53,8 @@ export function VoteControls({
   }, [initialScore])
 
   React.useEffect(() => {
-    setUserVote(normalizeVote(initialUserVote))
-  }, [initialUserVote])
+    setActiveVote(normalizeVote(initialStudentVote ?? initialUserVote))
+  }, [initialStudentVote, initialUserVote])
 
   const { data: session } = useSession()
   const isAuthenticated = Boolean(session?.user)
@@ -68,14 +71,14 @@ export function VoteControls({
 
     if (isSubmitting) return
 
-    const { nextVote, scoreDelta } = calculateNextVote(userVote, clickedValue)
+    const { nextVote, scoreDelta } = calculateNextVote(activeVote, clickedValue)
     const prevScore = score
-    const prevVote = userVote
+    const prevVote = activeVote
 
     // Optimistic update
     const optimisticScore = score + scoreDelta
     setScore(optimisticScore)
-    setUserVote(nextVote)
+    setActiveVote(nextVote)
     onVoteChange?.(optimisticScore, nextVote)
     setIsSubmitting(true)
 
@@ -86,12 +89,13 @@ export function VoteControls({
         value: clickedValue,
       })
       setScore(res.score)
-      setUserVote(res.userVote)
-      onVoteChange?.(res.score, res.userVote)
+      const confirmedVote = res.studentVote ?? res.userVote ?? null
+      setActiveVote(confirmedVote)
+      onVoteChange?.(res.score, confirmedVote)
     } catch {
       // Revert optimistic update on failure
       setScore(prevScore)
-      setUserVote(prevVote)
+      setActiveVote(prevVote)
       onVoteChange?.(prevScore, prevVote)
     } finally {
       setIsSubmitting(false)
@@ -108,12 +112,12 @@ export function VoteControls({
   const iconClasses = isSm ? "size-4" : "size-5"
 
   const upvoteClasses =
-    userVote === 1
+    activeVote === 1
       ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-500/30"
       : "text-muted-foreground hover:bg-muted hover:text-foreground"
 
   const downvoteClasses =
-    userVote === -1
+    activeVote === -1
       ? "bg-rose-500/15 text-rose-600 dark:text-rose-400 font-semibold border border-rose-500/30"
       : "text-muted-foreground hover:bg-muted hover:text-foreground"
 
@@ -140,7 +144,7 @@ export function VoteControls({
           handleVote(1)
         }}
         aria-label="Upvote"
-        aria-pressed={userVote === 1}
+        aria-pressed={activeVote === 1}
         data-testid={`upvote-button-${targetId}`}
         className={`${buttonBaseClasses} ${upvoteClasses}`}
       >
@@ -163,7 +167,7 @@ export function VoteControls({
           handleVote(-1)
         }}
         aria-label="Downvote"
-        aria-pressed={userVote === -1}
+        aria-pressed={activeVote === -1}
         data-testid={`downvote-button-${targetId}`}
         className={`${buttonBaseClasses} ${downvoteClasses}`}
       >

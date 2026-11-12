@@ -6,6 +6,7 @@ import { course } from "../db/schema/academic.js"
 import { user as student } from "../db/schema/auth.js"
 import { question, answer } from "../db/schema/question.js"
 import { vote } from "../db/schema/vote.js"
+import { parseJsonBody } from "../lib/json.js"
 import { requireAuth, optionalAuth } from "../middleware/auth.js"
 
 const questions = new Hono()
@@ -15,19 +16,6 @@ type QuestionSort = (typeof SORT_OPTIONS)[number]
 
 function isQuestionSort(value: string): value is QuestionSort {
   return (SORT_OPTIONS as readonly string[]).includes(value)
-}
-
-async function parseJsonBody(
-  c: Context
-): Promise<Record<string, unknown> | null> {
-  try {
-    const payload = await c.req.json()
-    return payload && typeof payload === "object"
-      ? (payload as Record<string, unknown>)
-      : {}
-  } catch {
-    return null
-  }
 }
 
 questions.get("/", optionalAuth, async (c) => {
@@ -69,6 +57,7 @@ questions.get("/", optionalAuth, async (c) => {
           studentName: student.name,
           voteScore: question.voteScore,
           answerCount: question.answerCount,
+          studentVote: vote.value,
           userVote: vote.value,
         })
         .from(question)
@@ -96,6 +85,7 @@ questions.get("/", optionalAuth, async (c) => {
           studentName: student.name,
           voteScore: question.voteScore,
           answerCount: question.answerCount,
+          studentVote: sql<number | null>`null`.as("studentVote"),
           userVote: sql<number | null>`null`.as("userVote"),
         })
         .from(question)
@@ -129,6 +119,7 @@ questions.get("/:id", optionalAuth, async (c) => {
           voteScore: question.voteScore,
           answerCount: question.answerCount,
           acceptedAnswerId: question.acceptedAnswerId,
+          studentVote: vote.value,
           userVote: vote.value,
         })
         .from(question)
@@ -159,6 +150,7 @@ questions.get("/:id", optionalAuth, async (c) => {
           voteScore: question.voteScore,
           answerCount: question.answerCount,
           acceptedAnswerId: question.acceptedAnswerId,
+          studentVote: sql<number | null>`null`.as("studentVote"),
           userVote: sql<number | null>`null`.as("userVote"),
         })
         .from(question)
@@ -184,6 +176,7 @@ questions.get("/:id", optionalAuth, async (c) => {
           voteScore: answer.voteScore,
           createdAt: answer.createdAt,
           updatedAt: answer.updatedAt,
+          studentVote: vote.value,
           userVote: vote.value,
         })
         .from(answer)
@@ -208,6 +201,7 @@ questions.get("/:id", optionalAuth, async (c) => {
           voteScore: answer.voteScore,
           createdAt: answer.createdAt,
           updatedAt: answer.updatedAt,
+          studentVote: sql<number | null>`null`.as("studentVote"),
           userVote: sql<number | null>`null`.as("userVote"),
         })
         .from(answer)

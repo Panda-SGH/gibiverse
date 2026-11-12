@@ -1,29 +1,17 @@
 import { randomUUID } from "node:crypto"
-import { Hono, type Context } from "hono"
+import { Hono } from "hono"
 import { and, eq, sql } from "drizzle-orm"
 import db from "../db/index.js"
 import { question, answer } from "../db/schema/question.js"
 import { vote } from "../db/schema/vote.js"
+import { parseJsonBody } from "../lib/json.js"
 import { requireAuth } from "../middleware/auth.js"
 
 const votes = new Hono()
 
-async function parseJsonBody(
-  c: Context
-): Promise<Record<string, unknown> | null> {
-  try {
-    const payload = await c.req.json()
-    return payload && typeof payload === "object"
-      ? (payload as Record<string, unknown>)
-      : {}
-  } catch {
-    return null
-  }
-}
-
 votes.post("/", requireAuth, async (c) => {
-  const user = c.get("user")
-  if (!user) {
+  const student = c.get("user")
+  if (!student) {
     return c.json({ error: "Unauthorized" }, 401)
   }
 
@@ -33,7 +21,8 @@ votes.post("/", requireAuth, async (c) => {
   }
 
   const targetType = raw.targetType
-  const targetId = typeof raw.targetId === "string" ? raw.targetId.trim() : ""
+  const targetId =
+    typeof raw.targetId === "string" ? raw.targetId.trim() : ""
   const value = raw.value
 
   if (targetType !== "question" && targetType !== "answer") {
@@ -51,69 +40,73 @@ votes.post("/", requireAuth, async (c) => {
     return c.json({ error: "value must be 1 or -1" }, 400)
   }
 
-  // Validate target existence
-  if (targetType === "question") {
-    const [existingQuestion] = await db
-      .select({ id: question.id })
-      .from(question)
-      .where(eq(question.id, targetId))
-      .limit(1)
-
-    if (!existingQuestion) {
-      return c.json({ error: "Question not found" }, 404)
-    }
-  } else {
-    const [existingAnswer] = await db
-      .select({ id: answer.id })
-      .from(answer)
-      .where(eq(answer.id, targetId))
-      .limit(1)
-
-    if (!existingAnswer) {
-      return c.json({ error: "Answer not found" }, 404)
-    }
-  }
-
-  // Atomically update vote and target score within a transaction
+  // Atomically lock target row, update vote, and recalculate aggregate score within a transaction
   const result = await db.transaction(async (tx) => {
+    // 1. Lock target row to serialize concurrent votes and verify existence
+    if (targetType === "question") {
+      const [existingQuestion] = await tx
+        .select({ id: question.id })
+        .from(question)
+        .where(eq(question.id, targetId))
+        .for("update")
+
+      if (!existingQuestion) {
+        return { error: "Question not found", status: 404 as const }
+      }
+    } else {
+      const [existingAnswer] = await tx
+        .select({ id: answer.id })
+        .from(answer)
+        .where(eq(answer.id, targetId))
+        .for("update")
+
+      if (!existingAnswer) {
+        return { error: "Answer not found", status: 404 as const }
+      }
+    }
+
+    // 2. Query existing vote for this student & target (with row lock if present)
     const [existingVote] = await tx
       .select({ id: vote.id, value: vote.value })
       .from(vote)
       .where(
         and(
-          eq(vote.userId, user.id),
+          eq(vote.userId, student.id),
           eq(vote.targetType, targetType),
           eq(vote.targetId, targetId)
         )
       )
-      .limit(1)
+      .for("update")
 
     let scoreDelta = 0
-    let nextUserVote: number | null = null
+    let nextStudentVote: number | null = null
 
     if (existingVote) {
       if (existingVote.value === value) {
         // Toggle off: remove vote record
         await tx.delete(vote).where(eq(vote.id, existingVote.id))
         scoreDelta = -value
-        nextUserVote = null
+        nextStudentVote = null
       } else {
         // Switch direction
-        await tx.update(vote).set({ value }).where(eq(vote.id, existingVote.id))
+        await tx
+          .update(vote)
+          .set({ value })
+          .where(eq(vote.id, existingVote.id))
         scoreDelta = value - existingVote.value
-        nextUserVote = value
+        nextStudentVote = value
       }
     } else {
       // New vote
       await tx.insert(vote).values({
         id: randomUUID(),
-        userId: user.id,
+        userId: student.id,
         targetType,
         targetId,
         value,
       })
       scoreDelta = value
-      nextUserVote = value
+      nextStudentVote = value
     }
 
     let updatedScore = 0
@@ -134,14 +127,22 @@ votes.post("/", requireAuth, async (c) => {
     }
 
     return {
-      score: updatedScore,
-      userVote: nextUserVote,
-      targetType,
-      targetId,
+      status: 200 as const,
+      data: {
+        score: updatedScore,
+        studentVote: nextStudentVote,
+        userVote: nextStudentVote,
+        targetType,
+        targetId,
+      },
     }
   })
 
-  return c.json(result, 200)
+  if (result.status !== 200) {
+    return c.json({ error: result.error }, result.status)
+  }
+
+  return c.json(result.data, 200)
 })
 
 export { votes }

@@ -20,6 +20,7 @@ export type CatalogQuestion = {
   studentName: string
   voteScore: number
   answerCount: number
+  studentVote?: 1 | -1 | null
   userVote?: 1 | -1 | null
 }
 

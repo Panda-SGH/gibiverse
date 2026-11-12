@@ -599,3 +599,82 @@ test("GET /api/questions and /:id return userVote for authenticated student and 
     }),
   })
 })
+
+test("concurrent votes from multiple students maintain score count integrity", async () => {
+  // Create 4 distinct students with session cookies
+  const cookies: string[] = []
+  const values = [1, 1, -1, 1] // Expected sum = 2
+
+  for (let i = 0; i < values.length; i++) {
+    const res = await app.request("/api/auth/sign-up/email", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: `Concurrent Student ${i}`,
+        email: `concurrent_${suffix}_${i}@university.edu`,
+        password: "ConcurrentPass123!",
+      }),
+    })
+    assert.strictEqual(res.status, 200)
+    const cookie = res.headers.get("set-cookie")?.split(";")[0]
+    assert.ok(cookie)
+    cookies.push(cookie)
+  }
+
+  // Issue all 4 votes concurrently using Promise.all
+  const results = await Promise.all(
+    cookies.map((cookie, idx) =>
+      app.request("/api/votes", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          cookie,
+        },
+        body: JSON.stringify({
+          targetType: "question",
+          targetId: testQuestionId,
+          value: values[idx],
+        }),
+      })
+    )
+  )
+
+  for (const res of results) {
+    assert.strictEqual(res.status, 200)
+  }
+
+  // Verify DB question voteScore is exactly 2
+  const [qRow] = await db
+    .select({ voteScore: question.voteScore })
+    .from(question)
+    .where(eq(question.id, testQuestionId))
+  assert.strictEqual(qRow.voteScore, 2)
+
+  // Clean up: concurrent toggle off for all 4 students
+  const cleanupResults = await Promise.all(
+    cookies.map((cookie, idx) =>
+      app.request("/api/votes", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          cookie,
+        },
+        body: JSON.stringify({
+          targetType: "question",
+          targetId: testQuestionId,
+          value: values[idx],
+        }),
+      })
+    )
+  )
+
+  for (const res of cleanupResults) {
+    assert.strictEqual(res.status, 200)
+  }
+
+  const [qRowAfter] = await db
+    .select({ voteScore: question.voteScore })
+    .from(question)
+    .where(eq(question.id, testQuestionId))
+  assert.strictEqual(qRowAfter.voteScore, 0)
+})
