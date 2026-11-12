@@ -20,6 +20,8 @@ export type CatalogQuestion = {
   studentName: string
   voteScore: number
   answerCount: number
+  studentVote?: 1 | -1 | null
+  userVote?: 1 | -1 | null
 }
 
 export type QuestionCatalogEmptyState = {
@@ -48,8 +50,7 @@ export function questionCatalogEmptyState(
 
   return {
     title: "No questions yet",
-    description:
-      "Be the first to ask an academic question for your courses.",
+    description: "Be the first to ask an academic question for your courses.",
   }
 }
 
