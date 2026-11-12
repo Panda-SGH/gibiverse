@@ -6,6 +6,7 @@ export interface AnswerItem {
   studentName: string
   voteScore: number
   isAccepted: boolean
+  userVote?: 1 | -1 | null
   createdAt: string
   updatedAt: string
 }
@@ -22,6 +23,7 @@ export interface QuestionDetail {
   voteScore: number
   answerCount: number
   acceptedAnswerId: string | null
+  userVote?: 1 | -1 | null
   createdAt: string
   updatedAt: string
   answers: AnswerItem[]

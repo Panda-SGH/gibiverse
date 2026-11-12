@@ -5,7 +5,8 @@ import db from "../db/index.js"
 import { course } from "../db/schema/academic.js"
 import { user as student } from "../db/schema/auth.js"
 import { question, answer } from "../db/schema/question.js"
-import { requireAuth } from "../middleware/auth.js"
+import { vote } from "../db/schema/vote.js"
+import { requireAuth, optionalAuth } from "../middleware/auth.js"
 
 const questions = new Hono()
 
@@ -29,7 +30,8 @@ async function parseJsonBody(
   }
 }
 
-questions.get("/", async (c) => {
+questions.get("/", optionalAuth, async (c) => {
+  const user = c.get("user")
   const courseId = c.req.query("courseId")?.trim() || undefined
   const departmentId = c.req.query("departmentId")?.trim() || undefined
   const sortRaw = c.req.query("sort")?.trim() || "newest"
@@ -53,24 +55,53 @@ questions.get("/", async (c) => {
         ? [asc(question.answerCount), desc(question.createdAt)]
         : [desc(question.createdAt)]
 
-  const base = db
-    .select({
-      id: question.id,
-      title: question.title,
-      body: question.body,
-      createdAt: question.createdAt,
-      courseId: question.courseId,
-      courseCode: course.code,
-      courseName: course.name,
-      studentId: question.userId,
-      studentName: student.name,
-      voteScore: question.voteScore,
-      answerCount: question.answerCount,
-    })
-    .from(question)
-    .innerJoin(course, eq(question.courseId, course.id))
-    .innerJoin(student, eq(question.userId, student.id))
-    .orderBy(...orderBy)
+  const base = user
+    ? db
+        .select({
+          id: question.id,
+          title: question.title,
+          body: question.body,
+          createdAt: question.createdAt,
+          courseId: question.courseId,
+          courseCode: course.code,
+          courseName: course.name,
+          studentId: question.userId,
+          studentName: student.name,
+          voteScore: question.voteScore,
+          answerCount: question.answerCount,
+          userVote: vote.value,
+        })
+        .from(question)
+        .innerJoin(course, eq(question.courseId, course.id))
+        .innerJoin(student, eq(question.userId, student.id))
+        .leftJoin(
+          vote,
+          and(
+            eq(vote.targetId, question.id),
+            eq(vote.targetType, "question"),
+            eq(vote.userId, user.id)
+          )
+        )
+        .orderBy(...orderBy)
+    : db
+        .select({
+          id: question.id,
+          title: question.title,
+          body: question.body,
+          createdAt: question.createdAt,
+          courseId: question.courseId,
+          courseCode: course.code,
+          courseName: course.name,
+          studentId: question.userId,
+          studentName: student.name,
+          voteScore: question.voteScore,
+          answerCount: question.answerCount,
+          userVote: sql<number | null>`null`.as("userVote"),
+        })
+        .from(question)
+        .innerJoin(course, eq(question.courseId, course.id))
+        .innerJoin(student, eq(question.userId, student.id))
+        .orderBy(...orderBy)
 
   const rows =
     filters.length > 0 ? await base.where(and(...filters)) : await base
@@ -78,50 +109,113 @@ questions.get("/", async (c) => {
   return c.json(rows)
 })
 
-questions.get("/:id", async (c) => {
+questions.get("/:id", optionalAuth, async (c) => {
+  const user = c.get("user")
   const questionId = c.req.param("id")
 
-  const [qRow] = await db
-    .select({
-      id: question.id,
-      title: question.title,
-      body: question.body,
-      createdAt: question.createdAt,
-      updatedAt: question.updatedAt,
-      courseId: question.courseId,
-      courseCode: course.code,
-      courseName: course.name,
-      studentId: question.userId,
-      studentName: student.name,
-      voteScore: question.voteScore,
-      answerCount: question.answerCount,
-      acceptedAnswerId: question.acceptedAnswerId,
-    })
-    .from(question)
-    .innerJoin(course, eq(question.courseId, course.id))
-    .innerJoin(student, eq(question.userId, student.id))
-    .where(eq(question.id, questionId))
-    .limit(1)
+  const qQuery = user
+    ? db
+        .select({
+          id: question.id,
+          title: question.title,
+          body: question.body,
+          createdAt: question.createdAt,
+          updatedAt: question.updatedAt,
+          courseId: question.courseId,
+          courseCode: course.code,
+          courseName: course.name,
+          studentId: question.userId,
+          studentName: student.name,
+          voteScore: question.voteScore,
+          answerCount: question.answerCount,
+          acceptedAnswerId: question.acceptedAnswerId,
+          userVote: vote.value,
+        })
+        .from(question)
+        .innerJoin(course, eq(question.courseId, course.id))
+        .innerJoin(student, eq(question.userId, student.id))
+        .leftJoin(
+          vote,
+          and(
+            eq(vote.targetId, question.id),
+            eq(vote.targetType, "question"),
+            eq(vote.userId, user.id)
+          )
+        )
+        .where(eq(question.id, questionId))
+        .limit(1)
+    : db
+        .select({
+          id: question.id,
+          title: question.title,
+          body: question.body,
+          createdAt: question.createdAt,
+          updatedAt: question.updatedAt,
+          courseId: question.courseId,
+          courseCode: course.code,
+          courseName: course.name,
+          studentId: question.userId,
+          studentName: student.name,
+          voteScore: question.voteScore,
+          answerCount: question.answerCount,
+          acceptedAnswerId: question.acceptedAnswerId,
+          userVote: sql<number | null>`null`.as("userVote"),
+        })
+        .from(question)
+        .innerJoin(course, eq(question.courseId, course.id))
+        .innerJoin(student, eq(question.userId, student.id))
+        .where(eq(question.id, questionId))
+        .limit(1)
+
+  const [qRow] = await qQuery
 
   if (!qRow) {
     return c.json({ error: "Question not found" }, 404)
   }
 
-  const answers = await db
-    .select({
-      id: answer.id,
-      body: answer.body,
-      questionId: answer.questionId,
-      studentId: answer.userId,
-      studentName: student.name,
-      voteScore: answer.voteScore,
-      createdAt: answer.createdAt,
-      updatedAt: answer.updatedAt,
-    })
-    .from(answer)
-    .innerJoin(student, eq(answer.userId, student.id))
-    .where(eq(answer.questionId, questionId))
-    .orderBy(asc(answer.createdAt))
+  const aQuery = user
+    ? db
+        .select({
+          id: answer.id,
+          body: answer.body,
+          questionId: answer.questionId,
+          studentId: answer.userId,
+          studentName: student.name,
+          voteScore: answer.voteScore,
+          createdAt: answer.createdAt,
+          updatedAt: answer.updatedAt,
+          userVote: vote.value,
+        })
+        .from(answer)
+        .innerJoin(student, eq(answer.userId, student.id))
+        .leftJoin(
+          vote,
+          and(
+            eq(vote.targetId, answer.id),
+            eq(vote.targetType, "answer"),
+            eq(vote.userId, user.id)
+          )
+        )
+        .where(eq(answer.questionId, questionId))
+        .orderBy(asc(answer.createdAt))
+    : db
+        .select({
+          id: answer.id,
+          body: answer.body,
+          questionId: answer.questionId,
+          studentId: answer.userId,
+          studentName: student.name,
+          voteScore: answer.voteScore,
+          createdAt: answer.createdAt,
+          updatedAt: answer.updatedAt,
+          userVote: sql<number | null>`null`.as("userVote"),
+        })
+        .from(answer)
+        .innerJoin(student, eq(answer.userId, student.id))
+        .where(eq(answer.questionId, questionId))
+        .orderBy(asc(answer.createdAt))
+
+  const answers = await aQuery
 
   const answersWithAccepted = answers.map((ans) => ({
     ...ans,
@@ -289,10 +383,7 @@ questions.post("/:id/accept", requireAuth, async (c) => {
         .limit(1)
 
       if (!targetAnswer || targetAnswer.questionId !== questionId) {
-        return c.json(
-          { error: "Answer does not belong to this question" },
-          400
-        )
+        return c.json({ error: "Answer does not belong to this question" }, 400)
       }
       nextAcceptedId = targetAnswerId
     }

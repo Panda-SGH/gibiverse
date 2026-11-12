@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { MessageCircle, ThumbsUp } from "lucide-react"
+import { MessageCircle } from "lucide-react"
 import { Badge } from "@gibiverse/ui/components/badge"
 import { Button } from "@gibiverse/ui/components/button"
 import {
@@ -10,6 +10,7 @@ import {
   ToggleGroupItem,
 } from "@gibiverse/ui/components/toggle-group"
 import { CoursePicker } from "@/components/course-picker"
+import { VoteControls } from "@/components/vote-controls"
 import type { Course, Department } from "@/lib/academic"
 import {
   formatRelativeUploadDate,
@@ -79,7 +80,10 @@ export function QuestionCatalogClient({
 
   return (
     <div className="flex flex-col gap-8">
-      <section className="flex flex-col gap-4" aria-labelledby="filters-heading">
+      <section
+        className="flex flex-col gap-4"
+        aria-labelledby="filters-heading"
+      >
         <div>
           <h2
             id="filters-heading"
@@ -213,35 +217,43 @@ export function QuestionCatalogClient({
 function QuestionCard({ question }: { question: CatalogQuestion }) {
   return (
     <article
-      className="flex h-full flex-col gap-3 rounded-lg border border-border bg-background p-4"
+      className="flex h-full gap-4 rounded-lg border border-border bg-background p-4"
       data-testid={`question-card-${question.id}`}
     >
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="secondary">{question.courseCode}</Badge>
-        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-          <ThumbsUp className="size-3.5" aria-hidden="true" />
-          <span>{question.voteScore}</span>
-        </span>
-        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-          <MessageCircle className="size-3.5" aria-hidden="true" />
-          <span>{question.answerCount}</span>
-        </span>
+      <div className="flex shrink-0 pt-0.5">
+        <VoteControls
+          targetType="question"
+          targetId={question.id}
+          initialScore={question.voteScore}
+          initialUserVote={question.userVote}
+          orientation="vertical"
+          size="sm"
+        />
       </div>
-      <h3 className="text-base font-semibold text-foreground">
-        <Link href={`/questions/${question.id}`} className="hover:underline">
-          {question.title}
-        </Link>
-      </h3>
-      <p className="line-clamp-2 text-sm text-muted-foreground">
-        {question.body}
-      </p>
-      <p className="mt-auto text-sm text-muted-foreground">
-        {question.studentName}
-        <span aria-hidden="true"> · </span>
-        <time dateTime={question.createdAt}>
-          {formatRelativeUploadDate(question.createdAt)}
-        </time>
-      </p>
+      <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="secondary">{question.courseCode}</Badge>
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <MessageCircle className="size-3.5" aria-hidden="true" />
+            <span>{question.answerCount} answers</span>
+          </span>
+        </div>
+        <h3 className="text-base font-semibold text-foreground">
+          <Link href={`/questions/${question.id}`} className="hover:underline">
+            {question.title}
+          </Link>
+        </h3>
+        <p className="line-clamp-2 text-sm text-muted-foreground">
+          {question.body}
+        </p>
+        <p className="mt-auto text-sm text-muted-foreground">
+          {question.studentName}
+          <span aria-hidden="true"> · </span>
+          <time dateTime={question.createdAt}>
+            {formatRelativeUploadDate(question.createdAt)}
+          </time>
+        </p>
+      </div>
     </article>
   )
 }
