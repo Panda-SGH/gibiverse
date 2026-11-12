@@ -28,13 +28,13 @@ export interface QuestionDetail {
 }
 
 export function canAcceptAnswer(
-  questionAuthorId?: string | null,
-  currentUserId?: string | null
+  questionStudentId?: string | null,
+  currentStudentId?: string | null
 ): boolean {
-  if (!questionAuthorId || !currentUserId) {
+  if (!questionStudentId || !currentStudentId) {
     return false
   }
-  return questionAuthorId.trim() === currentUserId.trim()
+  return questionStudentId.trim() === currentStudentId.trim()
 }
 
 export function isAnswerAccepted(

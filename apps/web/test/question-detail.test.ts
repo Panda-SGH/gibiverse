@@ -7,16 +7,16 @@ import {
 } from "../lib/question-detail"
 
 test("canAcceptAnswer allows question author and rejects non-authors and guests", () => {
-  // Author matches user
-  assert.strictEqual(canAcceptAnswer("user_123", "user_123"), true)
+  // Author matches student
+  assert.strictEqual(canAcceptAnswer("student_123", "student_123"), true)
 
   // Non-author student
-  assert.strictEqual(canAcceptAnswer("user_123", "user_456"), false)
+  assert.strictEqual(canAcceptAnswer("student_123", "student_456"), false)
 
   // Unauthenticated guest
-  assert.strictEqual(canAcceptAnswer("user_123", null), false)
-  assert.strictEqual(canAcceptAnswer("user_123", undefined), false)
-  assert.strictEqual(canAcceptAnswer(null, "user_123"), false)
+  assert.strictEqual(canAcceptAnswer("student_123", null), false)
+  assert.strictEqual(canAcceptAnswer("student_123", undefined), false)
+  assert.strictEqual(canAcceptAnswer(null, "student_123"), false)
 })
 
 test("isAnswerAccepted checks if answer matches acceptedAnswerId", () => {

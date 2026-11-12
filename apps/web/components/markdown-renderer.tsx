@@ -44,10 +44,15 @@ function renderInlineText(text: string): React.ReactNode[] {
     // Link [label](url)
     const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/)
     if (linkMatch) {
+      const href = linkMatch[2]!.trim()
+      const isSafe = /^(https?:|\/|#|mailto:)/i.test(href)
+      if (!isSafe) {
+        return <React.Fragment key={idx}>{linkMatch[1]}</React.Fragment>
+      }
       return (
         <a
           key={idx}
-          href={linkMatch[2]}
+          href={href}
           target="_blank"
           rel="noopener noreferrer"
           className="font-medium text-primary underline underline-offset-4 hover:opacity-80"

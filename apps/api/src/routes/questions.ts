@@ -228,7 +228,15 @@ questions.post("/:id/answers", requireAuth, async (c) => {
     .set({ answerCount: sql`${question.answerCount} + 1` })
     .where(eq(question.id, questionId))
 
-  return c.json(createdAnswer, 201)
+  return c.json(
+    {
+      ...createdAnswer,
+      studentId: user.id,
+      studentName: user.name,
+      isAccepted: false,
+    },
+    201
+  )
 })
 
 questions.post("/:id/accept", requireAuth, async (c) => {

@@ -10,6 +10,7 @@ import { MarkdownRenderer } from "./markdown-renderer"
 import {
   canAcceptAnswer,
   formatDetailDate,
+  isAnswerAccepted,
   type AnswerItem,
   type QuestionDetail,
 } from "@/lib/question-detail"
@@ -60,7 +61,7 @@ export function QuestionDiscussion({
         acceptedAnswerId: updated.acceptedAnswerId,
         answers: prev.answers.map((ans) => ({
           ...ans,
-          isAccepted: ans.id === updated.acceptedAnswerId,
+          isAccepted: isAnswerAccepted(updated.acceptedAnswerId, ans.id),
         })),
       }))
     } catch (err) {
@@ -167,7 +168,7 @@ export function QuestionDiscussion({
         ) : (
           <div className="space-y-4" data-testid="answers-list">
             {question.answers.map((ans, idx) => {
-              const isAccepted = ans.isAccepted || question.acceptedAnswerId === ans.id
+              const isAccepted = isAnswerAccepted(question.acceptedAnswerId, ans.id) || ans.isAccepted
 
               return (
                 <article
