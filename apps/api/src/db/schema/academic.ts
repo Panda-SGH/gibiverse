@@ -1,9 +1,10 @@
 import { relations } from "drizzle-orm/_relations"
-import { pgTable, text } from "drizzle-orm/pg-core"
+import { pgTable, text, timestamp } from "drizzle-orm/pg-core"
 
 export const university = pgTable("university", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 
 export const department = pgTable("department", {
@@ -12,6 +13,7 @@ export const department = pgTable("department", {
   universityId: text("university_id")
     .notNull()
     .references(() => university.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 
 export const course = pgTable("course", {
@@ -21,6 +23,7 @@ export const course = pgTable("course", {
   departmentId: text("department_id")
     .notNull()
     .references(() => department.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 
 export const universityRelations = relations(university, ({ many }) => ({

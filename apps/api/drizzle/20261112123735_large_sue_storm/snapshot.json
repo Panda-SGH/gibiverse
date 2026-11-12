@@ -1,0 +1,431 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "64255872-e616-45f3-997c-b5ab5347d4c1",
+  "prevIds": [
+    "c9673d0b-bd20-4098-982f-5df827edfb58"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "answer"
+      ],
+      "writes": [
+        "s|tbl|public.answer",
+        "n|tbl|public.answer",
+        "e|tbl|public.answer",
+        "n|rel|public.answer",
+        "n|type|public.answer",
+        "n|rel|public.answer_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "course",
+        "created_at"
+      ],
+      "writes": [
+        "s|col|public.course.created_at",
+        "n|col|public.course.created_at",
+        "e|col|public.course.created_at"
+      ],
+      "reads": [
+        "n|tbl|public.course",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "department",
+        "created_at"
+      ],
+      "writes": [
+        "s|col|public.department.created_at",
+        "n|col|public.department.created_at",
+        "e|col|public.department.created_at"
+      ],
+      "reads": [
+        "n|tbl|public.department",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "university",
+        "created_at"
+      ],
+      "writes": [
+        "s|col|public.university.created_at",
+        "n|col|public.university.created_at",
+        "e|col|public.university.created_at"
+      ],
+      "reads": [
+        "n|tbl|public.university",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "question",
+        "accepted_answer_id"
+      ],
+      "writes": [
+        "s|col|public.question.accepted_answer_id",
+        "n|col|public.question.accepted_answer_id",
+        "e|col|public.question.accepted_answer_id"
+      ],
+      "reads": [
+        "n|tbl|public.question",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "answer"
+      ],
+      "writes": [
+        "s|fk|public.answer.answer_question_id_question_id_fkey",
+        "n|fk|public.answer.answer_question_id_question_id_fkey",
+        "e|fk|public.answer.answer_question_id_question_id_fkey",
+        "n|con|public.answer.answer_question_id_question_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.answer",
+        "n|sch|public",
+        "n|tbl|public.question",
+        "n|sch|public",
+        "n|col|public.answer.question_id",
+        "n|col|public.question.id",
+        "e|uniqueness|public.question.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "answer"
+      ],
+      "writes": [
+        "s|fk|public.answer.answer_user_id_user_id_fkey",
+        "n|fk|public.answer.answer_user_id_user_id_fkey",
+        "e|fk|public.answer.answer_user_id_user_id_fkey",
+        "n|con|public.answer.answer_user_id_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.answer",
+        "n|sch|public",
+        "n|tbl|public.user",
+        "n|sch|public",
+        "n|col|public.answer.user_id",
+        "n|col|public.user.id",
+        "e|uniqueness|public.user.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "question"
+      ],
+      "writes": [
+        "s|fk|public.question.question_accepted_answer_id_answer_id_fkey",
+        "n|fk|public.question.question_accepted_answer_id_answer_id_fkey",
+        "e|fk|public.question.question_accepted_answer_id_answer_id_fkey",
+        "n|con|public.question.question_accepted_answer_id_answer_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.question",
+        "n|sch|public",
+        "n|tbl|public.answer",
+        "n|sch|public",
+        "n|col|public.question.accepted_answer_id",
+        "n|col|public.answer.id",
+        "e|uniqueness|public.answer.id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "answer",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "course",
+        "name": "created_at",
+        "type": "timestamp",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "department",
+        "name": "created_at",
+        "type": "timestamp",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "university",
+        "name": "created_at",
+        "type": "timestamp",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "answer",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "answer",
+        "name": "body",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "answer",
+        "name": "question_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "answer",
+        "name": "user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "answer",
+        "name": "vote_score",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "0",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "answer",
+        "name": "created_at",
+        "type": "timestamp",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "answer",
+        "name": "updated_at",
+        "type": "timestamp",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "question",
+        "name": "accepted_answer_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "answer",
+        "name": "answer_question_id_question_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "question_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "question",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "answer",
+        "name": "answer_user_id_user_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "user_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "user",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "question",
+        "name": "question_accepted_answer_id_answer_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "accepted_answer_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "answer",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "SET NULL",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "answer",
+        "name": "answer_pkey",
+        "columns": [
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    }
+  ]
+}

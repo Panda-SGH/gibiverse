@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { MessageCircle, ThumbsUp } from "lucide-react"
 import { Badge } from "@gibiverse/ui/components/badge"
 import { Button } from "@gibiverse/ui/components/button"
@@ -227,7 +228,9 @@ function QuestionCard({ question }: { question: CatalogQuestion }) {
         </span>
       </div>
       <h3 className="text-base font-semibold text-foreground">
-        {question.title}
+        <Link href={`/questions/${question.id}`} className="hover:underline">
+          {question.title}
+        </Link>
       </h3>
       <p className="line-clamp-2 text-sm text-muted-foreground">
         {question.body}
