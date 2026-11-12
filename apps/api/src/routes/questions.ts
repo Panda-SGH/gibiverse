@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto"
-import { Hono } from "hono"
+import { Hono, type Context } from "hono"
 import { and, asc, desc, eq, sql, type SQL } from "drizzle-orm"
 import db from "../db/index.js"
 import { course } from "../db/schema/academic.js"
@@ -14,6 +14,19 @@ type QuestionSort = (typeof SORT_OPTIONS)[number]
 
 function isQuestionSort(value: string): value is QuestionSort {
   return (SORT_OPTIONS as readonly string[]).includes(value)
+}
+
+async function parseJsonBody(
+  c: Context
+): Promise<Record<string, unknown> | null> {
+  try {
+    const payload = await c.req.json()
+    return payload && typeof payload === "object"
+      ? (payload as Record<string, unknown>)
+      : {}
+  } catch {
+    return null
+  }
 }
 
 questions.get("/", async (c) => {
@@ -127,17 +140,10 @@ questions.post("/", requireAuth, async (c) => {
     return c.json({ error: "Unauthorized" }, 401)
   }
 
-  let payload: unknown
-  try {
-    payload = await c.req.json()
-  } catch {
+  const raw = await parseJsonBody(c)
+  if (!raw) {
     return c.json({ error: "Invalid JSON body" }, 400)
   }
-
-  const raw =
-    payload && typeof payload === "object"
-      ? (payload as Record<string, unknown>)
-      : {}
 
   const title = typeof raw.title === "string" ? raw.title.trim() : ""
   const body = typeof raw.body === "string" ? raw.body.trim() : ""
@@ -195,17 +201,10 @@ questions.post("/:id/answers", requireAuth, async (c) => {
     return c.json({ error: "Question not found" }, 404)
   }
 
-  let payload: unknown
-  try {
-    payload = await c.req.json()
-  } catch {
+  const raw = await parseJsonBody(c)
+  if (!raw) {
     return c.json({ error: "Invalid JSON body" }, 400)
   }
-
-  const raw =
-    payload && typeof payload === "object"
-      ? (payload as Record<string, unknown>)
-      : {}
 
   const body = typeof raw.body === "string" ? raw.body.trim() : ""
   if (!body) {
@@ -267,17 +266,10 @@ questions.post("/:id/accept", requireAuth, async (c) => {
     )
   }
 
-  let payload: unknown
-  try {
-    payload = await c.req.json()
-  } catch {
+  const raw = await parseJsonBody(c)
+  if (!raw) {
     return c.json({ error: "Invalid JSON body" }, 400)
   }
-
-  const raw =
-    payload && typeof payload === "object"
-      ? (payload as Record<string, unknown>)
-      : {}
 
   const targetAnswerId =
     typeof raw.answerId === "string" && raw.answerId.trim().length > 0
