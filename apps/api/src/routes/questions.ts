@@ -1,21 +1,29 @@
-import { randomUUID } from "node:crypto"
-import { Hono, type Context } from "hono"
-import { and, asc, desc, eq, sql, type SQL } from "drizzle-orm"
+import { Hono } from "hono"
 import db from "../db/index.js"
-import { course } from "../db/schema/academic.js"
-import { user as student } from "../db/schema/auth.js"
-import { question, answer } from "../db/schema/question.js"
-import { vote } from "../db/schema/vote.js"
 import { parseJsonBody } from "../lib/json.js"
 import { requireAuth, optionalAuth } from "../middleware/auth.js"
+import { createQa, type QuestionSort, type QaError } from "../qa/index.js"
 
 const questions = new Hono()
+const qa = createQa({ db })
 
 const SORT_OPTIONS = ["newest", "most_voted", "unanswered"] as const
-type QuestionSort = (typeof SORT_OPTIONS)[number]
 
 function isQuestionSort(value: string): value is QuestionSort {
   return (SORT_OPTIONS as readonly string[]).includes(value)
+}
+
+function studentFromUser(
+  user: { id: string; name: string } | null | undefined
+) {
+  if (!user) return null
+  return { id: user.id, name: user.name }
+}
+
+function statusFor(error: QaError): 400 | 403 | 404 {
+  if (error.code === "not_found") return 404
+  if (error.code === "forbidden") return 403
+  return 400
 }
 
 questions.get("/", optionalAuth, async (c) => {
@@ -28,198 +36,32 @@ questions.get("/", optionalAuth, async (c) => {
     return c.json({ error: "Invalid sort" }, 400)
   }
 
-  const filters: SQL[] = []
-  if (courseId) {
-    filters.push(eq(question.courseId, courseId))
+  const result = await qa.list({
+    student: studentFromUser(user),
+    filters: { courseId, departmentId, sort: sortRaw },
+  })
+
+  if (!result.ok) {
+    return c.json({ error: result.error.message }, statusFor(result.error))
   }
-  if (departmentId) {
-    filters.push(eq(course.departmentId, departmentId))
-  }
 
-  const orderBy =
-    sortRaw === "most_voted"
-      ? [desc(question.voteScore), desc(question.createdAt)]
-      : sortRaw === "unanswered"
-        ? [asc(question.answerCount), desc(question.createdAt)]
-        : [desc(question.createdAt)]
-
-  const base = user
-    ? db
-        .select({
-          id: question.id,
-          title: question.title,
-          body: question.body,
-          createdAt: question.createdAt,
-          courseId: question.courseId,
-          courseCode: course.code,
-          courseName: course.name,
-          studentId: question.userId,
-          studentName: student.name,
-          voteScore: question.voteScore,
-          answerCount: question.answerCount,
-          studentVote: vote.value,
-          userVote: vote.value,
-        })
-        .from(question)
-        .innerJoin(course, eq(question.courseId, course.id))
-        .innerJoin(student, eq(question.userId, student.id))
-        .leftJoin(
-          vote,
-          and(
-            eq(vote.targetId, question.id),
-            eq(vote.targetType, "question"),
-            eq(vote.userId, user.id)
-          )
-        )
-        .orderBy(...orderBy)
-    : db
-        .select({
-          id: question.id,
-          title: question.title,
-          body: question.body,
-          createdAt: question.createdAt,
-          courseId: question.courseId,
-          courseCode: course.code,
-          courseName: course.name,
-          studentId: question.userId,
-          studentName: student.name,
-          voteScore: question.voteScore,
-          answerCount: question.answerCount,
-          studentVote: sql<number | null>`null`.as("studentVote"),
-          userVote: sql<number | null>`null`.as("userVote"),
-        })
-        .from(question)
-        .innerJoin(course, eq(question.courseId, course.id))
-        .innerJoin(student, eq(question.userId, student.id))
-        .orderBy(...orderBy)
-
-  const rows =
-    filters.length > 0 ? await base.where(and(...filters)) : await base
-
-  return c.json(rows)
+  return c.json(result.data)
 })
 
 questions.get("/:id", optionalAuth, async (c) => {
   const user = c.get("user")
   const questionId = c.req.param("id")
 
-  const qQuery = user
-    ? db
-        .select({
-          id: question.id,
-          title: question.title,
-          body: question.body,
-          createdAt: question.createdAt,
-          updatedAt: question.updatedAt,
-          courseId: question.courseId,
-          courseCode: course.code,
-          courseName: course.name,
-          studentId: question.userId,
-          studentName: student.name,
-          voteScore: question.voteScore,
-          answerCount: question.answerCount,
-          acceptedAnswerId: question.acceptedAnswerId,
-          studentVote: vote.value,
-          userVote: vote.value,
-        })
-        .from(question)
-        .innerJoin(course, eq(question.courseId, course.id))
-        .innerJoin(student, eq(question.userId, student.id))
-        .leftJoin(
-          vote,
-          and(
-            eq(vote.targetId, question.id),
-            eq(vote.targetType, "question"),
-            eq(vote.userId, user.id)
-          )
-        )
-        .where(eq(question.id, questionId))
-        .limit(1)
-    : db
-        .select({
-          id: question.id,
-          title: question.title,
-          body: question.body,
-          createdAt: question.createdAt,
-          updatedAt: question.updatedAt,
-          courseId: question.courseId,
-          courseCode: course.code,
-          courseName: course.name,
-          studentId: question.userId,
-          studentName: student.name,
-          voteScore: question.voteScore,
-          answerCount: question.answerCount,
-          acceptedAnswerId: question.acceptedAnswerId,
-          studentVote: sql<number | null>`null`.as("studentVote"),
-          userVote: sql<number | null>`null`.as("userVote"),
-        })
-        .from(question)
-        .innerJoin(course, eq(question.courseId, course.id))
-        .innerJoin(student, eq(question.userId, student.id))
-        .where(eq(question.id, questionId))
-        .limit(1)
+  const result = await qa.get({
+    student: studentFromUser(user),
+    questionId,
+  })
 
-  const [qRow] = await qQuery
-
-  if (!qRow) {
-    return c.json({ error: "Question not found" }, 404)
+  if (!result.ok) {
+    return c.json({ error: result.error.message }, statusFor(result.error))
   }
 
-  const aQuery = user
-    ? db
-        .select({
-          id: answer.id,
-          body: answer.body,
-          questionId: answer.questionId,
-          studentId: answer.userId,
-          studentName: student.name,
-          voteScore: answer.voteScore,
-          createdAt: answer.createdAt,
-          updatedAt: answer.updatedAt,
-          studentVote: vote.value,
-          userVote: vote.value,
-        })
-        .from(answer)
-        .innerJoin(student, eq(answer.userId, student.id))
-        .leftJoin(
-          vote,
-          and(
-            eq(vote.targetId, answer.id),
-            eq(vote.targetType, "answer"),
-            eq(vote.userId, user.id)
-          )
-        )
-        .where(eq(answer.questionId, questionId))
-        .orderBy(asc(answer.createdAt))
-    : db
-        .select({
-          id: answer.id,
-          body: answer.body,
-          questionId: answer.questionId,
-          studentId: answer.userId,
-          studentName: student.name,
-          voteScore: answer.voteScore,
-          createdAt: answer.createdAt,
-          updatedAt: answer.updatedAt,
-          studentVote: sql<number | null>`null`.as("studentVote"),
-          userVote: sql<number | null>`null`.as("userVote"),
-        })
-        .from(answer)
-        .innerJoin(student, eq(answer.userId, student.id))
-        .where(eq(answer.questionId, questionId))
-        .orderBy(asc(answer.createdAt))
-
-  const answers = await aQuery
-
-  const answersWithAccepted = answers.map((ans) => ({
-    ...ans,
-    isAccepted: qRow.acceptedAnswerId === ans.id,
-  }))
-
-  return c.json({
-    ...qRow,
-    answers: answersWithAccepted,
-  })
+  return c.json(result.data)
 })
 
 questions.post("/", requireAuth, async (c) => {
@@ -233,43 +75,18 @@ questions.post("/", requireAuth, async (c) => {
     return c.json({ error: "Invalid JSON body" }, 400)
   }
 
-  const title = typeof raw.title === "string" ? raw.title.trim() : ""
-  const body = typeof raw.body === "string" ? raw.body.trim() : ""
-  const courseId = typeof raw.courseId === "string" ? raw.courseId.trim() : ""
+  const result = await qa.ask({
+    student: { id: user.id, name: user.name },
+    title: typeof raw.title === "string" ? raw.title : "",
+    body: typeof raw.body === "string" ? raw.body : "",
+    courseId: typeof raw.courseId === "string" ? raw.courseId : "",
+  })
 
-  if (!title) {
-    return c.json({ error: "Title is required" }, 400)
-  }
-  if (!body) {
-    return c.json({ error: "Body is required" }, 400)
-  }
-  if (!courseId) {
-    return c.json({ error: "Course is required" }, 400)
+  if (!result.ok) {
+    return c.json({ error: result.error.message }, statusFor(result.error))
   }
 
-  const [existingCourse] = await db
-    .select({ id: course.id })
-    .from(course)
-    .where(eq(course.id, courseId))
-    .limit(1)
-
-  if (!existingCourse) {
-    return c.json({ error: "Course not found" }, 400)
-  }
-
-  const id = randomUUID()
-  const [created] = await db
-    .insert(question)
-    .values({
-      id,
-      title,
-      body,
-      courseId,
-      userId: user.id,
-    })
-    .returning()
-
-  return c.json(created, 201)
+  return c.json(result.data, 201)
 })
 
 questions.post("/:id/answers", requireAuth, async (c) => {
@@ -279,51 +96,22 @@ questions.post("/:id/answers", requireAuth, async (c) => {
   }
 
   const questionId = c.req.param("id")
-  const [existingQuestion] = await db
-    .select({ id: question.id })
-    .from(question)
-    .where(eq(question.id, questionId))
-    .limit(1)
-
-  if (!existingQuestion) {
-    return c.json({ error: "Question not found" }, 404)
-  }
-
   const raw = await parseJsonBody(c)
   if (!raw) {
     return c.json({ error: "Invalid JSON body" }, 400)
   }
 
-  const body = typeof raw.body === "string" ? raw.body.trim() : ""
-  if (!body) {
-    return c.json({ error: "Answer body is required" }, 400)
+  const result = await qa.answer({
+    student: { id: user.id, name: user.name },
+    questionId,
+    body: typeof raw.body === "string" ? raw.body : "",
+  })
+
+  if (!result.ok) {
+    return c.json({ error: result.error.message }, statusFor(result.error))
   }
 
-  const id = randomUUID()
-  const [createdAnswer] = await db
-    .insert(answer)
-    .values({
-      id,
-      body,
-      questionId,
-      userId: user.id,
-    })
-    .returning()
-
-  await db
-    .update(question)
-    .set({ answerCount: sql`${question.answerCount} + 1` })
-    .where(eq(question.id, questionId))
-
-  return c.json(
-    {
-      ...createdAnswer,
-      studentId: user.id,
-      studentName: user.name,
-      isAccepted: false,
-    },
-    201
-  )
+  return c.json(result.data, 201)
 })
 
 questions.post("/:id/accept", requireAuth, async (c) => {
@@ -333,68 +121,25 @@ questions.post("/:id/accept", requireAuth, async (c) => {
   }
 
   const questionId = c.req.param("id")
-  const [existingQuestion] = await db
-    .select({
-      id: question.id,
-      userId: question.userId,
-      acceptedAnswerId: question.acceptedAnswerId,
-    })
-    .from(question)
-    .where(eq(question.id, questionId))
-    .limit(1)
-
-  if (!existingQuestion) {
-    return c.json({ error: "Question not found" }, 404)
-  }
-
-  if (existingQuestion.userId !== user.id) {
-    return c.json(
-      { error: "Only the question author can accept an answer" },
-      403
-    )
-  }
-
   const raw = await parseJsonBody(c)
   if (!raw) {
     return c.json({ error: "Invalid JSON body" }, 400)
   }
 
-  const targetAnswerId =
-    typeof raw.answerId === "string" && raw.answerId.trim().length > 0
-      ? raw.answerId.trim()
-      : null
+  const answerId =
+    typeof raw.answerId === "string" ? raw.answerId : null
 
-  let nextAcceptedId: string | null = null
-  if (targetAnswerId) {
-    if (existingQuestion.acceptedAnswerId === targetAnswerId) {
-      // Toggle off / unmark
-      nextAcceptedId = null
-    } else {
-      const [targetAnswer] = await db
-        .select({ id: answer.id, questionId: answer.questionId })
-        .from(answer)
-        .where(eq(answer.id, targetAnswerId))
-        .limit(1)
+  const result = await qa.accept({
+    student: { id: user.id, name: user.name },
+    questionId,
+    answerId,
+  })
 
-      if (!targetAnswer || targetAnswer.questionId !== questionId) {
-        return c.json({ error: "Answer does not belong to this question" }, 400)
-      }
-      nextAcceptedId = targetAnswerId
-    }
-  } else {
-    nextAcceptedId = null
+  if (!result.ok) {
+    return c.json({ error: result.error.message }, statusFor(result.error))
   }
 
-  const [updated] = await db
-    .update(question)
-    .set({ acceptedAnswerId: nextAcceptedId })
-    .where(eq(question.id, questionId))
-    .returning({
-      id: question.id,
-      acceptedAnswerId: question.acceptedAnswerId,
-    })
-
-  return c.json(updated, 200)
+  return c.json(result.data, 200)
 })
 
 export { questions }

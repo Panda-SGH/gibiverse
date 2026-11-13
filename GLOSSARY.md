@@ -40,6 +40,10 @@ _Avoid_: User, member, account, profile
 
 ### Q&A
 
+**Q&A**:
+A question together with its answers and at most one accepted answer, treated as one unit of academic discussion for a course.
+_Avoid_: Thread, post, discussion thread
+
 **Question**:
 A student's academic query tied to a course, with a title and body.
 _Avoid_: Post, thread, topic
