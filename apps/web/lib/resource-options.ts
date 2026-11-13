@@ -1,5 +1,14 @@
 import type { ResourceType, Semester } from "./resource-validation"
 
+export const resourceTypePillLabels: Record<ResourceType, string> = {
+  exam: "Exam",
+  notes: "Notes",
+  slides: "Slides",
+  assignment: "Assignment",
+  lab: "Lab",
+  other: "Other",
+}
+
 export const resourceTypeOptions: Array<{
   value: ResourceType
   label: string
