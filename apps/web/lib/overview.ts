@@ -135,7 +135,10 @@ export async function fetchPlatformOverview(
         ? data.recentQuestions
         : [],
     }
-  } catch {
+  } catch (err) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[overview] fetchPlatformOverview failed:", err)
+    }
     return DEFAULT_PLATFORM_OVERVIEW
   }
 }
