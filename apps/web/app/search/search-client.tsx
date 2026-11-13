@@ -19,7 +19,7 @@ import {
   formatRelativeUploadDate,
 } from "@/lib/resource-catalog"
 import {
-  buildSearchQuery,
+  buildSearchPageUrl,
   getSearchEmptyState,
   searchPlatform,
   type SearchResponse,
@@ -69,14 +69,14 @@ export function SearchClient({
   const handleSearchSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const trimmed = queryInput.trim()
-    router.replace(buildSearchQuery(trimmed, activeTab), { scroll: false })
+    router.replace(buildSearchPageUrl(trimmed, activeTab), { scroll: false })
     await executeSearch(trimmed, activeTab)
   }
 
   const handleTabChange = async (newTab: SearchTab) => {
     setActiveTab(newTab)
     const trimmed = results.query.trim()
-    router.replace(buildSearchQuery(trimmed, newTab), { scroll: false })
+    router.replace(buildSearchPageUrl(trimmed, newTab), { scroll: false })
 
     if (trimmed) {
       await executeSearch(trimmed, newTab)
@@ -91,6 +91,8 @@ export function SearchClient({
     <div className="flex flex-col gap-8">
       {/* Search Input Bar */}
       <form
+        action="/search"
+        method="GET"
         onSubmit={handleSearchSubmit}
         role="search"
         className="relative flex w-full items-center gap-2"
@@ -99,6 +101,7 @@ export function SearchClient({
           <Search className="absolute left-3.5 top-1/2 size-5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input
             type="search"
+            name="q"
             value={queryInput}
             onChange={(e) => setQueryInput(e.target.value)}
             placeholder="Search resources, questions, course codes..."

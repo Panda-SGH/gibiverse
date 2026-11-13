@@ -1,6 +1,7 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 import {
+  buildSearchPageUrl,
   buildSearchQuery,
   getSearchEmptyState,
   searchCatalog,
@@ -23,6 +24,21 @@ test("buildSearchQuery formats url and query params correctly", () => {
   assert.equal(
     buildSearchQuery("data structures", "questions"),
     "/api/search?q=data+structures&type=questions"
+  )
+})
+
+test("buildSearchPageUrl formats frontend page routes without /api", () => {
+  assert.equal(buildSearchPageUrl(""), "/search")
+  assert.equal(buildSearchPageUrl("   "), "/search")
+  assert.equal(buildSearchPageUrl("", "resources"), "/search?type=resources")
+  assert.equal(buildSearchPageUrl("cs101"), "/search?q=cs101")
+  assert.equal(
+    buildSearchPageUrl("quantum physics", "all"),
+    "/search?q=quantum+physics"
+  )
+  assert.equal(
+    buildSearchPageUrl("algorithms", "resources"),
+    "/search?q=algorithms&type=resources"
   )
 })
 

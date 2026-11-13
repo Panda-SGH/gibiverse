@@ -105,12 +105,15 @@ function HeaderSearchBar({
   return (
     <form
       role="search"
+      action="/search"
+      method="GET"
       onSubmit={handleSubmit}
       className={cn("relative w-full", className)}
     >
       <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
       <Input
         type="search"
+        name="q"
         placeholder="Search resources, questions, course codes..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}

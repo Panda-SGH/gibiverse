@@ -57,6 +57,21 @@ export function buildSearchQuery(query: string, type?: SearchTab): string {
   return `/api/search?${params.toString()}`
 }
 
+export function buildSearchPageUrl(query: string, type?: SearchTab): string {
+  const trimmed = query.trim()
+  if (!trimmed) {
+    return type && type !== "all" ? `/search?type=${type}` : "/search"
+  }
+
+  const params = new URLSearchParams()
+  params.set("q", trimmed)
+  if (type && type !== "all") {
+    params.set("type", type)
+  }
+
+  return `/search?${params.toString()}`
+}
+
 export function getSearchEmptyState(
   query: string,
   type: SearchTab
