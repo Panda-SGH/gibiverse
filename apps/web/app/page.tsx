@@ -4,7 +4,6 @@ import {
   BookOpen,
   GraduationCap,
   MessageSquareQuote,
-  Search,
   Sparkles,
   TrendingUp,
 } from "lucide-react"
@@ -13,6 +12,7 @@ import { Button } from "@gibiverse/ui/components/button"
 import {
   fetchPlatformOverview,
   formatActivityCounter,
+  getOverviewEmptyState,
   getRecentQuestionsEmptyState,
   getRecentResourcesEmptyState,
 } from "@/lib/overview"
@@ -20,20 +20,13 @@ import {
   formatAcademicPeriod,
   formatRelativeUploadDate,
 } from "@/lib/resource-catalog"
-
-const TYPE_PILL_LABELS: Record<string, string> = {
-  exam: "Exam",
-  notes: "Notes",
-  slides: "Slides",
-  assignment: "Assignment",
-  lab: "Lab",
-  other: "Other",
-}
+import { resourceTypePillLabels } from "@/lib/resource-options"
 
 export const dynamic = "force-dynamic"
 
 export default async function HomePage() {
   const overview = await fetchPlatformOverview()
+  const heroState = getOverviewEmptyState(overview.stats)
   const recentResourcesEmpty = getRecentResourcesEmptyState()
   const recentQuestionsEmpty = getRecentQuestionsEmptyState()
 
@@ -54,12 +47,11 @@ export default async function HomePage() {
             id="overview-heading"
             className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-6xl"
           >
-            Academic Resource Sharing &amp; Course Q&amp;A
+            {heroState.title}
           </h1>
 
           <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
-            Gibiverse connects students to course resources, past exams, lecture
-            notes, and peer-driven academic Q&amp;A across departments.
+            {heroState.description}
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2 sm:gap-4">
@@ -73,12 +65,6 @@ export default async function HomePage() {
               <Button variant="outline" size="lg" className="gap-2">
                 <MessageSquareQuote className="size-4" />
                 <span>Ask Questions</span>
-              </Button>
-            </Link>
-            <Link href="/search">
-              <Button variant="ghost" size="lg" className="gap-2">
-                <Search className="size-4" />
-                <span>Search Catalog</span>
               </Button>
             </Link>
           </div>
@@ -107,7 +93,7 @@ export default async function HomePage() {
                 <p className="text-sm font-medium text-muted-foreground">
                   Total Resources
                 </p>
-                <p className="text-xs text-muted-foreground/80 truncate">
+                <p className="truncate text-xs text-muted-foreground/80">
                   Past exams, lecture notes &amp; slides
                 </p>
               </div>
@@ -124,7 +110,7 @@ export default async function HomePage() {
                 <p className="text-sm font-medium text-muted-foreground">
                   Academic Questions
                 </p>
-                <p className="text-xs text-muted-foreground/80 truncate">
+                <p className="truncate text-xs text-muted-foreground/80">
                   Course discussions &amp; peer help
                 </p>
               </div>
@@ -141,7 +127,7 @@ export default async function HomePage() {
                 <p className="text-sm font-medium text-muted-foreground">
                   Active Courses
                 </p>
-                <p className="text-xs text-muted-foreground/80 truncate">
+                <p className="truncate text-xs text-muted-foreground/80">
                   Courses with resources &amp; Q&amp;A
                 </p>
               </div>
@@ -149,7 +135,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Quick Navigation Shortcut Cards */}
+        {/* Quick Navigation Shortcut Cards — Resources and Q&A */}
         <section
           aria-labelledby="shortcuts-heading"
           className="space-y-4"
@@ -162,12 +148,12 @@ export default async function HomePage() {
               Quick Shortcuts
             </h2>
             <p className="text-sm text-muted-foreground">
-              Jump directly into course resources, peer discussions, or search.
+              Jump directly into course resources or peer discussions.
             </p>
           </div>
 
           <div
-            className="grid grid-cols-1 gap-4 md:grid-cols-3"
+            className="grid grid-cols-1 gap-4 md:grid-cols-2"
             data-testid="shortcut-cards-grid"
           >
             <Link
@@ -184,7 +170,7 @@ export default async function HomePage() {
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   Explore past exams, lecture notes, assignments, and slides
-                  organized by academic period and department.
+                  organised by academic period and department.
                 </p>
               </div>
               <div className="mt-4 flex items-center gap-1.5 text-sm font-medium text-primary">
@@ -206,35 +192,12 @@ export default async function HomePage() {
                   Course Q&amp;A
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Ask academic queries, get answers from classmates, vote on
-                  solutions, and discuss coursework.
+                  Ask academic questions, get answers from classmates, vote on
+                  questions and answers, and discuss coursework.
                 </p>
               </div>
               <div className="mt-4 flex items-center gap-1.5 text-sm font-medium text-primary">
                 <span>Join Discussions</span>
-                <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-              </div>
-            </Link>
-
-            <Link
-              href="/search"
-              className="group flex flex-col justify-between rounded-xl border border-border bg-card p-6 transition-all hover:border-primary/50 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              data-testid="shortcut-card-search"
-            >
-              <div className="space-y-3">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                  <Search className="size-5" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground">
-                  Unified Search
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Quickly find course materials, past questions, and discussions
-                  with course code and keyword search.
-                </p>
-              </div>
-              <div className="mt-4 flex items-center gap-1.5 text-sm font-medium text-primary">
-                <span>Search Catalog</span>
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
               </div>
             </Link>
@@ -301,17 +264,17 @@ export default async function HomePage() {
                         className="group flex flex-col gap-2 p-4 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:items-center sm:justify-between"
                         data-testid={`recent-resource-${res.id}`}
                       >
-                        <div className="space-y-1 min-w-0 flex-1">
+                        <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <Badge variant="secondary" className="font-mono text-xs">
                               {res.courseCode}
                             </Badge>
                             <Badge variant="outline" className="text-xs">
-                              {TYPE_PILL_LABELS[res.resourceType] ??
+                              {resourceTypePillLabels[res.resourceType] ??
                                 res.resourceType}
                             </Badge>
                           </div>
-                          <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                          <p className="truncate text-sm font-semibold text-foreground transition-colors group-hover:text-primary">
                             {res.title}
                           </p>
                         </div>
@@ -328,7 +291,7 @@ export default async function HomePage() {
               )}
             </div>
 
-            {/* Active Questions Feed */}
+            {/* Active Questions Feed — ordered by discussion activity */}
             <div className="flex flex-col space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -378,7 +341,7 @@ export default async function HomePage() {
                         className="group flex flex-col gap-2 p-4 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:items-center sm:justify-between"
                         data-testid={`recent-question-${q.id}`}
                       >
-                        <div className="space-y-1 min-w-0 flex-1">
+                        <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <Badge variant="secondary" className="font-mono text-xs">
                               {q.courseCode}
@@ -400,7 +363,7 @@ export default async function HomePage() {
                                 : `${q.voteScore} votes`}
                             </Badge>
                           </div>
-                          <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                          <p className="truncate text-sm font-semibold text-foreground transition-colors group-hover:text-primary">
                             {q.title}
                           </p>
                         </div>

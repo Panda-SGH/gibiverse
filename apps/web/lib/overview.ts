@@ -63,9 +63,9 @@ export function getOverviewEmptyState(stats: PlatformStats): {
 
   return {
     hasActivity: true,
-    title: "University Community Overview",
+    title: "Academic Resource Sharing &amp; Course Q&amp;A",
     description:
-      "Explore academic resources, course discussions, and peer answers across your university.",
+      "Explore academic resources, course questions, and peer answers across your university.",
   }
 }
 

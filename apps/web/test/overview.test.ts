@@ -25,7 +25,6 @@ test("getOverviewEmptyState distinguishes empty platforms from active ones", () 
   assert.equal(emptyState.hasActivity, false)
   assert.match(emptyState.title, /welcome/i)
   assert.match(emptyState.description, /first to share|community/i)
-
   const activeState = getOverviewEmptyState({
     totalResources: 12,
     totalQuestions: 5,

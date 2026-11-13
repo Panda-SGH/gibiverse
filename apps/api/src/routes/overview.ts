@@ -58,7 +58,11 @@ overview.get("/", async (c) => {
       .from(question)
       .innerJoin(course, eq(question.courseId, course.id))
       .innerJoin(student, eq(question.userId, student.id))
-      .orderBy(desc(question.createdAt))
+      // Rank by discussion activity: answers weighted 2x + vote score, then recency
+      .orderBy(
+        desc(sql`${question.answerCount} * 2 + ${question.voteScore}`),
+        desc(question.createdAt)
+      )
       .limit(6),
   ])
 

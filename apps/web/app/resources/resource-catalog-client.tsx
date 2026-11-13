@@ -19,17 +19,8 @@ import {
   type CatalogFilters,
   type CatalogResource,
 } from "@/lib/resource-catalog"
-import { resourceTypeOptions } from "@/lib/resource-options"
+import { resourceTypeOptions, resourceTypePillLabels } from "@/lib/resource-options"
 import type { ResourceType } from "@/lib/resource-validation"
-
-const TYPE_PILL_LABELS: Record<ResourceType, string> = {
-  exam: "Exam",
-  notes: "Notes",
-  slides: "Slides",
-  assignment: "Assignment",
-  lab: "Lab",
-  other: "Other",
-}
 
 export function ResourceCatalogClient({
   departments,
@@ -124,7 +115,7 @@ export function ResourceCatalogClient({
                 value={option.value}
                 aria-label={option.label}
               >
-                {TYPE_PILL_LABELS[option.value]}
+                {resourceTypePillLabels[option.value]}
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
@@ -215,7 +206,7 @@ export function ResourceCatalogClient({
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="secondary">{resource.courseCode}</Badge>
                     <Badge variant="outline">
-                      {TYPE_PILL_LABELS[resource.resourceType] ??
+                      {resourceTypePillLabels[resource.resourceType] ??
                         resource.resourceType}
                     </Badge>
                   </div>
