@@ -4,6 +4,7 @@ import { requireAuth, optionalAuth } from "./middleware/auth.js"
 import { academic } from "./routes/academic.js"
 import { questions } from "./routes/questions.js"
 import { resources } from "./routes/resources.js"
+import { search } from "./routes/search.js"
 import { votes } from "./routes/votes.js"
 
 export const app = new Hono()
@@ -24,6 +25,9 @@ app.route("/api/questions", questions)
 
 // Polymorphic voting on questions & answers
 app.route("/api/votes", votes)
+
+// Unified platform search across resources and questions
+app.route("/api/search", search)
 
 // Public root
 app.get("/", (c) => {

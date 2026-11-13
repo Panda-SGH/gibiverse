@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
   Menu,
   X,
@@ -15,6 +15,8 @@ import {
   Search,
 } from "lucide-react"
 import { Button } from "@gibiverse/ui/components/button"
+import { Input } from "@gibiverse/ui/components/input"
+import { cn } from "@gibiverse/ui/lib/utils"
 import { useSession, signOut } from "@/lib/auth-client"
 
 interface NavItem {
@@ -68,6 +70,55 @@ function StudentAvatar({ student, size = "sm" }: StudentAvatarProps) {
     >
       {initials}
     </div>
+  )
+}
+
+function HeaderSearchBar({
+  onSubmitted,
+  className,
+}: {
+  onSubmitted?: () => void
+  className?: string
+}) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [query, setQuery] = React.useState("")
+
+  React.useEffect(() => {
+    const q = searchParams.get("q")
+    if (q !== null) {
+      setQuery(q)
+    }
+  }, [searchParams])
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const trimmed = query.trim()
+    if (trimmed) {
+      router.push(`/search?q=${encodeURIComponent(trimmed)}`)
+    } else {
+      router.push("/search")
+    }
+    onSubmitted?.()
+  }
+
+  return (
+    <form
+      role="search"
+      onSubmit={handleSubmit}
+      className={cn("relative w-full", className)}
+    >
+      <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+      <Input
+        type="search"
+        placeholder="Search resources, questions, course codes..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        className="h-9 w-full rounded-md border border-input bg-muted/40 pl-9 pr-3 text-sm transition-colors hover:bg-muted/60 focus-visible:bg-background"
+        aria-label="Search platform"
+        data-testid="header-search-input"
+      />
+    </form>
   )
 }
 
@@ -151,6 +202,17 @@ export function Header() {
               )
             })}
           </nav>
+        </div>
+
+        {/* Desktop Search Bar */}
+        <div className="mx-4 hidden max-w-xs flex-1 lg:max-w-sm md:block">
+          <React.Suspense
+            fallback={
+              <div className="h-9 w-full animate-pulse rounded-md bg-muted/40" />
+            }
+          >
+            <HeaderSearchBar />
+          </React.Suspense>
         </div>
 
         {/* Desktop Auth Controls */}
@@ -240,6 +302,18 @@ export function Header() {
       {/* Mobile Navigation Drawer / Dropdown */}
       {mobileMenuOpen && (
         <div className="space-y-4 border-t border-border bg-background px-4 py-4 shadow-lg md:hidden">
+          <div className="pb-1">
+            <React.Suspense
+              fallback={
+                <div className="h-9 w-full animate-pulse rounded-md bg-muted/40" />
+              }
+            >
+              <HeaderSearchBar
+                onSubmitted={() => setMobileMenuOpen(false)}
+              />
+            </React.Suspense>
+          </div>
+
           <nav
             className="flex flex-col space-y-1"
             aria-label="Mobile Navigation"
