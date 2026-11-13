@@ -6,6 +6,7 @@ import { questions } from "./routes/questions.js"
 import { resources } from "./routes/resources.js"
 import { search } from "./routes/search.js"
 import { votes } from "./routes/votes.js"
+import { overview } from "./routes/overview.js"
 
 export const app = new Hono()
 
@@ -28,6 +29,9 @@ app.route("/api/votes", votes)
 
 // Unified platform search across resources and questions
 app.route("/api/search", search)
+
+// Community overview and dashboard metrics
+app.route("/api/overview", overview)
 
 // Public root
 app.get("/", (c) => {
