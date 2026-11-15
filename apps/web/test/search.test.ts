@@ -4,10 +4,9 @@ import {
   buildSearchPageUrl,
   buildSearchQuery,
   getSearchEmptyState,
-  searchCatalog,
-  searchPlatform,
+  emptySearchResponse,
   type SearchTab,
-} from "../lib/search"
+} from "../app/search/presentation.js"
 
 test("buildSearchQuery formats url and query params correctly", () => {
   assert.equal(buildSearchQuery(""), "/api/search")
@@ -60,15 +59,15 @@ test("getSearchEmptyState handles empty and non-empty queries across tabs", () =
   assert.match(noMatchQuestions.description, /xyz123/)
 })
 
-test("searchCatalog and searchPlatform return zeroed response without network fetch for empty query", async () => {
-  const result = await searchCatalog({ query: "   ", type: "resources" })
+test("emptySearchResponse returns zeroed response without network fetch for empty query", () => {
+  const result = emptySearchResponse("resources")
   assert.equal(result.query, "")
   assert.equal(result.type, "resources")
   assert.deepEqual(result.counts, { all: 0, resources: 0, questions: 0 })
   assert.deepEqual(result.resources, [])
   assert.deepEqual(result.questions, [])
 
-  const platformResult = await searchPlatform({ query: "", type: "questions" })
+  const platformResult = emptySearchResponse("questions")
   assert.equal(platformResult.query, "")
   assert.equal(platformResult.type, "questions")
   assert.deepEqual(platformResult.counts, { all: 0, resources: 0, questions: 0 })

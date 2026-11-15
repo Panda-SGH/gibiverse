@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation"
 import { MessageSquarePlus } from "lucide-react"
 import { Button } from "@gibiverse/ui/components/button"
 import { AskQuestionDialog } from "@/components/ask-question-dialog"
-import type { Course, Department } from "@/lib/academic"
-import { ASK_QUESTION_PATH, getAskSignInHref } from "@/lib/ask-auth"
+import type { Course, Department } from "@/app/courses/presentation"
+import { ASK_QUESTION_PATH, getAskSignInHref } from "@/app/questions/presentation"
 import { useSession } from "@/lib/auth-client"
 
 type AskQuestionButtonProps = {

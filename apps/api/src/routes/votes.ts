@@ -5,10 +5,8 @@ import { statusFor } from "../lib/result.js"
 import { requireAuth } from "../middleware/auth.js"
 import { createVoting } from "../voting/index.js"
 
-const votes = new Hono()
 const voting = createVoting({ db })
-
-votes.post("/", requireAuth, async (c) => {
+const votes = new Hono().post("/", requireAuth, async (c) => {
   const user = c.get("user")
   if (!user) {
     return c.json({ error: "Unauthorized" }, 401)

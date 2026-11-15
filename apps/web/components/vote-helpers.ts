@@ -32,7 +32,6 @@ export function calculateNextVote(
   incomingVote: VoteValue
 ): VoteTransitionResult {
   if (currentVote === incomingVote) {
-    // Toggle off
     return {
       nextVote: null,
       scoreDelta: -incomingVote,
@@ -40,14 +39,12 @@ export function calculateNextVote(
   }
 
   if (currentVote === null) {
-    // Fresh vote
     return {
       nextVote: incomingVote,
       scoreDelta: incomingVote,
     }
   }
 
-  // Switch direction (e.g. +1 -> -1 or -1 -> +1)
   return {
     nextVote: incomingVote,
     scoreDelta: incomingVote - currentVote,
@@ -96,24 +93,4 @@ export function validateVotePayload(payload: unknown): {
       value: p.value,
     },
   }
-}
-
-/**
- * Client-side helper to post a vote to the API.
- */
-export async function castVote(payload: VotePayload): Promise<VoteResponse> {
-  const res = await fetch("/api/votes", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(payload),
-  })
-
-  if (!res.ok) {
-    const errorData = (await res.json().catch(() => null)) as {
-      error?: string
-    } | null
-    throw new Error(errorData?.error || "Failed to submit vote")
-  }
-
-  return (await res.json()) as VoteResponse
 }

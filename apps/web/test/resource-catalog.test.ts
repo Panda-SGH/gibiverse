@@ -6,7 +6,7 @@ import {
   formatAcademicPeriod,
   formatRelativeUploadDate,
   type CatalogFilters,
-} from "../lib/resource-catalog.js"
+} from "../app/resources/presentation.js"
 
 test("formatAcademicPeriod renders year and semester label", () => {
   assert.strictEqual(formatAcademicPeriod(2024, "1"), "2024 · Semester 1")

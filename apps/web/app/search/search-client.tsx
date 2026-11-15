@@ -14,19 +14,19 @@ import {
 import { Badge } from "@gibiverse/ui/components/badge"
 import { Button } from "@gibiverse/ui/components/button"
 import { Input } from "@gibiverse/ui/components/input"
+import { client } from "@gibiverse/api-client"
 import {
   formatAcademicPeriod,
   formatRelativeUploadDate,
-} from "@/lib/resource-catalog"
+} from "@/lib/formatters"
 import {
   buildSearchPageUrl,
   getSearchEmptyState,
-  searchPlatform,
   type SearchResponse,
   type SearchResultQuestion,
   type SearchResultResource,
   type SearchTab,
-} from "@/lib/search"
+} from "./presentation"
 
 interface SearchClientProps {
   initialQuery: string
@@ -57,7 +57,21 @@ export function SearchClient({
     setIsLoading(true)
     setError(null)
     try {
-      const data = await searchPlatform({ query, type })
+      if (!query.trim()) {
+        setResults({
+          query: "",
+          type,
+          counts: { all: 0, resources: 0, questions: 0 },
+          resources: [],
+          questions: [],
+        })
+        return
+      }
+      const res = await client.api.search.$get({
+        query: { q: query.trim(), type },
+      })
+      if (!res.ok) throw new Error("Search failed")
+      const data = (await res.json()) as SearchResponse
       setResults(data)
     } catch {
       setError("Failed to fetch search results. Please try again.")

@@ -4,7 +4,7 @@ import {
   canAcceptAnswer,
   isAnswerAccepted,
   validateAnswerSubmission,
-} from "../lib/question-detail"
+} from "../app/questions/presentation.js"
 
 test("canAcceptAnswer allows question author and rejects non-authors and guests", () => {
   // Author matches student

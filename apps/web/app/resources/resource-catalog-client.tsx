@@ -9,16 +9,15 @@ import {
   ToggleGroupItem,
 } from "@gibiverse/ui/components/toggle-group"
 import { CoursePicker } from "@/components/course-picker"
-import type { Course, Department } from "@/lib/academic"
+import { client } from "@gibiverse/api-client"
+import type { Course, Department } from "@/app/courses/presentation"
+import { formatAcademicPeriod, formatRelativeUploadDate } from "@/lib/formatters"
 import {
   catalogEmptyState,
-  formatAcademicPeriod,
-  formatRelativeUploadDate,
   hasActiveCatalogFilters,
-  listResources,
   type CatalogFilters,
   type CatalogResource,
-} from "@/lib/resource-catalog"
+} from "./presentation"
 import { resourceTypeOptions, resourceTypePillLabels } from "@/lib/resource-options"
 import type { ResourceType } from "@/lib/resource-validation"
 
@@ -52,7 +51,18 @@ export function ResourceCatalogClient({
     setIsLoading(true)
     setError(null)
 
-    listResources(filters)
+    client.api.resources
+      .$get({
+        query: {
+          resourceType: filters.resourceType || undefined,
+          departmentId: filters.departmentId || undefined,
+          courseId: filters.courseId || undefined,
+        },
+      })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Could not load resources")
+        return res.json()
+      })
       .then((next) => {
         if (!cancelled) setResources(next)
       })
@@ -206,7 +216,7 @@ export function ResourceCatalogClient({
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="secondary">{resource.courseCode}</Badge>
                     <Badge variant="outline">
-                      {resourceTypePillLabels[resource.resourceType] ??
+                      {resourceTypePillLabels[resource.resourceType as ResourceType] ??
                         resource.resourceType}
                     </Badge>
                   </div>

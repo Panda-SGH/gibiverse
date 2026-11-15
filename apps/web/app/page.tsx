@@ -9,23 +9,26 @@ import {
 } from "lucide-react"
 import { Badge } from "@gibiverse/ui/components/badge"
 import { Button } from "@gibiverse/ui/components/button"
+import { client } from "@gibiverse/api-client"
 import {
-  fetchPlatformOverview,
+  DEFAULT_PLATFORM_OVERVIEW,
   formatActivityCounter,
   getOverviewEmptyState,
   getRecentQuestionsEmptyState,
   getRecentResourcesEmptyState,
-} from "@/lib/overview"
+} from "./home-presentation"
 import {
   formatAcademicPeriod,
   formatRelativeUploadDate,
-} from "@/lib/resource-catalog"
+} from "@/lib/formatters"
 import { resourceTypePillLabels } from "@/lib/resource-options"
+import type { ResourceType } from "@/lib/resource-validation"
 
 export const dynamic = "force-dynamic"
 
 export default async function HomePage() {
-  const overview = await fetchPlatformOverview()
+  const res = await client.api.overview.$get().catch(() => null)
+  const overview = res && res.ok ? await res.json() : DEFAULT_PLATFORM_OVERVIEW
   const heroState = getOverviewEmptyState(overview.stats)
   const recentResourcesEmpty = getRecentResourcesEmptyState()
   const recentQuestionsEmpty = getRecentQuestionsEmptyState()
@@ -270,7 +273,7 @@ export default async function HomePage() {
                               {res.courseCode}
                             </Badge>
                             <Badge variant="outline" className="text-xs">
-                              {resourceTypePillLabels[res.resourceType] ??
+                              {resourceTypePillLabels[res.resourceType as ResourceType] ??
                                 res.resourceType}
                             </Badge>
                           </div>

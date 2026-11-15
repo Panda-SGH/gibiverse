@@ -6,9 +6,7 @@ import { user as student } from "../db/schema/auth.js"
 import { question } from "../db/schema/question.js"
 import { resource } from "../db/schema/resource.js"
 
-const overview = new Hono()
-
-overview.get("/", async (c) => {
+const overview = new Hono().get("/", async (c) => {
   const [
     resourcesCountResult,
     questionsCountResult,

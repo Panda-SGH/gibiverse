@@ -1,16 +1,20 @@
 import { BookOpen } from "lucide-react"
 import { UploadResourceButton } from "@/components/upload-resource-button"
-import { listCourses, listDepartments, listUniversities } from "@/lib/academic"
-import { listResources } from "@/lib/resource-catalog"
+import { client } from "@gibiverse/api-client"
 import { ResourceCatalogClient } from "./resource-catalog-client"
 
 export default async function ResourcesPage() {
-  const [universities, departments, courses, resources] = await Promise.all([
-    listUniversities(),
-    listDepartments(),
-    listCourses(),
-    listResources(),
+  const [univRes, deptRes, courseRes, resourcesRes] = await Promise.all([
+    client.api.universities.$get(),
+    client.api.departments.$get(),
+    client.api.courses.$get(),
+    client.api.resources.$get(),
   ])
+
+  const universities = univRes.ok ? await univRes.json() : []
+  const departments = deptRes.ok ? await deptRes.json() : []
+  const courses = courseRes.ok ? await courseRes.json() : []
+  const resources = resourcesRes.ok ? await resourcesRes.json() : []
 
   const primaryUniversity = universities[0] ?? null
   const scopedDepartments = primaryUniversity

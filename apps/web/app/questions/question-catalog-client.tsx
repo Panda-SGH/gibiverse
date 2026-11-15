@@ -11,16 +11,16 @@ import {
 } from "@gibiverse/ui/components/toggle-group"
 import { CoursePicker } from "@/components/course-picker"
 import { VoteControls } from "@/components/vote-controls"
-import type { Course, Department } from "@/lib/academic"
+import { client } from "@gibiverse/api-client"
+import type { Course, Department } from "@/app/courses/presentation"
+import { formatRelativeUploadDate } from "@/lib/formatters"
 import {
-  formatRelativeUploadDate,
   hasActiveQuestionFilters,
-  listQuestions,
   questionCatalogEmptyState,
   type CatalogQuestion,
   type QuestionCatalogFilters,
   type QuestionSort,
-} from "@/lib/question-catalog"
+} from "./presentation"
 
 const SORT_OPTIONS: { value: QuestionSort; label: string }[] = [
   { value: "newest", label: "Newest" },
@@ -58,7 +58,18 @@ export function QuestionCatalogClient({
     setIsLoading(true)
     setError(null)
 
-    listQuestions(filters)
+    client.api.questions
+      .$get({
+        query: {
+          courseId: filters.courseId || undefined,
+          departmentId: filters.departmentId || undefined,
+          sort: filters.sort,
+        },
+      })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Could not load questions")
+        return res.json()
+      })
       .then((next) => {
         if (!cancelled) setQuestions(next)
       })

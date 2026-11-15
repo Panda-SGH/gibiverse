@@ -4,15 +4,15 @@ import { ArrowLeft, Download } from "lucide-react"
 import { Badge } from "@gibiverse/ui/components/badge"
 import { Button } from "@gibiverse/ui/components/button"
 import { ResourcePreview } from "@/components/resource-preview"
+import { client } from "@gibiverse/api-client"
 import {
   formatAcademicPeriod,
   formatRelativeUploadDate,
-} from "@/lib/resource-catalog"
+} from "@/lib/formatters"
 import {
-  getResource,
   resolvePreviewType,
   resourceDownloadUrl,
-} from "@/lib/resource-detail"
+} from "../presentation"
 import { resourceTypeOptions } from "@/lib/resource-options"
 import { formatBytes } from "@/lib/resource-validation"
 
@@ -30,8 +30,14 @@ function formatUploadDate(createdAt: string): string {
 
 export default async function ResourceDetailPage({ params }: ResourcePageProps) {
   const { id } = await params
-  const resource = await getResource(id)
-  if (!resource) notFound()
+  const res = await client.api.resources[":id"]
+    .$get({
+      param: { id },
+    })
+    .catch(() => null)
+
+  if (!res || !res.ok) notFound()
+  const resource = await res.json()
 
   const previewType = resolvePreviewType(resource.fileName, resource.mimeType)
   const typeLabel =

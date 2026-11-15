@@ -1,13 +1,13 @@
 import test from "node:test"
 import assert from "node:assert/strict"
+import { client } from "../../../packages/api-client/src/index.js"
 import {
   formatActivityCounter,
   getOverviewEmptyState,
   getRecentResourcesEmptyState,
   getRecentQuestionsEmptyState,
-  fetchPlatformOverview,
-  type PlatformOverview,
-} from "../lib/overview.js"
+  DEFAULT_PLATFORM_OVERVIEW,
+} from "../app/home-presentation.js"
 
 test("formatActivityCounter formats numbers with localized grouping", () => {
   assert.equal(formatActivityCounter(0), "0")
@@ -43,20 +43,28 @@ test("getRecentResourcesEmptyState and getRecentQuestionsEmptyState guide studen
   assert.match(qEmpty.description, /first.*question|discussion/i)
 })
 
-test("fetchPlatformOverview falls back safely on network failure without throwing", async () => {
-  // Pass an invalid URL to ensure fallback behavior is resilient
-  const fallback = await fetchPlatformOverview("http://127.0.0.1:59999/api/overview")
-  assert.deepEqual(fallback.stats, {
-    totalResources: 0,
-    totalQuestions: 0,
-    activeCourses: 0,
-  })
-  assert.deepEqual(fallback.recentResources, [])
-  assert.deepEqual(fallback.recentQuestions, [])
+test("overview falls back safely on network failure without throwing", async () => {
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async () => {
+    throw new Error("connect ECONNREFUSED")
+  }
+  try {
+    const res = await client.api.overview.$get().catch(() => null)
+    const fallback = res && res.ok ? await res.json() : DEFAULT_PLATFORM_OVERVIEW
+    assert.deepEqual(fallback.stats, {
+      totalResources: 0,
+      totalQuestions: 0,
+      activeCourses: 0,
+    })
+    assert.deepEqual(fallback.recentResources, [])
+    assert.deepEqual(fallback.recentQuestions, [])
+  } finally {
+    globalThis.fetch = originalFetch
+  }
 })
 
-test("fetchPlatformOverview returns parsed JSON payload when response is ok", async () => {
-  const mockPayload: PlatformOverview = {
+test("overview returns parsed JSON payload when response is ok", async () => {
+  const mockPayload = {
     stats: {
       totalResources: 34,
       totalQuestions: 18,
@@ -66,9 +74,9 @@ test("fetchPlatformOverview returns parsed JSON payload when response is ok", as
       {
         id: "res-1",
         title: "Calculus Exam Solutions",
-        resourceType: "exam",
+        resourceType: "exam" as const,
         year: 2024,
-        semester: "1",
+        semester: "1" as const,
         createdAt: "2026-11-13T08:00:00.000Z",
         courseId: "c-1",
         courseCode: "MATH101",
@@ -101,7 +109,9 @@ test("fetchPlatformOverview returns parsed JSON payload when response is ok", as
     })
 
   try {
-    const result = await fetchPlatformOverview("https://example.com/api/overview")
+    const res = await client.api.overview.$get()
+    assert.ok(res.ok)
+    const result = await res.json()
     assert.deepEqual(result.stats, mockPayload.stats)
     assert.equal(result.recentResources.length, 1)
     assert.equal(result.recentResources[0]?.title, "Calculus Exam Solutions")

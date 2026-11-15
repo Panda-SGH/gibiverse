@@ -1,9 +1,9 @@
 import { hc } from "hono/client"
-import { app } from "./app.js"
+import type { AppType } from "./app.js"
 
 // assign the client to a variable to calculate the type when compiling
-const client = hc<typeof app>("")
+const client = hc<AppType>("")
 export type Client = typeof client
 
 export const hcWithType = (...args: Parameters<typeof hc>): Client =>
-  hc<typeof app>(...args)
+  hc<AppType>(...args)

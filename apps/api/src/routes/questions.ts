@@ -1,11 +1,11 @@
 import { Hono } from "hono"
+import { validator } from "hono/validator"
 import db from "../db/index.js"
 import { parseJsonBody } from "../lib/json.js"
 import { statusFor } from "../lib/result.js"
 import { requireAuth, optionalAuth } from "../middleware/auth.js"
 import { createQa, type QuestionSort } from "../qa/index.js"
 
-const questions = new Hono()
 const qa = createQa({ db })
 
 const SORT_OPTIONS = ["newest", "most_voted", "unanswered"] as const
@@ -21,119 +21,131 @@ function studentFromUser(
   return { id: user.id, name: user.name }
 }
 
-questions.get("/", optionalAuth, async (c) => {
-  const user = c.get("user")
-  const courseId = c.req.query("courseId")?.trim() || undefined
-  const departmentId = c.req.query("departmentId")?.trim() || undefined
-  const sortRaw = c.req.query("sort")?.trim() || "newest"
+const questions = new Hono()
+  .get("/", optionalAuth, async (c) => {
+    const user = c.get("user")
+    const courseId = c.req.query("courseId")?.trim() || undefined
+    const departmentId = c.req.query("departmentId")?.trim() || undefined
+    const sortRaw = c.req.query("sort")?.trim() || "newest"
 
-  if (!isQuestionSort(sortRaw)) {
-    return c.json({ error: "Invalid sort" }, 400)
-  }
+    if (!isQuestionSort(sortRaw)) {
+      return c.json({ error: "Invalid sort" }, 400)
+    }
 
-  const result = await qa.list({
-    student: studentFromUser(user),
-    filters: { courseId, departmentId, sort: sortRaw },
+    const result = await qa.list({
+      student: studentFromUser(user),
+      filters: { courseId, departmentId, sort: sortRaw },
+    })
+
+    if (!result.ok) {
+      return c.json({ error: result.error.message }, statusFor(result.error))
+    }
+
+    return c.json(result.data)
   })
+  .get("/:id", optionalAuth, async (c) => {
+    const user = c.get("user")
+    const questionId = c.req.param("id")
 
-  if (!result.ok) {
-    return c.json({ error: result.error.message }, statusFor(result.error))
-  }
+    const result = await qa.get({
+      student: studentFromUser(user),
+      questionId,
+    })
 
-  return c.json(result.data)
-})
+    if (!result.ok) {
+      return c.json({ error: result.error.message }, statusFor(result.error))
+    }
 
-questions.get("/:id", optionalAuth, async (c) => {
-  const user = c.get("user")
-  const questionId = c.req.param("id")
-
-  const result = await qa.get({
-    student: studentFromUser(user),
-    questionId,
+    return c.json(result.data)
   })
+  .post(
+    "/",
+    requireAuth,
+    validator("json", (value) => value as { title: string; body: string; courseId: string }),
+    async (c) => {
+      const user = c.get("user")
+      if (!user) {
+        return c.json({ error: "Unauthorized" }, 401)
+      }
 
-  if (!result.ok) {
-    return c.json({ error: result.error.message }, statusFor(result.error))
-  }
+      const raw = await parseJsonBody(c)
+      if (!raw) {
+        return c.json({ error: "Invalid JSON body" }, 400)
+      }
 
-  return c.json(result.data)
-})
+      const result = await qa.ask({
+        student: { id: user.id, name: user.name },
+        title: typeof raw.title === "string" ? raw.title : "",
+        body: typeof raw.body === "string" ? raw.body : "",
+        courseId: typeof raw.courseId === "string" ? raw.courseId : "",
+      })
 
-questions.post("/", requireAuth, async (c) => {
-  const user = c.get("user")
-  if (!user) {
-    return c.json({ error: "Unauthorized" }, 401)
-  }
+      if (!result.ok) {
+        return c.json({ error: result.error.message }, statusFor(result.error))
+      }
 
-  const raw = await parseJsonBody(c)
-  if (!raw) {
-    return c.json({ error: "Invalid JSON body" }, 400)
-  }
+      return c.json(result.data, 201)
+    }
+  )
+  .post(
+    "/:id/answers",
+    requireAuth,
+    validator("json", (value) => value as { body: string }),
+    async (c) => {
+      const user = c.get("user")
+      if (!user) {
+        return c.json({ error: "Unauthorized" }, 401)
+      }
 
-  const result = await qa.ask({
-    student: { id: user.id, name: user.name },
-    title: typeof raw.title === "string" ? raw.title : "",
-    body: typeof raw.body === "string" ? raw.body : "",
-    courseId: typeof raw.courseId === "string" ? raw.courseId : "",
-  })
+      const questionId = c.req.param("id")
+      const raw = await parseJsonBody(c)
+      if (!raw) {
+        return c.json({ error: "Invalid JSON body" }, 400)
+      }
 
-  if (!result.ok) {
-    return c.json({ error: result.error.message }, statusFor(result.error))
-  }
+      const result = await qa.answer({
+        student: { id: user.id, name: user.name },
+        questionId,
+        body: typeof raw.body === "string" ? raw.body : "",
+      })
 
-  return c.json(result.data, 201)
-})
+      if (!result.ok) {
+        return c.json({ error: result.error.message }, statusFor(result.error))
+      }
 
-questions.post("/:id/answers", requireAuth, async (c) => {
-  const user = c.get("user")
-  if (!user) {
-    return c.json({ error: "Unauthorized" }, 401)
-  }
+      return c.json(result.data, 201)
+    }
+  )
+  .post(
+    "/:id/accept",
+    requireAuth,
+    validator("json", (value) => value as { answerId: string | null }),
+    async (c) => {
+      const user = c.get("user")
+      if (!user) {
+        return c.json({ error: "Unauthorized" }, 401)
+      }
 
-  const questionId = c.req.param("id")
-  const raw = await parseJsonBody(c)
-  if (!raw) {
-    return c.json({ error: "Invalid JSON body" }, 400)
-  }
+      const questionId = c.req.param("id")
+      const raw = await parseJsonBody(c)
+      if (!raw) {
+        return c.json({ error: "Invalid JSON body" }, 400)
+      }
 
-  const result = await qa.answer({
-    student: { id: user.id, name: user.name },
-    questionId,
-    body: typeof raw.body === "string" ? raw.body : "",
-  })
+      const answerId = typeof raw.answerId === "string" ? raw.answerId : null
 
-  if (!result.ok) {
-    return c.json({ error: result.error.message }, statusFor(result.error))
-  }
+      const result = await qa.accept({
+        student: { id: user.id, name: user.name },
+        questionId,
+        answerId,
+      })
 
-  return c.json(result.data, 201)
-})
+      if (!result.ok) {
+        return c.json({ error: result.error.message }, statusFor(result.error))
+      }
 
-questions.post("/:id/accept", requireAuth, async (c) => {
-  const user = c.get("user")
-  if (!user) {
-    return c.json({ error: "Unauthorized" }, 401)
-  }
-
-  const questionId = c.req.param("id")
-  const raw = await parseJsonBody(c)
-  if (!raw) {
-    return c.json({ error: "Invalid JSON body" }, 400)
-  }
-
-  const answerId = typeof raw.answerId === "string" ? raw.answerId : null
-
-  const result = await qa.accept({
-    student: { id: user.id, name: user.name },
-    questionId,
-    answerId,
-  })
-
-  if (!result.ok) {
-    return c.json({ error: result.error.message }, statusFor(result.error))
-  }
-
-  return c.json(result.data, 200)
-})
+      return c.json(result.data, 200)
+    }
+  )
 
 export { questions }

@@ -42,6 +42,16 @@ export type SearchResponse = {
   questions: SearchResultQuestion[]
 }
 
+export function emptySearchResponse(type: SearchTab = "all"): SearchResponse {
+  return {
+    query: "",
+    type,
+    counts: { all: 0, resources: 0, questions: 0 },
+    resources: [],
+    questions: [],
+  }
+}
+
 export function buildSearchQuery(query: string, type?: SearchTab): string {
   const trimmed = query.trim()
   if (!trimmed) {
@@ -104,40 +114,3 @@ export function getSearchEmptyState(
     description: `We couldn't find any results matching "${trimmed}". Try checking for typos or searching for a course code.`,
   }
 }
-
-const API_URL = process.env.API_URL || "http://localhost:8787"
-
-function searchBaseUrl() {
-  if (typeof window !== "undefined") {
-    return ""
-  }
-  return API_URL
-}
-
-export async function searchPlatform(params: {
-  query: string
-  type?: SearchTab
-}): Promise<SearchResponse> {
-  const path = buildSearchQuery(params.query, params.type)
-  if (!params.query.trim()) {
-    return {
-      query: "",
-      type: params.type || "all",
-      counts: { all: 0, resources: 0, questions: 0 },
-      resources: [],
-      questions: [],
-    }
-  }
-
-  const res = await fetch(`${searchBaseUrl()}${path}`, {
-    cache: "no-store",
-  })
-
-  if (!res.ok) {
-    throw new Error(`Failed to search platform: ${res.status}`)
-  }
-
-  return res.json() as Promise<SearchResponse>
-}
-
-export const searchCatalog = searchPlatform

@@ -1,7 +1,7 @@
 import { FileWarning } from "lucide-react"
 import { Button } from "@gibiverse/ui/components/button"
 import { formatBytes } from "@/lib/resource-validation"
-import { resourceDownloadUrl } from "@/lib/resource-detail"
+import { resourceDownloadUrl } from "@/app/resources/presentation"
 
 export function DownloadFallback({
   resourceId,

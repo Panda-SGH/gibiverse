@@ -1,5 +1,6 @@
 import { Search } from "lucide-react"
-import { searchPlatform, type SearchTab } from "@/lib/search"
+import { client } from "@gibiverse/api-client"
+import { type SearchTab, type SearchResponse } from "./presentation"
 import { SearchClient } from "./search-client"
 
 interface SearchPageProps {
@@ -16,10 +17,25 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const type: SearchTab =
     rawType === "resources" || rawType === "questions" ? rawType : "all"
 
-  const data = await searchPlatform({
+  let data: SearchResponse = {
     query,
     type,
-  })
+    counts: { all: 0, resources: 0, questions: 0 },
+    resources: [],
+    questions: [],
+  }
+
+  if (query) {
+    const res = await client.api.search
+      .$get({
+        query: { q: query, type },
+      })
+      .catch(() => null)
+
+    if (res && res.ok) {
+      data = (await res.json()) as SearchResponse
+    }
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">

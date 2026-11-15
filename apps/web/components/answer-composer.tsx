@@ -6,7 +6,8 @@ import { Bold, Code, Eye, Italic, List, Send, Terminal } from "lucide-react"
 import { Button } from "@gibiverse/ui/components/button"
 import { Textarea } from "@gibiverse/ui/components/textarea"
 import { MarkdownRenderer } from "./markdown-renderer"
-import { validateAnswerSubmission } from "@/lib/question-detail"
+import { client } from "@gibiverse/api-client"
+import { validateAnswerSubmission } from "@/app/questions/presentation"
 
 interface AnswerComposerProps {
   questionId: string
@@ -71,10 +72,9 @@ export function AnswerComposer({
 
     setIsSubmitting(true)
     try {
-      const res = await fetch(`/api/questions/${encodeURIComponent(questionId)}/answers`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ body: validation.body }),
+      const res = await client.api.questions[":id"].answers.$post({
+        param: { id: questionId },
+        json: { body: validation.body },
       })
 
       if (!res.ok) {

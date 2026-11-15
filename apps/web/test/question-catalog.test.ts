@@ -4,7 +4,7 @@ import {
   buildQuestionsQuery,
   hasActiveQuestionFilters,
   questionCatalogEmptyState,
-} from "../lib/question-catalog"
+} from "../app/questions/presentation.js"
 
 test("buildQuestionsQuery includes course and non-default sort", () => {
   assert.strictEqual(

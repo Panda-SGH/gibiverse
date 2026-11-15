@@ -4,7 +4,7 @@ import {
   resolvePreviewType,
   resourceDownloadUrl,
   resourcePreviewUrl,
-} from "../lib/resource-detail"
+} from "../app/resources/presentation.js"
 
 test("resourcePreviewUrl and resourceDownloadUrl point at streaming endpoints", () => {
   assert.strictEqual(

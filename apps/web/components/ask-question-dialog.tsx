@@ -15,8 +15,8 @@ import { Input } from "@gibiverse/ui/components/input"
 import { Label } from "@gibiverse/ui/components/label"
 import { Textarea } from "@gibiverse/ui/components/textarea"
 import { CoursePicker } from "@/components/course-picker"
-import type { Course, Department } from "@/lib/academic"
-import { createQuestion } from "@/lib/question-catalog"
+import { client } from "@gibiverse/api-client"
+import type { Course, Department } from "@/app/courses/presentation"
 
 type AskQuestionDialogProps = {
   open: boolean
@@ -71,11 +71,19 @@ export function AskQuestionDialog({
     setIsSubmitting(true)
     setError(null)
     try {
-      await createQuestion({
-        title: title.trim(),
-        body: body.trim(),
-        courseId,
+      const res = await client.api.questions.$post({
+        json: {
+          title: title.trim(),
+          body: body.trim(),
+          courseId,
+        },
       })
+      if (!res.ok) {
+        const errorData = (await res.json().catch(() => null)) as {
+          error?: string
+        } | null
+        throw new Error(errorData?.error || "Could not post question")
+      }
       handleOpenChange(false)
       router.push("/questions")
       router.refresh()

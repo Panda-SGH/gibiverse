@@ -14,7 +14,7 @@ import {
   filterCoursesByDepartment,
   type Course,
   type Department,
-} from "@/lib/academic"
+} from "@/app/courses/presentation"
 
 const ALL_VALUE = "__all__"
 

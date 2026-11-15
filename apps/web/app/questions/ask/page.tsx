@@ -1,12 +1,16 @@
 import { AskQuestionButton } from "@/components/ask-question-button"
-import { listCourses, listDepartments, listUniversities } from "@/lib/academic"
+import { client } from "@gibiverse/api-client"
 
 export default async function AskQuestionPage() {
-  const [universities, departments, courses] = await Promise.all([
-    listUniversities(),
-    listDepartments(),
-    listCourses(),
+  const [univRes, deptRes, courseRes] = await Promise.all([
+    client.api.universities.$get(),
+    client.api.departments.$get(),
+    client.api.courses.$get(),
   ])
+
+  const universities = univRes.ok ? await univRes.json() : []
+  const departments = deptRes.ok ? await deptRes.json() : []
+  const courses = courseRes.ok ? await courseRes.json() : []
 
   const primaryUniversity = universities[0] ?? null
   const scopedDepartments = primaryUniversity

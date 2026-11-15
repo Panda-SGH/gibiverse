@@ -5,7 +5,6 @@ import { requireAuth } from "../middleware/auth.js"
 import { createResources } from "../resources/index.js"
 import { createStorage } from "../storage/index.js"
 
-const resources = new Hono()
 const resourceModule = createResources({ db, storage: createStorage() })
 
 function contentDisposition(
@@ -36,82 +35,79 @@ async function streamResourceFile(
   return c.body(result.data.stream)
 }
 
-resources.get("/", async (c) => {
-  const resourceType = c.req.query("resourceType")?.trim() || undefined
-  const departmentId = c.req.query("departmentId")?.trim() || undefined
-  const courseId = c.req.query("courseId")?.trim() || undefined
+const resources = new Hono()
+  .get("/", async (c) => {
+    const resourceType = c.req.query("resourceType")?.trim() || undefined
+    const departmentId = c.req.query("departmentId")?.trim() || undefined
+    const courseId = c.req.query("courseId")?.trim() || undefined
 
-  const result = await resourceModule.list({
-    resourceType,
-    departmentId,
-    courseId,
+    const result = await resourceModule.list({
+      resourceType,
+      departmentId,
+      courseId,
+    })
+
+    if (!result.ok) {
+      return c.json({ error: result.error.message }, statusFor(result.error))
+    }
+
+    return c.json(result.data)
   })
+  .get("/:id/download", async (c) => streamResourceFile(c, "attachment"))
+  .get("/:id/preview", async (c) => streamResourceFile(c, "inline"))
+  .get("/:id", async (c) => {
+    const id = c.req.param("id")
+    const result = await resourceModule.get(id)
 
-  if (!result.ok) {
-    return c.json({ error: result.error.message }, statusFor(result.error))
-  }
+    if (!result.ok) {
+      return c.json({ error: result.error.message }, statusFor(result.error))
+    }
 
-  return c.json(result.data)
-})
-
-resources.get("/:id/download", async (c) => streamResourceFile(c, "attachment"))
-
-resources.get("/:id/preview", async (c) => streamResourceFile(c, "inline"))
-
-resources.get("/:id", async (c) => {
-  const id = c.req.param("id")
-  const result = await resourceModule.get(id)
-
-  if (!result.ok) {
-    return c.json({ error: result.error.message }, statusFor(result.error))
-  }
-
-  return c.json(result.data)
-})
-
-resources.post("/", requireAuth, async (c) => {
-  const user = c.get("user")
-  if (!user) {
-    return c.json({ error: "Unauthorized" }, 401)
-  }
-
-  const body = await c.req.parseBody()
-  const file = body["file"]
-
-  if (!(file instanceof File)) {
-    return c.json({ error: "File is required" }, 400)
-  }
-
-  const title = typeof body["title"] === "string" ? body["title"] : ""
-  const courseId = typeof body["courseId"] === "string" ? body["courseId"] : ""
-  const resourceType =
-    typeof body["resourceType"] === "string" ? body["resourceType"] : ""
-  const yearRaw = typeof body["year"] === "string" ? body["year"] : ""
-  const semester = typeof body["semester"] === "string" ? body["semester"] : ""
-  const description =
-    typeof body["description"] === "string" && body["description"].trim()
-      ? body["description"].trim()
-      : null
-
-  const year = Number.parseInt(yearRaw, 10)
-  const data = Buffer.from(await file.arrayBuffer())
-
-  const result = await resourceModule.upload({
-    student: { id: user.id, name: user.name },
-    title,
-    courseId,
-    resourceType,
-    year,
-    semester,
-    description,
-    file: { name: file.name, size: file.size, type: file.type, data },
+    return c.json(result.data)
   })
+  .post("/", requireAuth, async (c) => {
+    const user = c.get("user")
+    if (!user) {
+      return c.json({ error: "Unauthorized" }, 401)
+    }
 
-  if (!result.ok) {
-    return c.json({ error: result.error.message }, statusFor(result.error))
-  }
+    const body = await c.req.parseBody()
+    const file = body["file"]
 
-  return c.json(result.data, 201)
-})
+    if (!(file instanceof File)) {
+      return c.json({ error: "File is required" }, 400)
+    }
+
+    const title = typeof body["title"] === "string" ? body["title"] : ""
+    const courseId = typeof body["courseId"] === "string" ? body["courseId"] : ""
+    const resourceType =
+      typeof body["resourceType"] === "string" ? body["resourceType"] : ""
+    const yearRaw = typeof body["year"] === "string" ? body["year"] : ""
+    const semester = typeof body["semester"] === "string" ? body["semester"] : ""
+    const description =
+      typeof body["description"] === "string" && body["description"].trim()
+        ? body["description"].trim()
+        : null
+
+    const year = Number.parseInt(yearRaw, 10)
+    const data = Buffer.from(await file.arrayBuffer())
+
+    const result = await resourceModule.upload({
+      student: { id: user.id, name: user.name },
+      title,
+      courseId,
+      resourceType,
+      year,
+      semester,
+      description,
+      file: { name: file.name, size: file.size, type: file.type, data },
+    })
+
+    if (!result.ok) {
+      return c.json({ error: result.error.message }, statusFor(result.error))
+    }
+
+    return c.json(result.data, 201)
+  })
 
 export { resources }

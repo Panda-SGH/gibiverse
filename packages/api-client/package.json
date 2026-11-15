@@ -12,10 +12,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@gibiverse/api": "workspace:*",
     "hono": "catalog:"
   },
   "devDependencies": {
-    "@gibiverse/api": "workspace:*",
     "@gibiverse/eslint-config": "workspace:*",
     "@gibiverse/typescript-config": "workspace:*",
     "eslint": "catalog:",

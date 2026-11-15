@@ -4,56 +4,53 @@ import db from "../db/index.js"
 import { university, department, course } from "../db/schema/academic.js"
 
 const academic = new Hono()
+  .get("/universities", async (c) => {
+    const rows = await db
+      .select({
+        id: university.id,
+        name: university.name,
+      })
+      .from(university)
+      .orderBy(university.name)
 
-academic.get("/universities", async (c) => {
-  const rows = await db
-    .select({
-      id: university.id,
-      name: university.name,
-    })
-    .from(university)
-    .orderBy(university.name)
+    return c.json(rows)
+  })
+  .get("/departments", async (c) => {
+    const universityId = c.req.query("universityId")
 
-  return c.json(rows)
-})
+    const query = db
+      .select({
+        id: department.id,
+        name: department.name,
+        universityId: department.universityId,
+      })
+      .from(department)
+      .orderBy(department.name)
 
-academic.get("/departments", async (c) => {
-  const universityId = c.req.query("universityId")
+    const rows = universityId
+      ? await query.where(eq(department.universityId, universityId))
+      : await query
 
-  const query = db
-    .select({
-      id: department.id,
-      name: department.name,
-      universityId: department.universityId,
-    })
-    .from(department)
-    .orderBy(department.name)
+    return c.json(rows)
+  })
+  .get("/courses", async (c) => {
+    const departmentId = c.req.query("departmentId")
 
-  const rows = universityId
-    ? await query.where(eq(department.universityId, universityId))
-    : await query
+    const query = db
+      .select({
+        id: course.id,
+        name: course.name,
+        code: course.code,
+        departmentId: course.departmentId,
+      })
+      .from(course)
+      .orderBy(course.code)
 
-  return c.json(rows)
-})
+    const rows = departmentId
+      ? await query.where(eq(course.departmentId, departmentId))
+      : await query
 
-academic.get("/courses", async (c) => {
-  const departmentId = c.req.query("departmentId")
-
-  const query = db
-    .select({
-      id: course.id,
-      name: course.name,
-      code: course.code,
-      departmentId: course.departmentId,
-    })
-    .from(course)
-    .orderBy(course.code)
-
-  const rows = departmentId
-    ? await query.where(eq(course.departmentId, departmentId))
-    : await query
-
-  return c.json(rows)
-})
+    return c.json(rows)
+  })
 
 export { academic }

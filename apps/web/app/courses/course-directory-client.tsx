@@ -6,7 +6,7 @@ import {
   groupCoursesByDepartment,
   type Course,
   type Department,
-} from "@/lib/academic"
+} from "./presentation"
 
 export function CourseDirectoryClient({
   departments,

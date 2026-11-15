@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation"
 import { Upload } from "lucide-react"
 import { Button } from "@gibiverse/ui/components/button"
 import { UploadResourceWizard } from "@/components/upload-resource-wizard"
-import type { Course, Department } from "@/lib/academic"
+import type { Course, Department } from "@/app/courses/presentation"
 import { useSession } from "@/lib/auth-client"
-import { getUploadSignInHref, UPLOAD_RESOURCE_PATH } from "@/lib/upload-auth"
+import { getUploadSignInHref, UPLOAD_RESOURCE_PATH } from "@/app/resources/presentation"
 
 type UploadResourceButtonProps = {
   departments: Department[]

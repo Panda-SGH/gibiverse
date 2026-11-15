@@ -15,23 +15,16 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => {
   return auth.handler(c.req.raw)
 })
 
-// Academic hierarchy (public reads)
-app.route("/api", academic)
+// Mount chained API routes for full RPC type inference
+const routes = app
+  .route("/api", academic)
+  .route("/api/resources", resources)
+  .route("/api/questions", questions)
+  .route("/api/votes", votes)
+  .route("/api/search", search)
+  .route("/api/overview", overview)
 
-// Resource catalog (public list) and uploads (authenticated create)
-app.route("/api/resources", resources)
-
-// Question catalog (public list) and posting (authenticated create)
-app.route("/api/questions", questions)
-
-// Polymorphic voting on questions & answers
-app.route("/api/votes", votes)
-
-// Unified platform search across resources and questions
-app.route("/api/search", search)
-
-// Community overview and dashboard metrics
-app.route("/api/overview", overview)
+export type AppType = typeof routes
 
 // Public root
 app.get("/", (c) => {

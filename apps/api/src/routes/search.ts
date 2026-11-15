@@ -6,8 +6,6 @@ import { user as student } from "../db/schema/auth.js"
 import { question } from "../db/schema/question.js"
 import { resource } from "../db/schema/resource.js"
 
-const search = new Hono()
-
 export const SEARCH_TYPES = ["all", "resources", "questions"] as const
 export type SearchType = (typeof SEARCH_TYPES)[number]
 
@@ -15,7 +13,7 @@ export function isSearchType(value: string): value is SearchType {
   return (SEARCH_TYPES as readonly string[]).includes(value)
 }
 
-search.get("/", async (c) => {
+const search = new Hono().get("/", async (c) => {
   const q = c.req.query("q")?.trim() ?? ""
   const typeParam = c.req.query("type")?.trim() || "all"
 

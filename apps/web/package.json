@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@gibiverse/api-client": "workspace:*",
     "@gibiverse/ui": "workspace:*",
     "better-auth": "catalog:",
     "dompurify": "catalog:",

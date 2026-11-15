@@ -31,7 +31,7 @@ import {
 } from "@gibiverse/ui/components/select"
 import { Textarea } from "@gibiverse/ui/components/textarea"
 import { CoursePicker } from "@/components/course-picker"
-import type { Course, Department } from "@/lib/academic"
+import type { Course, Department } from "@/app/courses/presentation"
 import {
   resourceTypeOptions,
   semesterOptions,
@@ -46,7 +46,7 @@ import {
   type ResourceType,
   type Semester,
 } from "@/lib/resource-validation"
-import { uploadResource } from "@/lib/upload-resource"
+import { uploadResource } from "@/app/resources/upload/upload-resource"
 
 type UploadResourceWizardProps = {
   open: boolean

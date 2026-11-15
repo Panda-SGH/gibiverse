@@ -5,7 +5,7 @@ import { proxy } from "../proxy"
 import {
   getUploadSignInHref,
   UPLOAD_RESOURCE_PATH,
-} from "../lib/upload-auth"
+} from "../app/resources/presentation.js"
 
 test("getUploadSignInHref encodes callback URL for upload", () => {
   assert.strictEqual(

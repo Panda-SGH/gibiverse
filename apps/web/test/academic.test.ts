@@ -5,7 +5,7 @@ import {
   groupCoursesByDepartment,
   type Course,
   type Department,
-} from "../lib/academic.js"
+} from "../app/courses/presentation.js"
 
 const departments: Department[] = [
   { id: "dept_cs", name: "Computer Science", universityId: "uni_1" },

@@ -2,14 +2,14 @@
 
 import * as React from "react"
 import { ChevronDown, ChevronUp } from "lucide-react"
+import { client } from "@gibiverse/api-client"
 import { useSession } from "@/lib/auth-client"
 import {
   calculateNextVote,
-  castVote,
   buildSignInRedirectUrl,
   type CurrentVote,
   type VoteTargetType,
-} from "@/lib/voting"
+} from "./vote-helpers"
 
 export interface VoteControlsProps {
   targetType: VoteTargetType
@@ -83,13 +83,19 @@ export function VoteControls({
     setIsSubmitting(true)
 
     try {
-      const res = await castVote({
-        targetType,
-        targetId,
-        value: clickedValue,
+      const apiRes = await client.api.votes.$post({
+        json: {
+          targetType,
+          targetId,
+          value: clickedValue,
+        },
       })
+      if (!apiRes.ok) {
+        throw new Error("Vote failed")
+      }
+      const res = await apiRes.json()
       setScore(res.score)
-      const confirmedVote = res.studentVote ?? res.userVote ?? null
+      const confirmedVote = (res.studentVote ?? res.userVote ?? null) as CurrentVote
       setActiveVote(confirmedVote)
       onVoteChange?.(res.score, confirmedVote)
     } catch {

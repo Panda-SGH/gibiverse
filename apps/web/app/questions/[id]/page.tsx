@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { getQuestion } from "@/lib/question-detail"
+import { client } from "@gibiverse/api-client"
 import { QuestionDiscussion } from "@/components/question-discussion"
 
 type QuestionPageProps = {
@@ -8,11 +8,17 @@ type QuestionPageProps = {
 
 export default async function QuestionDetailPage({ params }: QuestionPageProps) {
   const { id } = await params
-  const question = await getQuestion(id)
+  const res = await client.api.questions[":id"]
+    .$get({
+      param: { id },
+    })
+    .catch(() => null)
 
-  if (!question) {
+  if (!res || !res.ok) {
     notFound()
   }
+
+  const question = await res.json()
 
   return <QuestionDiscussion initialQuestion={question} />
 }

@@ -14,13 +14,14 @@ import { Button } from "@gibiverse/ui/components/button"
 import { AnswerComposer } from "./answer-composer"
 import { MarkdownRenderer } from "./markdown-renderer"
 import { VoteControls } from "./vote-controls"
+import { client } from "@gibiverse/api-client"
 import {
   canAcceptAnswer,
   formatDetailDate,
   isAnswerAccepted,
   type AnswerItem,
   type QuestionDetail,
-} from "@/lib/question-detail"
+} from "@/app/questions/presentation"
 import { useSession } from "@/lib/auth-client"
 
 interface QuestionDiscussionProps {
@@ -51,14 +52,10 @@ export function QuestionDiscussion({
       question.acceptedAnswerId === answerId ? null : answerId
 
     try {
-      const res = await fetch(
-        `/api/questions/${encodeURIComponent(question.id)}/accept`,
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ answerId: targetPayloadId }),
-        }
-      )
+      const res = await client.api.questions[":id"].accept.$post({
+        param: { id: question.id },
+        json: { answerId: targetPayloadId },
+      })
 
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as {

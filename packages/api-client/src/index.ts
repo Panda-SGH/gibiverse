@@ -1,4 +1,4 @@
-import { hcWithType } from "@gibiverse/api/hc"
+import { hcWithType, type Client } from "@gibiverse/api/hc"
 
 /** Prefer same-origin in the browser so Next rewrites preserve session cookies. */
 function resolveBaseUrl(baseUrl?: string) {
@@ -10,10 +10,12 @@ function resolveBaseUrl(baseUrl?: string) {
   return process.env.API_URL || "http://localhost:8787"
 }
 
-export function createClient(baseUrl?: string) {
+export function createClient(baseUrl?: string): Client {
   return hcWithType(resolveBaseUrl(baseUrl))
 }
 
-export const client = createClient()
+export const client: Client = createClient()
 
-export type Client = ReturnType<typeof createClient>
+export type { Client }
+export type { InferResponseType, InferRequestType } from "hono/client"
+

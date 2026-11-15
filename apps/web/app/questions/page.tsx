@@ -1,16 +1,20 @@
 import { MessageSquareQuote } from "lucide-react"
 import { AskQuestionButton } from "@/components/ask-question-button"
-import { listCourses, listDepartments, listUniversities } from "@/lib/academic"
-import { listQuestions } from "@/lib/question-catalog"
+import { client } from "@gibiverse/api-client"
 import { QuestionCatalogClient } from "./question-catalog-client"
 
 export default async function QuestionsPage() {
-  const [universities, departments, courses, questions] = await Promise.all([
-    listUniversities(),
-    listDepartments(),
-    listCourses(),
-    listQuestions(),
+  const [univRes, deptRes, courseRes, questionsRes] = await Promise.all([
+    client.api.universities.$get(),
+    client.api.departments.$get(),
+    client.api.courses.$get(),
+    client.api.questions.$get(),
   ])
+
+  const universities = univRes.ok ? await univRes.json() : []
+  const departments = deptRes.ok ? await deptRes.json() : []
+  const courses = courseRes.ok ? await courseRes.json() : []
+  const questions = questionsRes.ok ? await questionsRes.json() : []
 
   const primaryUniversity = universities[0] ?? null
   const scopedDepartments = primaryUniversity

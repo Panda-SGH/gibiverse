@@ -1,8 +1,8 @@
 "use client"
 
 import dynamic from "next/dynamic"
-import type { ResourcePreviewType } from "@/lib/resource-detail"
-import { resourcePreviewUrl } from "@/lib/resource-detail"
+import type { ResourcePreviewType } from "@/app/resources/presentation"
+import { resourcePreviewUrl } from "@/app/resources/presentation"
 import { DownloadFallback } from "./download-fallback"
 import { ImagePreview } from "./image-preview"
 import { DocxPreview } from "./docx-preview"

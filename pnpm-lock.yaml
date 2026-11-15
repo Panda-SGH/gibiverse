@@ -265,6 +265,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@gibiverse/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@gibiverse/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -332,13 +335,13 @@ importers:
 
   packages/api-client:
     dependencies:
+      '@gibiverse/api':
+        specifier: workspace:*
+        version: link:../../apps/api
       hono:
         specifier: 'catalog:'
         version: 4.13.16
     devDependencies:
-      '@gibiverse/api':
-        specifier: workspace:*
-        version: link:../../apps/api
       '@gibiverse/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config

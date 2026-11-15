@@ -4,7 +4,7 @@ import {
   calculateNextVote,
   buildSignInRedirectUrl,
   validateVotePayload,
-} from "../lib/voting"
+} from "../components/vote-helpers.js"
 
 test("calculateNextVote handles initial vote from neutral (null)", () => {
   // Neutral to upvote
