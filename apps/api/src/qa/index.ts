@@ -1,38 +1,22 @@
 import { randomUUID } from "node:crypto"
 import { and, asc, desc, eq, sql, type SQL } from "drizzle-orm"
-import type dbDefault from "../db/index.js"
 import { course } from "../db/schema/academic.js"
 import { user as studentTable } from "../db/schema/auth.js"
 import { question, answer } from "../db/schema/question.js"
 import { vote } from "../db/schema/vote.js"
+import {
+  ok,
+  err,
+  type Db,
+  type StudentIdentity,
+  type Result,
+  type DomainError,
+} from "../lib/result.js"
 
-export type Db = typeof dbDefault
-
-export type StudentIdentity = {
-  id: string
-  name: string
-}
+export type { DomainError as QaError }
+export type QaResult<T> = Result<T>
 
 export type QuestionSort = "newest" | "most_voted" | "unanswered"
-
-export type QaErrorCode = "validation" | "not_found" | "forbidden"
-
-export type QaError = {
-  code: QaErrorCode
-  message: string
-}
-
-export type QaResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: QaError }
-
-function ok<T>(data: T): QaResult<T> {
-  return { ok: true, data }
-}
-
-function err<T = never>(code: QaErrorCode, message: string): QaResult<T> {
-  return { ok: false, error: { code, message } }
-}
 
 export type ListFilters = {
   courseId?: string
@@ -361,10 +345,7 @@ export function createQa(deps: { db: Db }) {
     }
 
     if (existingQuestion.userId !== input.student.id) {
-      return err(
-        "forbidden",
-        "Only the question author can accept an answer"
-      )
+      return err("forbidden", "Only the question author can accept an answer")
     }
 
     const targetAnswerId =
@@ -384,10 +365,7 @@ export function createQa(deps: { db: Db }) {
           .limit(1)
 
         if (!targetAnswer || targetAnswer.questionId !== input.questionId) {
-          return err(
-            "validation",
-            "Answer does not belong to this question"
-          )
+          return err("validation", "Answer does not belong to this question")
         }
         nextAcceptedId = targetAnswerId
       }

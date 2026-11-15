@@ -1,8 +1,9 @@
 import { Hono } from "hono"
 import db from "../db/index.js"
 import { parseJsonBody } from "../lib/json.js"
+import { statusFor } from "../lib/result.js"
 import { requireAuth, optionalAuth } from "../middleware/auth.js"
-import { createQa, type QuestionSort, type QaError } from "../qa/index.js"
+import { createQa, type QuestionSort } from "../qa/index.js"
 
 const questions = new Hono()
 const qa = createQa({ db })
@@ -18,12 +19,6 @@ function studentFromUser(
 ) {
   if (!user) return null
   return { id: user.id, name: user.name }
-}
-
-function statusFor(error: QaError): 400 | 403 | 404 {
-  if (error.code === "not_found") return 404
-  if (error.code === "forbidden") return 403
-  return 400
 }
 
 questions.get("/", optionalAuth, async (c) => {
@@ -126,8 +121,7 @@ questions.post("/:id/accept", requireAuth, async (c) => {
     return c.json({ error: "Invalid JSON body" }, 400)
   }
 
-  const answerId =
-    typeof raw.answerId === "string" ? raw.answerId : null
+  const answerId = typeof raw.answerId === "string" ? raw.answerId : null
 
   const result = await qa.accept({
     student: { id: user.id, name: user.name },
