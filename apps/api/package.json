@@ -21,6 +21,7 @@
     "db:seed": "tsx src/db/seed.ts"
   },
   "dependencies": {
+    "@gibiverse/shared": "workspace:*",
     "@hono/node-server": "catalog:",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
