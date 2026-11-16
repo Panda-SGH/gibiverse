@@ -1,5 +1,16 @@
 import { randomUUID } from "node:crypto"
 import { and, eq, sql } from "drizzle-orm"
+import {
+  type VoteTargetType,
+  type VoteValue,
+  type CurrentVote,
+  voteTargetTypeSchema,
+  voteValueSchema,
+} from "@gibiverse/shared/types"
+import {
+  calculateVoteTransition,
+  type VoteTransition,
+} from "@gibiverse/shared/utils"
 import { question, answer } from "../db/schema/question.js"
 import { vote } from "../db/schema/vote.js"
 import {
@@ -13,9 +24,8 @@ import {
 export type { DomainError as VotingError }
 export type VotingResult<T> = Result<T>
 
-export type VoteTargetType = "question" | "answer"
-export type VoteValue = 1 | -1
-export type CurrentVote = 1 | -1 | null
+export type { VoteTargetType, VoteValue, CurrentVote, VoteTransition }
+export { calculateVoteTransition }
 
 export type UserIdentity = {
   id: string
@@ -34,41 +44,6 @@ export type VoteResult = {
   userVote: CurrentVote
   targetType: VoteTargetType
   targetId: string
-}
-
-export type VoteTransition = {
-  nextVote: CurrentVote
-  scoreDelta: number
-}
-
-/**
- * Pure transition logic for voting:
- * - Fresh vote: returns incoming vote and delta (+1 or -1).
- * - Toggle off: clicking the same active vote removes it (null) with delta (-incoming).
- * - Switch: clicking opposite vote reverses direction with delta (±2).
- */
-export function calculateVoteTransition(
-  currentVote: CurrentVote,
-  incomingVote: VoteValue
-): VoteTransition {
-  if (currentVote === incomingVote) {
-    return {
-      nextVote: null,
-      scoreDelta: -incomingVote,
-    }
-  }
-
-  if (currentVote === null) {
-    return {
-      nextVote: incomingVote,
-      scoreDelta: incomingVote,
-    }
-  }
-
-  return {
-    nextVote: incomingVote,
-    scoreDelta: incomingVote - currentVote,
-  }
 }
 
 const TARGET_CONFIG = {
@@ -92,22 +67,28 @@ export function createVoting(deps: { db: Db }) {
       return err("validation", "User is required")
     }
 
-    if (targetType !== "question" && targetType !== "answer") {
-      return err("validation", "targetType must be either 'question' or 'answer'")
+    const parsedTargetType = voteTargetTypeSchema.safeParse(targetType)
+    if (!parsedTargetType.success) {
+      return err(
+        "validation",
+        "targetType must be either 'question' or 'answer'"
+      )
     }
 
-    const trimmedTargetId =
-      typeof targetId === "string" ? targetId.trim() : ""
+    const trimmedTargetId = typeof targetId === "string" ? targetId.trim() : ""
 
     if (!trimmedTargetId) {
       return err("validation", "targetId is required")
     }
 
-    if (value !== 1 && value !== -1) {
+    const parsedValue = voteValueSchema.safeParse(value)
+    if (!parsedValue.success) {
       return err("validation", "value must be 1 or -1")
     }
 
-    const config = TARGET_CONFIG[targetType]
+    const validTargetType = parsedTargetType.data
+    const validValue = parsedValue.data
+    const config = TARGET_CONFIG[validTargetType]
 
     return await db.transaction(async (tx) => {
       // 1. Lock target row to serialize concurrent votes and verify existence
@@ -128,7 +109,7 @@ export function createVoting(deps: { db: Db }) {
         .where(
           and(
             eq(vote.userId, user.id),
-            eq(vote.targetType, targetType),
+            eq(vote.targetType, validTargetType),
             eq(vote.targetId, trimmedTargetId)
           )
         )
@@ -140,7 +121,7 @@ export function createVoting(deps: { db: Db }) {
 
       const { nextVote, scoreDelta } = calculateVoteTransition(
         currentVoteValue,
-        value
+        validValue
       )
 
       if (existingVote) {
@@ -159,7 +140,7 @@ export function createVoting(deps: { db: Db }) {
         await tx.insert(vote).values({
           id: randomUUID(),
           userId: user.id,
-          targetType,
+          targetType: validTargetType,
           targetId: trimmedTargetId,
           value: nextVote!,
         })
@@ -175,7 +156,7 @@ export function createVoting(deps: { db: Db }) {
       return ok({
         score: updated?.voteScore ?? 0,
         userVote: nextVote,
-        targetType,
+        targetType: validTargetType,
         targetId: trimmedTargetId,
       })
     })

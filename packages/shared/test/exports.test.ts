@@ -5,6 +5,16 @@ test("subpath export ./types resolves and provides type definitions", async () =
   const typesModule = await import("@gibiverse/shared/types")
   assert.ok(typesModule, "types module should resolve")
   assert.equal(typeof typesModule, "object")
+  assert.ok(
+    typesModule.voteTargetTypeSchema,
+    "voteTargetTypeSchema should be exported"
+  )
+  assert.ok(typesModule.voteValueSchema, "voteValueSchema should be exported")
+  assert.ok(
+    typesModule.currentVoteSchema,
+    "currentVoteSchema should be exported"
+  )
+  assert.ok(typesModule.castVoteSchema, "castVoteSchema should be exported")
 })
 
 test("subpath export ./validation resolves and provides validation schemas", async () => {
@@ -17,6 +27,22 @@ test("subpath export ./validation resolves and provides validation schemas", asy
   assert.ok(
     validationModule.semesterSchema,
     "semesterSchema should be exported"
+  )
+  assert.ok(
+    validationModule.voteTargetTypeSchema,
+    "voteTargetTypeSchema should be exported"
+  )
+  assert.ok(
+    validationModule.voteValueSchema,
+    "voteValueSchema should be exported"
+  )
+  assert.ok(
+    validationModule.currentVoteSchema,
+    "currentVoteSchema should be exported"
+  )
+  assert.ok(
+    validationModule.castVoteSchema,
+    "castVoteSchema should be exported"
   )
 
   // Verify runtime schema behavior
@@ -36,6 +62,7 @@ test("subpath export ./utils resolves and provides domain utilities", async () =
   const utilsModule = await import("@gibiverse/shared/utils")
   assert.ok(utilsModule, "utils module should resolve")
   assert.equal(typeof utilsModule.formatAcademicPeriod, "function")
+  assert.equal(typeof utilsModule.calculateVoteTransition, "function")
 
   // Test with object parameter (Data Clump refactored)
   assert.equal(
@@ -47,4 +74,10 @@ test("subpath export ./utils resolves and provides domain utilities", async () =
     utilsModule.formatAcademicPeriod(2026, "summer"),
     "2026 - Summer"
   )
+
+  // Test calculateVoteTransition
+  assert.deepEqual(utilsModule.calculateVoteTransition(null, 1), {
+    nextVote: 1,
+    scoreDelta: 1,
+  })
 })

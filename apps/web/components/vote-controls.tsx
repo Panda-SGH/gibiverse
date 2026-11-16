@@ -2,14 +2,15 @@
 
 import * as React from "react"
 import { ChevronDown, ChevronUp } from "lucide-react"
+import type {
+  CurrentVote,
+  VoteTargetType,
+  VoteValue,
+} from "@gibiverse/shared/types"
+import { calculateVoteTransition } from "@gibiverse/shared/utils"
 import { client } from "@gibiverse/api-client"
 import { useSession } from "@/lib/auth-client"
-import {
-  calculateNextVote,
-  buildSignInRedirectUrl,
-  type CurrentVote,
-  type VoteTargetType,
-} from "./vote-helpers"
+import { buildSignInRedirectUrl } from "./vote-helpers"
 
 export interface VoteControlsProps {
   targetType: VoteTargetType
@@ -59,7 +60,7 @@ export function VoteControls({
   const { data: session } = useSession()
   const isAuthenticated = Boolean(session?.user)
 
-  async function handleVote(clickedValue: 1 | -1) {
+  async function handleVote(clickedValue: VoteValue) {
     if (!isAuthenticated) {
       const currentPath =
         typeof window !== "undefined"
@@ -71,7 +72,10 @@ export function VoteControls({
 
     if (isSubmitting) return
 
-    const { nextVote, scoreDelta } = calculateNextVote(activeVote, clickedValue)
+    const { nextVote, scoreDelta } = calculateVoteTransition(
+      activeVote,
+      clickedValue
+    )
     const prevScore = score
     const prevVote = activeVote
 
@@ -95,7 +99,9 @@ export function VoteControls({
       }
       const res = await apiRes.json()
       setScore(res.score)
-      const confirmedVote = (res.studentVote ?? res.userVote ?? null) as CurrentVote
+      const confirmedVote = (res.studentVote ??
+        res.userVote ??
+        null) as CurrentVote
       setActiveVote(confirmedVote)
       onVoteChange?.(res.score, confirmedVote)
     } catch {

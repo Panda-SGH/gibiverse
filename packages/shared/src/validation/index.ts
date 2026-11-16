@@ -13,3 +13,5 @@ export const academicPeriodSchema = z.object({
   year: z.number().int().min(2000).max(2100),
   semester: semesterSchema,
 })
+
+export * from "../types/vote.js"

@@ -7,3 +7,5 @@ export interface AcademicPeriod {
   year: number
   semester: Semester
 }
+
+export * from "./vote.js"
