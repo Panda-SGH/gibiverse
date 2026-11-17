@@ -75,13 +75,11 @@ const questions = new Hono()
         return c.json({ error: "Unauthorized" }, 401)
       }
 
-      const { title, body, courseId } = c.req.valid("json")
+      const payload = c.req.valid("json")
 
       const result = await qa.ask({
         student: { id: user.id, name: user.name },
-        title,
-        body,
-        courseId,
+        ...payload,
       })
 
       if (!result.ok) {
@@ -130,7 +128,11 @@ const questions = new Hono()
     zValidator("json", acceptAnswerSchema, (result, c) => {
       if (!result.success) {
         return c.json(
-          { error: result.error.issues[0]?.message ?? "Invalid accept input" },
+          {
+            error:
+              result.error.issues[0]?.message ??
+              "Invalid accepted answer payload",
+          },
           400
         )
       }

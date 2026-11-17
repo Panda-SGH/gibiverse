@@ -7,7 +7,7 @@ import { Button } from "@gibiverse/ui/components/button"
 import { Textarea } from "@gibiverse/ui/components/textarea"
 import { MarkdownRenderer } from "./markdown-renderer"
 import { client } from "@gibiverse/api-client"
-import { validateAnswerSubmission } from "@/app/questions/presentation"
+import { postAnswerSchema } from "@gibiverse/shared/types"
 
 interface AnswerComposerProps {
   questionId: string
@@ -64,9 +64,11 @@ export function AnswerComposer({
     e.preventDefault()
     setError(null)
 
-    const validation = validateAnswerSubmission(body)
-    if (!validation.valid || !validation.body) {
-      setError(validation.error || "Please enter your answer.")
+    const validation = postAnswerSchema.safeParse({ body })
+    if (!validation.success) {
+      setError(
+        validation.error.issues[0]?.message ?? "Please enter your answer."
+      )
       return
     }
 
@@ -74,7 +76,7 @@ export function AnswerComposer({
     try {
       const res = await client.api.questions[":id"].answers.$post({
         param: { id: questionId },
-        json: { body: validation.body },
+        json: validation.data,
       })
 
       if (!res.ok) {

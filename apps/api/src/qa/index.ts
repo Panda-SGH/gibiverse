@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto"
 import { and, asc, desc, eq, sql, type SQL } from "drizzle-orm"
-import {
-  type QuestionSort,
-  askQuestionSchema,
-  postAnswerSchema,
-  acceptAnswerSchema,
+import type {
+  QuestionSort,
+  AskQuestionPayload,
+  PostAnswerPayload,
+  AcceptAnswerPayload,
 } from "@gibiverse/shared/types"
 import { course } from "../db/schema/academic.js"
 import { user as studentTable } from "../db/schema/auth.js"
@@ -24,6 +24,20 @@ export type QaResult<T> = Result<T>
 
 export type { QuestionSort }
 
+export type AskQuestionInput = {
+  student: StudentIdentity
+} & AskQuestionPayload
+
+export type PostAnswerInput = {
+  student: StudentIdentity
+  questionId: string
+} & PostAnswerPayload
+
+export type AcceptAnswerInput = {
+  student: StudentIdentity
+  questionId: string
+} & AcceptAnswerPayload
+
 export type ListFilters = {
   courseId?: string
   departmentId?: string
@@ -33,24 +47,22 @@ export type ListFilters = {
 export function createQa(deps: { db: Db }) {
   const { db } = deps
 
-  async function ask(input: {
-    student: StudentIdentity
-    title: string
-    body: string
-    courseId: string
-  }): Promise<QaResult<typeof question.$inferSelect>> {
-    const parsed = askQuestionSchema.safeParse({
-      title: input.title,
-      body: input.body,
-      courseId: input.courseId,
-    })
-    if (!parsed.success) {
-      return err(
-        "validation",
-        parsed.error.issues[0]?.message ?? "Invalid question input"
-      )
+  async function ask(
+    input: AskQuestionInput
+  ): Promise<QaResult<typeof question.$inferSelect>> {
+    const title = input.title?.trim()
+    const body = input.body?.trim()
+    const courseId = input.courseId?.trim()
+
+    if (!title) {
+      return err("validation", "Title is required")
     }
-    const { title, body, courseId } = parsed.data
+    if (!body) {
+      return err("validation", "Body is required")
+    }
+    if (!courseId) {
+      return err("validation", "Course is required")
+    }
 
     const [existingCourse] = await db
       .select({ id: course.id })
@@ -282,11 +294,7 @@ export function createQa(deps: { db: Db }) {
     })
   }
 
-  async function postAnswer(input: {
-    student: StudentIdentity
-    questionId: string
-    body: string
-  }) {
+  async function postAnswer(input: PostAnswerInput) {
     const [existingQuestion] = await db
       .select({ id: question.id })
       .from(question)
@@ -297,14 +305,10 @@ export function createQa(deps: { db: Db }) {
       return err("not_found", "Question not found")
     }
 
-    const parsed = postAnswerSchema.safeParse({ body: input.body })
-    if (!parsed.success) {
-      return err(
-        "validation",
-        parsed.error.issues[0]?.message ?? "Answer body is required"
-      )
+    const body = input.body?.trim()
+    if (!body) {
+      return err("validation", "Answer body is required")
     }
-    const { body } = parsed.data
 
     const id = randomUUID()
     const [createdAnswer] = await db
@@ -334,11 +338,7 @@ export function createQa(deps: { db: Db }) {
     })
   }
 
-  async function accept(input: {
-    student: StudentIdentity
-    questionId: string
-    answerId: string | null
-  }) {
+  async function accept(input: AcceptAnswerInput) {
     const [existingQuestion] = await db
       .select({
         id: question.id,
@@ -357,15 +357,10 @@ export function createQa(deps: { db: Db }) {
       return err("forbidden", "Only the question author can accept an answer")
     }
 
-    const parsed = acceptAnswerSchema.safeParse({ answerId: input.answerId })
-    if (!parsed.success) {
-      return err(
-        "validation",
-        parsed.error.issues[0]?.message ?? "Invalid answer ID"
-      )
-    }
-
-    const targetAnswerId = parsed.data.answerId
+    const targetAnswerId =
+      typeof input.answerId === "string" && input.answerId.trim().length > 0
+        ? input.answerId.trim()
+        : null
 
     let nextAcceptedId: string | null = null
     if (targetAnswerId) {
