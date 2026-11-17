@@ -13,8 +13,8 @@ import {
   resolvePreviewType,
   resourceDownloadUrl,
 } from "../presentation"
-import { resourceTypeOptions } from "@/lib/resource-options"
-import { formatBytes } from "@/lib/resource-validation"
+import { resourceTypeOptions } from "@gibiverse/shared/types"
+import { formatBytes } from "@gibiverse/shared/utils"
 
 type ResourcePageProps = {
   params: Promise<{ id: string }>

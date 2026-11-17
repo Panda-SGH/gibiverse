@@ -3,6 +3,8 @@ import assert from "node:assert/strict"
 import {
   MAX_FILE_SIZE_BYTES,
   validateFile,
+  sanitizeTitleFromFilename,
+  detectResourceType,
 } from "../lib/resource-validation"
 
 function makeFile(overrides: {
@@ -68,4 +70,63 @@ test("accepts allowed formats within size limits", () => {
       `expected ${fileCase.name} to be valid`
     )
   }
+})
+
+test("resolves formatLabel and previewType for supported files", () => {
+  const pdfRes = validateFile(
+    makeFile({ name: "exam.pdf", type: "application/pdf" })
+  )
+  assert.strictEqual(pdfRes.previewType, "pdf")
+  assert.strictEqual(pdfRes.formatLabel, "PDF Document")
+
+  const docxRes = validateFile(
+    makeFile({
+      name: "notes.docx",
+      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    })
+  )
+  assert.strictEqual(docxRes.previewType, "docx")
+  assert.strictEqual(docxRes.formatLabel, "Word Document")
+
+  const imgRes = validateFile(
+    makeFile({ name: "graph.png", type: "image/png" })
+  )
+  assert.strictEqual(imgRes.previewType, "image")
+  assert.strictEqual(imgRes.formatLabel, "Image")
+
+  const pptxRes = validateFile(
+    makeFile({
+      name: "slides.pptx",
+      type: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    })
+  )
+  assert.strictEqual(pptxRes.previewType, "download-only")
+  assert.strictEqual(
+    pptxRes.formatLabel,
+    "PowerPoint Presentation (Download-only)"
+  )
+})
+
+test("sanitizeTitleFromFilename removes extensions and capitalizes words", () => {
+  assert.strictEqual(
+    sanitizeTitleFromFilename("cs101_midterm_exam_2024.pdf"),
+    "Cs101 Midterm Exam 2024"
+  )
+  assert.strictEqual(
+    sanitizeTitleFromFilename("lecture-05-database-normalization.docx"),
+    "Lecture 05 Database Normalization"
+  )
+})
+
+test("detectResourceType detects resource type from filename keywords", () => {
+  assert.strictEqual(detectResourceType("midterm-exam.pdf"), "exam")
+  assert.strictEqual(detectResourceType("quiz1-practice.pdf"), "exam")
+  assert.strictEqual(detectResourceType("lecture-slides-ch03.pptx"), "slides")
+  assert.strictEqual(detectResourceType("chapter-summary-notes.pdf"), "notes")
+  assert.strictEqual(
+    detectResourceType("homework-1-assignment.docx"),
+    "assignment"
+  )
+  assert.strictEqual(detectResourceType("lab02-experiment.pdf"), "lab")
+  assert.strictEqual(detectResourceType("general-document.pdf"), "other")
 })

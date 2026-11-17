@@ -33,18 +33,18 @@ import { Textarea } from "@gibiverse/ui/components/textarea"
 import { CoursePicker } from "@/components/course-picker"
 import type { Course, Department } from "@/app/courses/presentation"
 import {
+  MAX_FILE_SIZE_MB,
   resourceTypeOptions,
   semesterOptions,
   yearOptions,
-} from "@/lib/resource-options"
-import {
-  detectResourceType,
-  formatBytes,
-  MAX_FILE_SIZE_MB,
-  sanitizeTitleFromFilename,
-  validateFile,
   type ResourceType,
   type Semester,
+} from "@gibiverse/shared/types"
+import { formatBytes } from "@gibiverse/shared/utils"
+import {
+  detectResourceType,
+  sanitizeTitleFromFilename,
+  validateFile,
 } from "@/lib/resource-validation"
 import { uploadResource } from "@/app/resources/upload/upload-resource"
 

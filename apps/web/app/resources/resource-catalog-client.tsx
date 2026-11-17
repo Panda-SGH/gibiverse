@@ -18,8 +18,11 @@ import {
   type CatalogFilters,
   type CatalogResource,
 } from "./presentation"
-import { resourceTypeOptions, resourceTypePillLabels } from "@/lib/resource-options"
-import type { ResourceType } from "@/lib/resource-validation"
+import {
+  resourceTypeOptions,
+  resourceTypePillLabels,
+  type ResourceType,
+} from "@gibiverse/shared/types"
 
 export function ResourceCatalogClient({
   departments,

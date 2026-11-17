@@ -1,4 +1,4 @@
-import { semesterOptions } from "./resource-options"
+import { semesterOptions } from "@gibiverse/shared/types"
 
 export function formatAcademicPeriod(year: number, semester: string): string {
   const label =

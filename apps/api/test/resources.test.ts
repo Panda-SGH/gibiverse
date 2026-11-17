@@ -187,3 +187,74 @@ test("POST /api/resources rejects invalid files", async () => {
   const body = (await res.json()) as { error: string }
   assert.match(body.error, /unsupported|invalid|format/i)
 })
+
+test("POST /api/resources validates inputs at route boundary with Zod", async () => {
+  // Invalid year
+  const formYear = new FormData()
+  formYear.set("title", "Year Test")
+  formYear.set("courseId", courseId)
+  formYear.set("resourceType", "exam")
+  formYear.set("year", "1990")
+  formYear.set("semester", "1")
+  formYear.set(
+    "file",
+    new File([Buffer.from("%PDF-1.4")], "test.pdf", {
+      type: "application/pdf",
+    })
+  )
+
+  const resYear = await app.request("/api/resources", {
+    method: "POST",
+    headers: { cookie: sessionCookie },
+    body: formYear,
+  })
+  assert.strictEqual(resYear.status, 400)
+  const bodyYear = (await resYear.json()) as { error: string }
+  assert.match(bodyYear.error, /academic year/i)
+
+  // Invalid semester
+  const formSem = new FormData()
+  formSem.set("title", "Sem Test")
+  formSem.set("courseId", courseId)
+  formSem.set("resourceType", "exam")
+  formSem.set("year", "2024")
+  formSem.set("semester", "spring")
+  formSem.set(
+    "file",
+    new File([Buffer.from("%PDF-1.4")], "test.pdf", {
+      type: "application/pdf",
+    })
+  )
+
+  const resSem = await app.request("/api/resources", {
+    method: "POST",
+    headers: { cookie: sessionCookie },
+    body: formSem,
+  })
+  assert.strictEqual(resSem.status, 400)
+  const bodySem = (await resSem.json()) as { error: string }
+  assert.match(bodySem.error, /semester/i)
+
+  // Invalid resourceType
+  const formType = new FormData()
+  formType.set("title", "Type Test")
+  formType.set("courseId", courseId)
+  formType.set("resourceType", "handout")
+  formType.set("year", "2024")
+  formType.set("semester", "1")
+  formType.set(
+    "file",
+    new File([Buffer.from("%PDF-1.4")], "test.pdf", {
+      type: "application/pdf",
+    })
+  )
+
+  const resType = await app.request("/api/resources", {
+    method: "POST",
+    headers: { cookie: sessionCookie },
+    body: formType,
+  })
+  assert.strictEqual(resType.status, 400)
+  const bodyType = (await resType.json()) as { error: string }
+  assert.match(bodyType.error, /resource type/i)
+})

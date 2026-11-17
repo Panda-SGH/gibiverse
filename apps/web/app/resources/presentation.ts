@@ -1,6 +1,5 @@
 import { formatAcademicPeriod, formatRelativeUploadDate } from "@/lib/formatters"
-import type { ResourceType, Semester } from "@/lib/resource-validation"
-import { validateFile } from "@/lib/resource-validation"
+import type { ResourceType, Semester } from "@gibiverse/shared/types"
 
 export { formatAcademicPeriod, formatRelativeUploadDate }
 
@@ -100,8 +99,36 @@ export function resolvePreviewType(
   fileName: string,
   mimeType: string
 ): ResourcePreviewType {
-  return (
-    validateFile({ name: fileName, size: 1, type: mimeType }).previewType ??
-    "download-only"
-  )
+  const name = fileName.toLowerCase()
+  const extension = "." + (name.split(".").pop() ?? "")
+  if (extension === ".pdf" || mimeType === "application/pdf") {
+    return "pdf"
+  }
+  if (
+    extension === ".docx" ||
+    mimeType ===
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  ) {
+    return "docx"
+  }
+  if (
+    [".png", ".jpg", ".jpeg", ".webp"].includes(extension) ||
+    mimeType.startsWith("image/")
+  ) {
+    return "image"
+  }
+  return "download-only"
+}
+
+export function resolveFormatLabel(
+  previewType: ResourcePreviewType,
+  fileName: string
+): string {
+  const name = fileName.toLowerCase()
+  const extension = "." + (name.split(".").pop() ?? "")
+  if (previewType === "pdf") return "PDF Document"
+  if (previewType === "docx") return "Word Document"
+  if (previewType === "image") return "Image"
+  if (extension === ".pptx") return "PowerPoint Presentation (Download-only)"
+  return "Document"
 }

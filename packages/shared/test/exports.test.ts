@@ -15,6 +15,41 @@ test("subpath export ./types resolves and provides type definitions", async () =
     "currentVoteSchema should be exported"
   )
   assert.ok(typesModule.castVoteSchema, "castVoteSchema should be exported")
+  assert.ok(
+    typesModule.questionSortSchema,
+    "questionSortSchema should be exported"
+  )
+  assert.ok(
+    typesModule.askQuestionSchema,
+    "askQuestionSchema should be exported"
+  )
+  assert.ok(
+    typesModule.postAnswerSchema,
+    "postAnswerSchema should be exported"
+  )
+  assert.ok(
+    typesModule.acceptAnswerSchema,
+    "acceptAnswerSchema should be exported"
+  )
+  assert.ok(
+    typesModule.resourceTypeSchema,
+    "resourceTypeSchema should be exported"
+  )
+  assert.ok(typesModule.semesterSchema, "semesterSchema should be exported")
+  assert.ok(
+    typesModule.resourceTypeOptions,
+    "resourceTypeOptions should be exported"
+  )
+  assert.ok(typesModule.semesterOptions, "semesterOptions should be exported")
+  assert.ok(typesModule.yearOptions, "yearOptions should be exported")
+  assert.ok(
+    typesModule.resourceTypePillLabels,
+    "resourceTypePillLabels should be exported"
+  )
+  assert.equal(typesModule.MAX_FILE_SIZE_MB, 50)
+  assert.equal(typesModule.MAX_FILE_SIZE_BYTES, 50 * 1024 * 1024)
+  assert.ok(typesModule.ALLOWED_EXTENSIONS)
+  assert.ok(typesModule.ALLOWED_MIME_TYPES)
 })
 
 test("subpath export ./validation resolves and provides validation schemas", async () => {
@@ -44,6 +79,22 @@ test("subpath export ./validation resolves and provides validation schemas", asy
     validationModule.castVoteSchema,
     "castVoteSchema should be exported"
   )
+  assert.ok(
+    validationModule.questionSortSchema,
+    "questionSortSchema should be exported"
+  )
+  assert.ok(
+    validationModule.askQuestionSchema,
+    "askQuestionSchema should be exported"
+  )
+  assert.ok(
+    validationModule.postAnswerSchema,
+    "postAnswerSchema should be exported"
+  )
+  assert.ok(
+    validationModule.acceptAnswerSchema,
+    "acceptAnswerSchema should be exported"
+  )
 
   // Verify runtime schema behavior
   const valid = validationModule.academicPeriodSchema.safeParse({
@@ -63,6 +114,7 @@ test("subpath export ./utils resolves and provides domain utilities", async () =
   assert.ok(utilsModule, "utils module should resolve")
   assert.equal(typeof utilsModule.formatAcademicPeriod, "function")
   assert.equal(typeof utilsModule.calculateVoteTransition, "function")
+  assert.equal(typeof utilsModule.formatBytes, "function")
 
   // Test with object parameter (Data Clump refactored)
   assert.equal(

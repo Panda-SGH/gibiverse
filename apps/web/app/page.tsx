@@ -21,8 +21,10 @@ import {
   formatAcademicPeriod,
   formatRelativeUploadDate,
 } from "@/lib/formatters"
-import { resourceTypePillLabels } from "@/lib/resource-options"
-import type { ResourceType } from "@/lib/resource-validation"
+import {
+  resourceTypePillLabels,
+  type ResourceType,
+} from "@gibiverse/shared/types"
 
 export const dynamic = "force-dynamic"
 

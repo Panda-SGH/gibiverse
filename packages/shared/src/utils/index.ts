@@ -18,3 +18,5 @@ export function formatAcademicPeriod(
 }
 
 export * from "./vote.js"
+export * from "./resource.js"
+
