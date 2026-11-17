@@ -1,12 +1,12 @@
 import { z } from "zod"
 
 /**
- * Supported search domains/categories across Gibiverse.
+ * Supported search domains across Gibiverse.
  */
 export const SEARCH_TYPES = ["all", "resources", "questions"] as const
 
 /**
- * Schema validating the search category parameter.
+ * Schema validating the search type parameter.
  */
 export const searchTypeSchema = z.enum(SEARCH_TYPES, {
   message: "Invalid search type",

@@ -41,6 +41,7 @@ import {
   type Semester,
 } from "@gibiverse/shared/types"
 import { formatBytes } from "@gibiverse/shared/utils"
+import { uploadResourceSchema } from "@gibiverse/shared/validation"
 import {
   detectResourceType,
   sanitizeTitleFromFilename,
@@ -131,6 +132,24 @@ export function UploadResourceWizard({
   async function startUpload() {
     if (!selectedFile || !courseId || !title.trim()) return
 
+    const validation = uploadResourceSchema.safeParse({
+      file: selectedFile,
+      title,
+      courseId,
+      resourceType,
+      year,
+      semester,
+      description: description.trim() || null,
+    })
+
+    if (!validation.success) {
+      setPhase("error")
+      setUploadError(
+        validation.error.issues[0]?.message ?? "Please check the form fields."
+      )
+      return
+    }
+
     setPhase("uploading")
     setProgress(0)
     setUploadError(null)
@@ -138,13 +157,13 @@ export function UploadResourceWizard({
     try {
       const result = await uploadResource(
         {
-          file: selectedFile,
-          title: title.trim(),
-          courseId,
-          resourceType,
-          year,
-          semester,
-          description,
+          file: validation.data.file,
+          title: validation.data.title,
+          courseId: validation.data.courseId,
+          resourceType: validation.data.resourceType,
+          year: validation.data.year,
+          semester: validation.data.semester,
+          description: validation.data.description ?? "",
         },
         setProgress
       )

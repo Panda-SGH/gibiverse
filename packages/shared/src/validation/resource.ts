@@ -4,6 +4,8 @@ import {
   ALLOWED_MIME_TYPES,
   MAX_FILE_SIZE_BYTES,
   MAX_FILE_SIZE_MB,
+  MIN_ACADEMIC_YEAR,
+  MAX_ACADEMIC_YEAR,
   resourceTypeSchema,
   semesterSchema,
 } from "../types/resource.js"
@@ -73,8 +75,8 @@ export const uploadResourceSchema = z
     year: z.coerce
       .number({ message: "Invalid academic year" })
       .int("Invalid academic year")
-      .min(2000, "Invalid academic year")
-      .max(2100, "Invalid academic year"),
+      .min(MIN_ACADEMIC_YEAR, "Invalid academic year")
+      .max(MAX_ACADEMIC_YEAR, "Invalid academic year"),
     semester: semesterSchema,
     description: z
       .string()

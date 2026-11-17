@@ -9,6 +9,8 @@ import {
   MAX_FILE_SIZE_MB,
   ALLOWED_EXTENSIONS,
   ALLOWED_MIME_TYPES,
+  MIN_ACADEMIC_YEAR,
+  MAX_ACADEMIC_YEAR,
   resourceTypePillLabels,
   resourceTypeOptions,
   semesterOptions,
@@ -47,9 +49,11 @@ test("semesterSchema validates valid semesters and rejects invalid", () => {
   assert.equal(invalid.success, false)
 })
 
-test("file constants have expected values", () => {
+test("file constants and academic year limits have expected values", () => {
   assert.equal(MAX_FILE_SIZE_MB, 50)
   assert.equal(MAX_FILE_SIZE_BYTES, 50 * 1024 * 1024)
+  assert.equal(MIN_ACADEMIC_YEAR, 2000)
+  assert.equal(MAX_ACADEMIC_YEAR, 2100)
   assert.ok(ALLOWED_EXTENSIONS.includes(".pdf"))
   assert.ok(ALLOWED_EXTENSIONS.includes(".docx"))
   assert.ok(ALLOWED_EXTENSIONS.includes(".pptx"))

@@ -44,6 +44,12 @@ export type Semester = (typeof SEMESTERS)[number]
 export const MAX_FILE_SIZE_MB = 50
 export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 
+/**
+ * Academic year limits for resources in Gibiverse.
+ */
+export const MIN_ACADEMIC_YEAR = 2000
+export const MAX_ACADEMIC_YEAR = 2100
+
 export const ALLOWED_EXTENSIONS = [
   ".pdf",
   ".docx",

@@ -258,3 +258,10 @@ test("POST /api/resources validates inputs at route boundary with Zod", async ()
   const bodyType = (await resType.json()) as { error: string }
   assert.match(bodyType.error, /resource type/i)
 })
+
+test("GET /api/resources validates query parameters at route boundary with Zod", async () => {
+  const res = await app.request("/api/resources?resourceType=invalid_type")
+  assert.strictEqual(res.status, 400)
+  const body = (await res.json()) as { error: string }
+  assert.match(body.error, /resource type/i)
+})
