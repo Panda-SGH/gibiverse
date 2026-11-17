@@ -142,3 +142,41 @@ test("POST /api/questions creates a question for the authenticated student", asy
   assert.strictEqual(row.userId, studentId)
   assert.strictEqual(row.title, "What is Big-O of binary search?")
 })
+
+test("POST /api/questions rejects title exceeding 200 characters at route boundary", async () => {
+  const res = await app.request("/api/questions", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      cookie: sessionCookie,
+    },
+    body: JSON.stringify({
+      title: "a".repeat(201),
+      body: "Valid body text",
+      courseId,
+    }),
+  })
+  assert.strictEqual(res.status, 400)
+  const payload = (await res.json()) as { error: string }
+  assert.match(payload.error, /title/i)
+})
+
+test("POST /api/questions trims whitespace on title and body", async () => {
+  const res = await app.request("/api/questions", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      cookie: sessionCookie,
+    },
+    body: JSON.stringify({
+      title: "   Trimmed Question Title   ",
+      body: "   Trimmed body content.   ",
+      courseId,
+    }),
+  })
+  assert.strictEqual(res.status, 201)
+  const payload = (await res.json()) as { id: string; title: string; body: string }
+  createdQuestionIds.push(payload.id)
+  assert.strictEqual(payload.title, "Trimmed Question Title")
+  assert.strictEqual(payload.body, "Trimmed body content.")
+})

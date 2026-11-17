@@ -1,18 +1,17 @@
 import { Hono } from "hono"
-import { validator } from "hono/validator"
+import { zValidator } from "@hono/zod-validator"
+import {
+  questionSortSchema,
+  askQuestionSchema,
+  postAnswerSchema,
+  acceptAnswerSchema,
+} from "@gibiverse/shared/types"
 import db from "../db/index.js"
-import { parseJsonBody } from "../lib/json.js"
 import { statusFor } from "../lib/result.js"
 import { requireAuth, optionalAuth } from "../middleware/auth.js"
-import { createQa, type QuestionSort } from "../qa/index.js"
+import { createQa } from "../qa/index.js"
 
 const qa = createQa({ db })
-
-const SORT_OPTIONS = ["newest", "most_voted", "unanswered"] as const
-
-function isQuestionSort(value: string): value is QuestionSort {
-  return (SORT_OPTIONS as readonly string[]).includes(value)
-}
 
 function studentFromUser(
   user: { id: string; name: string } | null | undefined
@@ -28,13 +27,14 @@ const questions = new Hono()
     const departmentId = c.req.query("departmentId")?.trim() || undefined
     const sortRaw = c.req.query("sort")?.trim() || "newest"
 
-    if (!isQuestionSort(sortRaw)) {
+    const sortParsed = questionSortSchema.safeParse(sortRaw)
+    if (!sortParsed.success) {
       return c.json({ error: "Invalid sort" }, 400)
     }
 
     const result = await qa.list({
       student: studentFromUser(user),
-      filters: { courseId, departmentId, sort: sortRaw },
+      filters: { courseId, departmentId, sort: sortParsed.data },
     })
 
     if (!result.ok) {
@@ -61,23 +61,27 @@ const questions = new Hono()
   .post(
     "/",
     requireAuth,
-    validator("json", (value) => value as { title: string; body: string; courseId: string }),
+    zValidator("json", askQuestionSchema, (result, c) => {
+      if (!result.success) {
+        return c.json(
+          { error: result.error.issues[0]?.message ?? "Invalid question input" },
+          400
+        )
+      }
+    }),
     async (c) => {
       const user = c.get("user")
       if (!user) {
         return c.json({ error: "Unauthorized" }, 401)
       }
 
-      const raw = await parseJsonBody(c)
-      if (!raw) {
-        return c.json({ error: "Invalid JSON body" }, 400)
-      }
+      const { title, body, courseId } = c.req.valid("json")
 
       const result = await qa.ask({
         student: { id: user.id, name: user.name },
-        title: typeof raw.title === "string" ? raw.title : "",
-        body: typeof raw.body === "string" ? raw.body : "",
-        courseId: typeof raw.courseId === "string" ? raw.courseId : "",
+        title,
+        body,
+        courseId,
       })
 
       if (!result.ok) {
@@ -90,7 +94,14 @@ const questions = new Hono()
   .post(
     "/:id/answers",
     requireAuth,
-    validator("json", (value) => value as { body: string }),
+    zValidator("json", postAnswerSchema, (result, c) => {
+      if (!result.success) {
+        return c.json(
+          { error: result.error.issues[0]?.message ?? "Invalid answer input" },
+          400
+        )
+      }
+    }),
     async (c) => {
       const user = c.get("user")
       if (!user) {
@@ -98,15 +109,12 @@ const questions = new Hono()
       }
 
       const questionId = c.req.param("id")
-      const raw = await parseJsonBody(c)
-      if (!raw) {
-        return c.json({ error: "Invalid JSON body" }, 400)
-      }
+      const { body } = c.req.valid("json")
 
       const result = await qa.answer({
         student: { id: user.id, name: user.name },
         questionId,
-        body: typeof raw.body === "string" ? raw.body : "",
+        body,
       })
 
       if (!result.ok) {
@@ -119,7 +127,14 @@ const questions = new Hono()
   .post(
     "/:id/accept",
     requireAuth,
-    validator("json", (value) => value as { answerId: string | null }),
+    zValidator("json", acceptAnswerSchema, (result, c) => {
+      if (!result.success) {
+        return c.json(
+          { error: result.error.issues[0]?.message ?? "Invalid accept input" },
+          400
+        )
+      }
+    }),
     async (c) => {
       const user = c.get("user")
       if (!user) {
@@ -127,12 +142,7 @@ const questions = new Hono()
       }
 
       const questionId = c.req.param("id")
-      const raw = await parseJsonBody(c)
-      if (!raw) {
-        return c.json({ error: "Invalid JSON body" }, 400)
-      }
-
-      const answerId = typeof raw.answerId === "string" ? raw.answerId : null
+      const { answerId } = c.req.valid("json")
 
       const result = await qa.accept({
         student: { id: user.id, name: user.name },

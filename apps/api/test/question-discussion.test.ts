@@ -236,6 +236,20 @@ test("POST /api/questions/:id/accept requires authentication", async () => {
   assert.strictEqual(res.status, 401)
 })
 
+test("POST /api/questions/:id/accept rejects invalid answerId at route boundary", async () => {
+  const res = await app.request(`/api/questions/${testQuestionId}/accept`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      cookie: authorCookie,
+    },
+    body: JSON.stringify({ answerId: "   " }),
+  })
+  assert.strictEqual(res.status, 400)
+  const err = (await res.json()) as { error: string }
+  assert.match(err.error, /answer/i)
+})
+
 test("POST /api/questions/:id/accept rejects non-author student with 403 Forbidden", async () => {
   // Post an answer first
   const ansRes = await app.request(`/api/questions/${testQuestionId}/answers`, {

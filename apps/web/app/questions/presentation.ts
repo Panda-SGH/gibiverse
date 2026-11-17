@@ -1,4 +1,6 @@
-export type QuestionSort = "newest" | "most_voted" | "unanswered"
+import { postAnswerSchema, type QuestionSort } from "@gibiverse/shared/types"
+
+export type { QuestionSort }
 
 export type QuestionCatalogFilters = {
   courseId: string | null
@@ -119,16 +121,16 @@ export function validateAnswerSubmission(body: string): {
   error?: string
   body?: string
 } {
-  const trimmed = (body || "").trim()
-  if (!trimmed) {
+  const result = postAnswerSchema.safeParse({ body })
+  if (!result.success) {
     return {
       valid: false,
-      error: "Answer body cannot be empty",
+      error: result.error.issues[0]?.message ?? "Answer body cannot be empty",
     }
   }
   return {
     valid: true,
-    body: trimmed,
+    body: result.data.body,
   }
 }
 

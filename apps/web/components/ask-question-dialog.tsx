@@ -16,6 +16,7 @@ import { Label } from "@gibiverse/ui/components/label"
 import { Textarea } from "@gibiverse/ui/components/textarea"
 import { CoursePicker } from "@/components/course-picker"
 import { client } from "@gibiverse/api-client"
+import { askQuestionSchema } from "@gibiverse/shared/types"
 import type { Course, Department } from "@/app/courses/presentation"
 
 type AskQuestionDialogProps = {
@@ -55,16 +56,16 @@ export function AskQuestionDialog({
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!courseId) {
-      setError("Course is required")
-      return
-    }
-    if (!title.trim()) {
-      setError("Title is required")
-      return
-    }
-    if (!body.trim()) {
-      setError("Question body is required")
+    const validation = askQuestionSchema.safeParse({
+      courseId: courseId ?? "",
+      title,
+      body,
+    })
+
+    if (!validation.success) {
+      setError(
+        validation.error.issues[0]?.message ?? "Please check the form fields."
+      )
       return
     }
 
@@ -72,11 +73,7 @@ export function AskQuestionDialog({
     setError(null)
     try {
       const res = await client.api.questions.$post({
-        json: {
-          title: title.trim(),
-          body: body.trim(),
-          courseId,
-        },
+        json: validation.data,
       })
       if (!res.ok) {
         const errorData = (await res.json().catch(() => null)) as {
