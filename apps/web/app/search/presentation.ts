@@ -1,4 +1,7 @@
-export type SearchTab = "all" | "resources" | "questions"
+import type { SearchType } from "@gibiverse/shared/types"
+
+export type { SearchType }
+export type SearchTab = SearchType
 
 export type SearchResultResource = {
   id: string
@@ -36,13 +39,13 @@ export type SearchCounts = {
 
 export type SearchResponse = {
   query: string
-  type: SearchTab
+  type: SearchType
   counts: SearchCounts
   resources: SearchResultResource[]
   questions: SearchResultQuestion[]
 }
 
-export function emptySearchResponse(type: SearchTab = "all"): SearchResponse {
+export function emptySearchResponse(type: SearchType = "all"): SearchResponse {
   return {
     query: "",
     type,
@@ -52,7 +55,7 @@ export function emptySearchResponse(type: SearchTab = "all"): SearchResponse {
   }
 }
 
-export function buildSearchQuery(query: string, type?: SearchTab): string {
+export function buildSearchQuery(query: string, type?: SearchType): string {
   const trimmed = query.trim()
   if (!trimmed) {
     return "/api/search"
@@ -67,7 +70,7 @@ export function buildSearchQuery(query: string, type?: SearchTab): string {
   return `/api/search?${params.toString()}`
 }
 
-export function buildSearchPageUrl(query: string, type?: SearchTab): string {
+export function buildSearchPageUrl(query: string, type?: SearchType): string {
   const trimmed = query.trim()
   if (!trimmed) {
     return type && type !== "all" ? `/search?type=${type}` : "/search"
@@ -84,7 +87,7 @@ export function buildSearchPageUrl(query: string, type?: SearchTab): string {
 
 export function getSearchEmptyState(
   query: string,
-  type: SearchTab
+  type: SearchType
 ): { title: string; description: string } {
   const trimmed = query.trim()
   if (!trimmed) {

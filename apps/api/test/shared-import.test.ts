@@ -1,8 +1,8 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 import { formatAcademicPeriod } from "@gibiverse/shared/utils"
-import { academicPeriodSchema } from "@gibiverse/shared/validation"
-import type { AcademicPeriod } from "@gibiverse/shared/types"
+import { academicPeriodSchema, searchTypeSchema } from "@gibiverse/shared/validation"
+import type { AcademicPeriod, SearchType } from "@gibiverse/shared/types"
 
 test("apps/api can import and use @gibiverse/shared subpaths", () => {
   const period: AcademicPeriod = { year: 2026, semester: 1 }
@@ -12,4 +12,8 @@ test("apps/api can import and use @gibiverse/shared subpaths", () => {
     formatAcademicPeriod(parsed.year, parsed.semester),
     "2026 - Semester 1"
   )
+
+  const searchType: SearchType = "questions"
+  const parsedSearchType = searchTypeSchema.parse(searchType)
+  assert.equal(parsedSearchType, "questions")
 })

@@ -1,6 +1,6 @@
 import { Search } from "lucide-react"
 import { client } from "@gibiverse/api-client"
-import { type SearchTab, type SearchResponse } from "./presentation"
+import { type SearchType, type SearchResponse } from "./presentation"
 import { SearchClient } from "./search-client"
 
 interface SearchPageProps {
@@ -14,7 +14,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams
   const query = params.q?.trim() || ""
   const rawType = params.type?.trim()
-  const type: SearchTab =
+  const type: SearchType =
     rawType === "resources" || rawType === "questions" ? rawType : "all"
 
   let data: SearchResponse = {

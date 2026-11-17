@@ -1,41 +1,40 @@
 import { Hono } from "hono"
+import { zValidator } from "@hono/zod-validator"
 import { and, desc, eq, ilike, or } from "drizzle-orm"
+import { searchQuerySchema, type SearchType } from "@gibiverse/shared/types"
 import db from "../db/index.js"
 import { course } from "../db/schema/academic.js"
 import { user as student } from "../db/schema/auth.js"
 import { question } from "../db/schema/question.js"
 import { resource } from "../db/schema/resource.js"
 
-export const SEARCH_TYPES = ["all", "resources", "questions"] as const
-export type SearchType = (typeof SEARCH_TYPES)[number]
+export type { SearchType }
 
-export function isSearchType(value: string): value is SearchType {
-  return (SEARCH_TYPES as readonly string[]).includes(value)
-}
+const search = new Hono().get(
+  "/",
+  zValidator("query", searchQuerySchema, (result, c) => {
+    if (!result.success) {
+      return c.json({ error: "Invalid search type" }, 400)
+    }
+  }),
+  async (c) => {
+    const { q, type } = c.req.valid("query")
 
-const search = new Hono().get("/", async (c) => {
-  const q = c.req.query("q")?.trim() ?? ""
-  const typeParam = c.req.query("type")?.trim() || "all"
+    if (!q) {
+      return c.json({
+        query: "",
+        type,
+        counts: {
+          all: 0,
+          resources: 0,
+          questions: 0,
+        },
+        resources: [],
+        questions: [],
+      })
+    }
 
-  if (!isSearchType(typeParam)) {
-    return c.json({ error: "Invalid search type" }, 400)
-  }
-
-  if (!q) {
-    return c.json({
-      query: "",
-      type: typeParam,
-      counts: {
-        all: 0,
-        resources: 0,
-        questions: 0,
-      },
-      resources: [],
-      questions: [],
-    })
-  }
-
-  const searchPattern = `%${q}%`
+    const searchPattern = `%${q}%`
 
   // Resources search
   const resourceConditions = or(
@@ -101,14 +100,12 @@ const search = new Hono().get("/", async (c) => {
     questions: allMatchedQuestions.length,
   }
 
-  const returnedResources =
-    typeParam === "questions" ? [] : allMatchedResources
-  const returnedQuestions =
-    typeParam === "resources" ? [] : allMatchedQuestions
+  const returnedResources = type === "questions" ? [] : allMatchedResources
+  const returnedQuestions = type === "resources" ? [] : allMatchedQuestions
 
   return c.json({
     query: q,
-    type: typeParam,
+    type,
     counts,
     resources: returnedResources,
     questions: returnedQuestions,

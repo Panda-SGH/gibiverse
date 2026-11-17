@@ -25,12 +25,12 @@ import {
   type SearchResponse,
   type SearchResultQuestion,
   type SearchResultResource,
-  type SearchTab,
+  type SearchType,
 } from "./presentation"
 
 interface SearchClientProps {
   initialQuery: string
-  initialType: SearchTab
+  initialType: SearchType
   initialData: SearchResponse
 }
 
@@ -41,7 +41,7 @@ export function SearchClient({
 }: SearchClientProps) {
   const router = useRouter()
   const [queryInput, setQueryInput] = React.useState(initialQuery)
-  const [activeTab, setActiveTab] = React.useState<SearchTab>(initialType)
+  const [activeTab, setActiveTab] = React.useState<SearchType>(initialType)
   const [results, setResults] = React.useState<SearchResponse>(initialData)
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -53,7 +53,7 @@ export function SearchClient({
     setResults(initialData)
   }, [initialQuery, initialType, initialData])
 
-  const executeSearch = async (query: string, type: SearchTab) => {
+  const executeSearch = async (query: string, type: SearchType) => {
     setIsLoading(true)
     setError(null)
     try {
@@ -87,7 +87,7 @@ export function SearchClient({
     await executeSearch(trimmed, activeTab)
   }
 
-  const handleTabChange = async (newTab: SearchTab) => {
+  const handleTabChange = async (newTab: SearchType) => {
     setActiveTab(newTab)
     const trimmed = results.query.trim()
     router.replace(buildSearchPageUrl(trimmed, newTab), { scroll: false })
