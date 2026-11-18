@@ -22,7 +22,7 @@ export default async function ResourcesUploadPage() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Upload Resource</h1>
         <p className="text-sm text-muted-foreground">
-          Share academic materials with your course.
+          Share academic resources with your course.
         </p>
       </div>
       <UploadResourceButton

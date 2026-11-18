@@ -37,4 +37,19 @@ export const nextJsConfig = [
     },
   },
   pluginReactHooks.configs.flat.recommended,
+  {
+    // Base UI: Button with render prop must set nativeButton={false}
+    // when the render target is a Next.js Link (which renders an <a>).
+    rules: {
+      "no-restricted-syntax": [
+        "warn",
+        {
+          selector:
+            "JSXOpeningElement[name.name='Button']:has(JSXAttribute[name.name='render']):not(:has(JSXAttribute[name.name='nativeButton']))",
+          message:
+            "<Button render={...}> requires nativeButton={false} when render produces an anchor element.",
+        },
+      ],
+    },
+  },
 ]

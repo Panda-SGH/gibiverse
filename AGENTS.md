@@ -46,7 +46,8 @@ When looking up Hono documentation or API reference:
 - Use `https://hono.dev/llms-full.txt` for the complete documentation set in a single file.
 - Fetch any specific doc page as raw Markdown using the `Accept: text/markdown` header:
   ```bash
-  curl -H 'Accept: text/markdown' [https://hono.dev/docs/](https://hono.dev/docs/)<path>
+  curl -H 'Accept: text/markdown' https://hono.dev/docs/<path>
+  ```
 <!-- END:hono-agent-rules -->
 
 <!-- BEGIN:database-and-migration-agent-rules -->

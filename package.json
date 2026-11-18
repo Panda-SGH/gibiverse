@@ -7,19 +7,27 @@
     "dev": "turbo dev",
     "lint": "turbo lint",
     "test": "turbo test",
+    "check-glossary": "tsx scripts/check-glossary.ts",
     "format": "turbo format",
-    "typecheck": "turbo typecheck"
+    "typecheck": "turbo typecheck",
+    "prepare": "simple-git-hooks"
   },
   "devDependencies": {
     "@gibiverse/eslint-config": "workspace:*",
     "@gibiverse/typescript-config": "workspace:*",
+    "lint-staged": "catalog:",
     "prettier": "catalog:",
     "prettier-plugin-tailwindcss": "catalog:",
+    "simple-git-hooks": "catalog:",
+    "tsx": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:"
   },
   "packageManager": "pnpm@11.25.0",
   "engines": {
     "node": ">=20.9.0"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm turbo lint typecheck && pnpm check-glossary"
   }
 }

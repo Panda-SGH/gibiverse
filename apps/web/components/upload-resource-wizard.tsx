@@ -191,7 +191,7 @@ export function UploadResourceWizard({
         <DialogHeader className="border-b border-border px-6 py-4">
           <DialogTitle>Upload Resource</DialogTitle>
           <DialogDescription>
-            Share academic materials with your course.
+            Share academic resources with your course.
           </DialogDescription>
           {phase === "form" ? (
             <div className="grid grid-cols-2 gap-2 pt-2">
