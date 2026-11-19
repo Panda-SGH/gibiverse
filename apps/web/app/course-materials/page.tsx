@@ -1,10 +1,10 @@
 import { BookOpen } from "lucide-react"
-import { UploadResourceButton } from "@/components/upload-resource-button"
+import { UploadCourseMaterialButton } from "@/components/upload-course-material-button"
 import { client } from "@gibiverse/api-client"
-import { ResourceCatalogClient } from "./resource-catalog-client"
+import { CourseMaterialCatalogClient } from "./course-material-catalog-client"
 
-export default async function ResourcesPage() {
-  const [univRes, deptRes, courseRes, resourcesRes] = await Promise.all([
+export default async function CourseMaterialsPage() {
+  const [univRes, deptRes, courseRes, materialsRes] = await Promise.all([
     client.api.universities.$get(),
     client.api.departments.$get(),
     client.api.courses.$get(),
@@ -14,12 +14,7 @@ export default async function ResourcesPage() {
   const universities = univRes.ok ? await univRes.json() : []
   const departments = deptRes.ok ? await deptRes.json() : []
   const courses = courseRes.ok ? await courseRes.json() : []
-  const resources = resourcesRes.ok
-    ? (await resourcesRes.json()).map((r) => ({
-        ...r,
-        resourceType: r.courseMaterialType,
-      }))
-    : []
+  const courseMaterials = materialsRes.ok ? await materialsRes.json() : []
 
   const primaryUniversity = universities[0] ?? null
   const scopedDepartments = primaryUniversity
@@ -35,7 +30,7 @@ export default async function ResourcesPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">
-              Course Resources
+              Course Materials
             </h1>
             <p className="text-sm text-muted-foreground">
               Explore past exams, lecture notes, slides, and assignments across
@@ -43,16 +38,16 @@ export default async function ResourcesPage() {
             </p>
           </div>
         </div>
-        <UploadResourceButton
+        <UploadCourseMaterialButton
           departments={scopedDepartments}
           courses={courses}
         />
       </div>
 
-      <ResourceCatalogClient
+      <CourseMaterialCatalogClient
         departments={scopedDepartments}
         courses={courses}
-        initialResources={resources}
+        initialCourseMaterials={courseMaterials}
         universityName={primaryUniversity?.name ?? null}
       />
     </div>

@@ -29,7 +29,7 @@ test("Authenticated student visiting /sign-up is redirected to /", () => {
 
 test("Unauthenticated student visiting protected action is redirected to /sign-in with callbackUrl", () => {
   const req = new NextRequest(
-    "http://localhost:3000/resources/upload?course=CS101"
+    "http://localhost:3000/course-materials/upload?course=CS101"
   )
   const res = proxy(req)
 
@@ -38,7 +38,7 @@ test("Unauthenticated student visiting protected action is redirected to /sign-i
   assert.ok(location)
   assert.match(location, /\/sign-in\?callbackUrl=/)
   assert.ok(
-    location.includes(encodeURIComponent("/resources/upload?course=CS101"))
+    location.includes(encodeURIComponent("/course-materials/upload?course=CS101"))
   )
 })
 

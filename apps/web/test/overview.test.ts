@@ -4,6 +4,7 @@ import { client } from "../../../packages/api-client/src/index.js"
 import {
   formatActivityCounter,
   getOverviewEmptyState,
+  getRecentCourseMaterialsEmptyState,
   getRecentResourcesEmptyState,
   getRecentQuestionsEmptyState,
   DEFAULT_PLATFORM_OVERVIEW,
@@ -34,9 +35,12 @@ test("getOverviewEmptyState distinguishes empty platforms from active ones", () 
 })
 
 test("getRecentResourcesEmptyState and getRecentQuestionsEmptyState guide students", () => {
-  const resEmpty = getRecentResourcesEmptyState()
-  assert.match(resEmpty.title, /no resources/i)
+  const resEmpty = getRecentCourseMaterialsEmptyState()
+  assert.match(resEmpty.title, /no course materials/i)
   assert.match(resEmpty.description, /share|upload/i)
+
+  const aliasEmpty = getRecentResourcesEmptyState()
+  assert.match(aliasEmpty.title, /no course materials/i)
 
   const qEmpty = getRecentQuestionsEmptyState()
   assert.match(qEmpty.title, /no questions/i)
@@ -52,6 +56,7 @@ test("overview falls back safely on network failure without throwing", async () 
     const res = await client.api.overview.$get().catch(() => null)
     const fallback = res && res.ok ? await res.json() : DEFAULT_PLATFORM_OVERVIEW
     assert.deepEqual(fallback.stats, {
+      totalCourseMaterials: 0,
       totalResources: 0,
       totalQuestions: 0,
       activeCourses: 0,

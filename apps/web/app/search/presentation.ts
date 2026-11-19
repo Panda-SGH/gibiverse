@@ -94,7 +94,7 @@ export function getSearchEmptyState(
     return {
       title: "Search Gibiverse",
       description:
-        "Find resources and questions by keyword, topic, or course code.",
+        "Find course materials and questions by keyword, topic, or course code.",
     }
   }
 

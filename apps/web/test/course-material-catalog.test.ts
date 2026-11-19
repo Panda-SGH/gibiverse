@@ -1,12 +1,12 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 import {
-  buildResourcesQuery,
+  buildCourseMaterialsQuery,
   catalogEmptyState,
   formatAcademicPeriod,
   formatRelativeUploadDate,
-  type CatalogFilters,
-} from "../app/resources/presentation.js"
+  type CourseMaterialFilters,
+} from "../app/course-materials/presentation.js"
 
 test("formatAcademicPeriod renders year and semester label", () => {
   assert.strictEqual(formatAcademicPeriod(2024, "1"), "2024 · Semester 1")
@@ -31,42 +31,42 @@ test("formatRelativeUploadDate uses relative phrasing from a fixed now", () => {
 })
 
 test("catalogEmptyState guides clearing filters when filters are active", () => {
-  const filters: CatalogFilters = {
-    resourceType: "exam",
+  const filters: CourseMaterialFilters = {
+    courseMaterialType: "exam",
     departmentId: null,
     courseId: null,
   }
   const state = catalogEmptyState(filters)
-  assert.match(state.title, /no resources/i)
+  assert.match(state.title, /no course materials/i)
   assert.match(state.description, /clear|adjust|filters/i)
 })
 
 test("catalogEmptyState prompts upload when catalog is empty without filters", () => {
-  const filters: CatalogFilters = {
-    resourceType: null,
+  const filters: CourseMaterialFilters = {
+    courseMaterialType: null,
     departmentId: null,
     courseId: null,
   }
   const state = catalogEmptyState(filters)
-  assert.match(state.title, /no resources/i)
+  assert.match(state.title, /no course materials/i)
   assert.match(state.description, /upload/i)
 })
 
-test("buildResourcesQuery encodes active catalog filters", () => {
+test("buildCourseMaterialsQuery encodes active catalog filters", () => {
   assert.strictEqual(
-    buildResourcesQuery({
-      resourceType: null,
+    buildCourseMaterialsQuery({
+      courseMaterialType: null,
       departmentId: null,
       courseId: null,
     }),
-    "/api/resources"
+    "/api/course-materials"
   )
   assert.strictEqual(
-    buildResourcesQuery({
-      resourceType: "exam",
+    buildCourseMaterialsQuery({
+      courseMaterialType: "exam",
       departmentId: "dept_cs",
       courseId: "course_1",
     }),
-    "/api/resources?resourceType=exam&departmentId=dept_cs&courseId=course_1"
+    "/api/course-materials?courseMaterialType=exam&departmentId=dept_cs&courseId=course_1"
   )
 })

@@ -118,7 +118,7 @@ export function SearchClient({
             name="q"
             value={queryInput}
             onChange={(e) => setQueryInput(e.target.value)}
-            placeholder="Search resources, questions, course codes..."
+            placeholder="Search course materials, questions, course codes..."
             className="h-11 w-full rounded-lg pl-11 pr-4 text-base shadow-sm md:text-sm"
             aria-label="Search across platform"
             data-testid="search-page-input"
@@ -366,7 +366,7 @@ function ResourceGrid({ resources }: { resources: SearchResultResource[] }) {
       {resources.map((item) => (
         <li key={item.id}>
           <Link
-            href={`/resources/${item.id}`}
+            href={`/course-materials/${item.id}`}
             className="flex h-full flex-col gap-3 rounded-lg border border-border bg-background p-4 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             data-testid={`search-resource-card-${item.id}`}
           >

@@ -33,13 +33,13 @@ import { formatRelativeUploadDate } from "@/lib/formatters"
 import {
   catalogEmptyState,
   hasActiveCatalogFilters,
-  type CatalogFilters,
-  type CatalogResource,
+  type CourseMaterialFilters,
+  type CatalogCourseMaterial,
 } from "./presentation"
 import {
-  courseMaterialTypeOptions as resourceTypeOptions,
-  courseMaterialTypePillLabels as resourceTypePillLabels,
-  type CourseMaterialType as ResourceType,
+  courseMaterialTypeOptions,
+  courseMaterialTypePillLabels,
+  type CourseMaterialType,
 } from "@gibiverse/shared/types"
 
 const ALL_VALUE = "__all__"
@@ -49,14 +49,14 @@ const ACTIVE_TOGGLE_CLASSES =
   "aria-pressed:bg-emerald-50 aria-pressed:text-emerald-700 aria-pressed:border-emerald-600/30 data-[state=on]:bg-emerald-50 data-[state=on]:text-emerald-700 data-[state=on]:border-emerald-600/30 dark:aria-pressed:bg-emerald-950/40 dark:aria-pressed:text-emerald-400 dark:aria-pressed:border-emerald-500/30 dark:data-[state=on]:bg-emerald-950/40 dark:data-[state=on]:text-emerald-400 dark:data-[state=on]:border-emerald-500/30"
 
 function FileTypeIcon({
-  resourceType,
+  courseMaterialType,
   className,
 }: {
-  resourceType: string
+  courseMaterialType: string
   className?: string
 }) {
   const cls = cn("size-8 text-muted-foreground/60", className)
-  switch (resourceType) {
+  switch (courseMaterialType) {
     case "exam":
     case "notes":
     case "assignment":
@@ -70,24 +70,24 @@ function FileTypeIcon({
   }
 }
 
-export function ResourceCatalogClient({
+export function CourseMaterialCatalogClient({
   departments,
   courses,
-  initialResources,
+  initialCourseMaterials,
   universityName = null,
 }: {
   departments: Department[]
   courses: Course[]
-  initialResources: CatalogResource[]
+  initialCourseMaterials: CatalogCourseMaterial[]
   universityName?: string | null
 }) {
-  const [filters, setFilters] = React.useState<CatalogFilters>({
-    resourceType: null,
+  const [filters, setFilters] = React.useState<CourseMaterialFilters>({
+    courseMaterialType: null,
     departmentId: null,
     courseId: null,
   })
-  const [resources, setResources] =
-    React.useState<CatalogResource[]>(initialResources)
+  const [courseMaterials, setCourseMaterials] =
+    React.useState<CatalogCourseMaterial[]>(initialCourseMaterials)
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const isFirstRender = React.useRef(true)
@@ -105,21 +105,23 @@ export function ResourceCatalogClient({
     client.api["course-materials"]
       .$get({
         query: {
-          courseMaterialType: filters.resourceType || undefined,
+          courseMaterialType:
+            filters.courseMaterialType || filters.resourceType || undefined,
           departmentId: filters.departmentId || undefined,
           courseId: filters.courseId || undefined,
         },
       })
       .then(async (res) => {
-        if (!res.ok) throw new Error("Could not load resources")
+        if (!res.ok) throw new Error("Could not load course materials")
         return res.json()
       })
       .then((next) => {
-        if (!cancelled) setResources(next as unknown as CatalogResource[])
+        if (!cancelled)
+          setCourseMaterials(next as unknown as CatalogCourseMaterial[])
       })
       .catch(() => {
         if (!cancelled) {
-          setError("Could not load resources. Please try again.")
+          setError("Could not load course materials. Please try again.")
         }
       })
       .finally(() => {
@@ -144,7 +146,7 @@ export function ResourceCatalogClient({
 
       <section
         className="flex flex-col gap-4"
-        aria-label="Resources"
+        aria-label="Course Materials"
         aria-busy={isLoading}
       >
         {isLoading ? (
@@ -157,10 +159,10 @@ export function ResourceCatalogClient({
           </p>
         ) : null}
 
-        {resources.length === 0 ? (
+        {courseMaterials.length === 0 ? (
           <div
             className="flex flex-col items-start gap-3 rounded-lg border border-dashed border-border px-6 py-10"
-            data-testid="resources-empty-state"
+            data-testid="course-materials-empty-state"
           >
             <h3 className="text-base font-semibold text-foreground">
               {emptyState.title}
@@ -175,7 +177,7 @@ export function ResourceCatalogClient({
                 size="sm"
                 onClick={() =>
                   setFilters({
-                    resourceType: null,
+                    courseMaterialType: null,
                     departmentId: null,
                     courseId: null,
                   })
@@ -188,20 +190,20 @@ export function ResourceCatalogClient({
         ) : (
           <ul
             className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
-            data-testid="resources-grid"
+            data-testid="course-materials-grid"
           >
-            {resources.map((resource) => (
-              <li key={resource.id}>
+            {courseMaterials.map((material) => (
+              <li key={material.id}>
                 <Link
-                  href={`/resources/${resource.id}`}
+                  href={`/course-materials/${material.id}`}
                   className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-background transition-all hover:border-foreground/20 hover:shadow-md focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                  data-testid={`resource-card-${resource.id}`}
+                  data-testid={`course-material-card-${material.id}`}
                 >
                   {/* Thumbnail */}
                   <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-muted/50">
-                    {resource.thumbnailPath ? (
+                    {material.thumbnailPath ? (
                       <img
-                        src={`/api/resources/${resource.id}/thumbnail`}
+                        src={`/api/course-materials/${material.id}/thumbnail`}
                         alt=""
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         loading="lazy"
@@ -209,9 +211,9 @@ export function ResourceCatalogClient({
                     ) : (
                       <div className="flex h-full w-full items-center justify-center transition-transform duration-300 group-hover:scale-105">
                         <FileTypeIcon
-                          resourceType={
-                            resource.courseMaterialType ??
-                            resource.resourceType ??
+                          courseMaterialType={
+                            material.courseMaterialType ??
+                            material.resourceType ??
                             "other"
                           }
                         />
@@ -223,7 +225,7 @@ export function ResourceCatalogClient({
                   <div className="flex flex-1 flex-col gap-2 p-4">
                     {/* Title */}
                     <h3 className="line-clamp-2 text-base font-semibold text-foreground transition-colors group-hover:text-primary">
-                      {resource.title}
+                      {material.title}
                     </h3>
 
                     {/* University name + Course code on the same line */}
@@ -245,22 +247,22 @@ export function ResourceCatalogClient({
                         variant="secondary"
                         className="shrink-0 font-mono text-[11px]"
                       >
-                        {resource.courseCode}
+                        {material.courseCode}
                       </Badge>
                     </div>
 
                     {/* Type on left + Upload date on right */}
                     <div className="mt-auto flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
                       <Badge variant="outline" className="text-xs">
-                        {resourceTypePillLabels[
-                          (resource.courseMaterialType ??
-                            resource.resourceType) as ResourceType
+                        {courseMaterialTypePillLabels[
+                          (material.courseMaterialType ??
+                            material.resourceType) as CourseMaterialType
                         ] ??
-                          resource.courseMaterialType ??
-                          resource.resourceType}
+                          material.courseMaterialType ??
+                          material.resourceType}
                       </Badge>
-                      <time dateTime={resource.createdAt}>
-                        {formatRelativeUploadDate(resource.createdAt)}
+                      <time dateTime={material.createdAt}>
+                        {formatRelativeUploadDate(material.createdAt)}
                       </time>
                     </div>
                   </div>
@@ -275,7 +277,7 @@ export function ResourceCatalogClient({
 }
 
 /* ------------------------------------------------------------------ */
-/*  Filter bar: resource-type tabs + course dropdown                  */
+/*  Filter bar: course-material-type tabs + course dropdown           */
 /* ------------------------------------------------------------------ */
 
 function CatalogFiltersBar({
@@ -286,15 +288,19 @@ function CatalogFiltersBar({
 }: {
   departments: Department[]
   courses: Course[]
-  filters: CatalogFilters
-  onFiltersChange: (filters: CatalogFilters) => void
+  filters: CourseMaterialFilters
+  onFiltersChange: (filters: CourseMaterialFilters) => void
 }) {
   const [dropdownOpen, setDropdownOpen] = React.useState(false)
   const dropdownRef = React.useRef<HTMLDivElement>(null)
   const buttonRef = React.useRef<HTMLButtonElement>(null)
 
-  const filteredCourses = filterCoursesByDepartment(courses, filters.departmentId)
-  const typeValue = filters.resourceType ? [filters.resourceType] : [ALL_TYPE_KEY]
+  const filteredCourses = filterCoursesByDepartment(
+    courses,
+    filters.departmentId
+  )
+  const activeType = filters.courseMaterialType || filters.resourceType
+  const typeValue = activeType ? [activeType] : [ALL_TYPE_KEY]
 
   // Build course label for the dropdown button
   const hasCourseFilter = Boolean(filters.departmentId || filters.courseId)
@@ -345,9 +351,9 @@ function CatalogFiltersBar({
     <div
       className="flex flex-col gap-3"
       role="search"
-      aria-label="Filter resources"
+      aria-label="Filter course materials"
     >
-      {/* Resource type tabs with "All" */}
+      {/* Course Material Type tabs with "All" */}
       <ToggleGroup
         variant="outline"
         size="sm"
@@ -356,19 +362,24 @@ function CatalogFiltersBar({
         onValueChange={(next) => {
           const selected = next[0]
           if (!selected || selected === ALL_TYPE_KEY) {
-            onFiltersChange({ ...filters, resourceType: null })
+            onFiltersChange({
+              ...filters,
+              courseMaterialType: null,
+              resourceType: null,
+            })
           } else {
-            const match = resourceTypeOptions.find(
+            const match = courseMaterialTypeOptions.find(
               (option) => option.value === selected
             )
             onFiltersChange({
               ...filters,
+              courseMaterialType: match?.value ?? null,
               resourceType: match?.value ?? null,
             })
           }
         }}
         className="flex flex-wrap"
-        aria-label="Filter by resource type"
+        aria-label="Filter by course material type"
       >
         <ToggleGroupItem
           value={ALL_TYPE_KEY}
@@ -377,14 +388,14 @@ function CatalogFiltersBar({
         >
           All
         </ToggleGroupItem>
-        {resourceTypeOptions.map((option) => (
+        {courseMaterialTypeOptions.map((option) => (
           <ToggleGroupItem
             key={option.value}
             value={option.value}
             aria-label={option.label}
             className={ACTIVE_TOGGLE_CLASSES}
           >
-            {resourceTypePillLabels[option.value]}
+            {courseMaterialTypePillLabels[option.value]}
           </ToggleGroupItem>
         ))}
       </ToggleGroup>
@@ -502,3 +513,6 @@ function CatalogFiltersBar({
     </div>
   )
 }
+
+// Backwards compatibility alias
+export const ResourceCatalogClient = CourseMaterialCatalogClient

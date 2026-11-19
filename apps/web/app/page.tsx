@@ -15,15 +15,15 @@ import {
   formatActivityCounter,
   getOverviewEmptyState,
   getRecentQuestionsEmptyState,
-  getRecentResourcesEmptyState,
+  getRecentCourseMaterialsEmptyState,
 } from "./home-presentation"
 import {
   formatAcademicPeriod,
   formatRelativeUploadDate,
 } from "@/lib/formatters"
 import {
-  courseMaterialTypePillLabels as resourceTypePillLabels,
-  type CourseMaterialType as ResourceType,
+  courseMaterialTypePillLabels,
+  type CourseMaterialType,
 } from "@gibiverse/shared/types"
 
 export const dynamic = "force-dynamic"
@@ -32,8 +32,12 @@ export default async function HomePage() {
   const res = await client.api.overview.$get().catch(() => null)
   const overview = res && res.ok ? await res.json() : DEFAULT_PLATFORM_OVERVIEW
   const heroState = getOverviewEmptyState(overview.stats)
-  const recentResourcesEmpty = getRecentResourcesEmptyState()
+  const recentMaterialsEmpty = getRecentCourseMaterialsEmptyState()
   const recentQuestionsEmpty = getRecentQuestionsEmptyState()
+  const totalMaterials =
+    overview.stats.totalCourseMaterials ?? overview.stats.totalResources ?? 0
+  const recentMaterials =
+    overview.recentCourseMaterials ?? overview.recentResources ?? []
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
@@ -60,10 +64,10 @@ export default async function HomePage() {
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2 sm:gap-4">
-            <Link href="/resources">
+            <Link href="/course-materials">
               <Button size="lg" className="gap-2">
                 <BookOpen className="size-4" />
-                <span>Browse Resources</span>
+                <span>Browse Course Materials</span>
               </Button>
             </Link>
             <Link href="/questions">
@@ -93,10 +97,10 @@ export default async function HomePage() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                  {formatActivityCounter(overview.stats.totalResources)}
+                  {formatActivityCounter(totalMaterials)}
                 </p>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Total Resources
+                  Total Course Materials
                 </p>
                 <p className="truncate text-xs text-muted-foreground/80">
                   Past exams, lecture notes &amp; slides
@@ -133,14 +137,14 @@ export default async function HomePage() {
                   Active Courses
                 </p>
                 <p className="truncate text-xs text-muted-foreground/80">
-                  Courses with resources &amp; Q&amp;A
+                  Courses with course materials &amp; Q&amp;A
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Quick Navigation Shortcut Cards — Resources and Q&A */}
+        {/* Quick Navigation Shortcut Cards — Course Materials and Q&A */}
         <section
           aria-labelledby="shortcuts-heading"
           className="space-y-4"
@@ -153,7 +157,7 @@ export default async function HomePage() {
               Quick Shortcuts
             </h2>
             <p className="text-sm text-muted-foreground">
-              Jump directly into course resources or peer discussions.
+              Jump directly into course materials or peer discussions.
             </p>
           </div>
 
@@ -162,16 +166,16 @@ export default async function HomePage() {
             data-testid="shortcut-cards-grid"
           >
             <Link
-              href="/resources"
+              href="/course-materials"
               className="group flex flex-col justify-between rounded-xl border border-border bg-card p-6 transition-all hover:border-primary/50 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              data-testid="shortcut-card-resources"
+              data-testid="shortcut-card-course-materials"
             >
               <div className="space-y-3">
                 <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                   <BookOpen className="size-5" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">
-                  Course Resources
+                  Course Materials
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   Explore past exams, lecture notes, assignments, and slides
@@ -179,7 +183,7 @@ export default async function HomePage() {
                 </p>
               </div>
               <div className="mt-4 flex items-center gap-1.5 text-sm font-medium text-primary">
-                <span>Browse Resources</span>
+                <span>Browse Course Materials</span>
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
               </div>
             </Link>
@@ -209,7 +213,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Activity Feeds: Recent Resources & Active Questions */}
+        {/* Activity Feeds: Recent Course Materials & Active Questions */}
         <section
           aria-labelledby="activity-feeds-heading"
           className="space-y-4"
@@ -219,17 +223,17 @@ export default async function HomePage() {
           </h2>
 
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            {/* Recent Resources Feed */}
+            {/* Recent Course Materials Feed */}
             <div className="flex flex-col space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <BookOpen className="size-5 text-primary" />
                   <h3 className="text-lg font-bold text-foreground">
-                    Recent Resources
+                    Recent Course Materials
                   </h3>
                 </div>
                 <Link
-                  href="/resources"
+                  href="/course-materials"
                   className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline sm:text-sm"
                 >
                   <span>View all</span>
@@ -237,37 +241,37 @@ export default async function HomePage() {
                 </Link>
               </div>
 
-              {overview.recentResources.length === 0 ? (
+              {recentMaterials.length === 0 ? (
                 <div
                   className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border px-6 py-10 text-center"
-                  data-testid="recent-resources-empty"
+                  data-testid="recent-course-materials-empty"
                 >
                   <div className="flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
                     <BookOpen className="size-5" />
                   </div>
                   <h4 className="text-sm font-semibold text-foreground">
-                    {recentResourcesEmpty.title}
+                    {recentMaterialsEmpty.title}
                   </h4>
                   <p className="max-w-xs text-xs text-muted-foreground">
-                    {recentResourcesEmpty.description}
+                    {recentMaterialsEmpty.description}
                   </p>
-                  <Link href="/resources" className="pt-1">
+                  <Link href="/course-materials" className="pt-1">
                     <Button variant="outline" size="sm">
-                      Upload Resource
+                      Upload Course Material
                     </Button>
                   </Link>
                 </div>
               ) : (
                 <ul
                   className="divide-y divide-border rounded-xl border border-border bg-card shadow-xs"
-                  data-testid="recent-resources-list"
+                  data-testid="recent-course-materials-list"
                 >
-                  {overview.recentResources.map((res) => (
+                  {recentMaterials.map((res) => (
                     <li key={res.id}>
                       <Link
-                        href={`/resources/${res.id}`}
+                        href={`/course-materials/${res.id}`}
                         className="group flex flex-col gap-2 p-4 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:items-center sm:justify-between"
-                        data-testid={`recent-resource-${res.id}`}
+                        data-testid={`recent-course-material-${res.id}`}
                       >
                         <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
@@ -275,7 +279,11 @@ export default async function HomePage() {
                               {res.courseCode}
                             </Badge>
                             <Badge variant="outline" className="text-xs">
-                              {resourceTypePillLabels[res.resourceType as ResourceType] ??
+                              {courseMaterialTypePillLabels[
+                                (res.courseMaterialType ??
+                                  res.resourceType) as CourseMaterialType
+                              ] ??
+                                res.courseMaterialType ??
                                 res.resourceType}
                             </Badge>
                           </div>

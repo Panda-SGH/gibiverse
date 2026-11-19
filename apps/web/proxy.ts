@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server.js"
 
 // Routes that require authentication
 const protectedPrefixes = [
-  "/resources/upload",
+  "/course-materials/upload",
   "/questions/ask",
   "/qa/ask",
   "/settings",

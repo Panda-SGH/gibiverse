@@ -4,8 +4,8 @@ import {
   MAX_FILE_SIZE_BYTES,
   validateFile,
   sanitizeTitleFromFilename,
-  detectResourceType,
-} from "../lib/resource-validation"
+  detectCourseMaterialType,
+} from "../lib/course-material-validation"
 
 function makeFile(overrides: {
   name?: string
@@ -118,15 +118,15 @@ test("sanitizeTitleFromFilename removes extensions and capitalizes words", () =>
   )
 })
 
-test("detectResourceType detects resource type from filename keywords", () => {
-  assert.strictEqual(detectResourceType("midterm-exam.pdf"), "exam")
-  assert.strictEqual(detectResourceType("quiz1-practice.pdf"), "exam")
-  assert.strictEqual(detectResourceType("lecture-slides-ch03.pptx"), "slides")
-  assert.strictEqual(detectResourceType("chapter-summary-notes.pdf"), "notes")
+test("detectCourseMaterialType detects course material type from filename keywords", () => {
+  assert.strictEqual(detectCourseMaterialType("midterm-exam.pdf"), "exam")
+  assert.strictEqual(detectCourseMaterialType("quiz1-practice.pdf"), "exam")
+  assert.strictEqual(detectCourseMaterialType("lecture-slides-ch03.pptx"), "slides")
+  assert.strictEqual(detectCourseMaterialType("chapter-summary-notes.pdf"), "notes")
   assert.strictEqual(
-    detectResourceType("homework-1-assignment.docx"),
+    detectCourseMaterialType("homework-1-assignment.docx"),
     "assignment"
   )
-  assert.strictEqual(detectResourceType("lab02-experiment.pdf"), "lab")
-  assert.strictEqual(detectResourceType("general-document.pdf"), "other")
+  assert.strictEqual(detectCourseMaterialType("lab02-experiment.pdf"), "lab")
+  assert.strictEqual(detectCourseMaterialType("general-document.pdf"), "other")
 })

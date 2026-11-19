@@ -1,19 +1,22 @@
 import { FileWarning } from "lucide-react"
 import { Button } from "@gibiverse/ui/components/button"
 import { formatBytes } from "@gibiverse/shared/utils"
-import { resourceDownloadUrl } from "@/app/resources/presentation"
+import { courseMaterialDownloadUrl } from "@/app/course-materials/presentation"
 
 export function DownloadFallback({
+  courseMaterialId,
   resourceId,
   fileName,
   fileSize,
-  message = "This resource type can't be previewed in the browser",
+  message = "This course material type can't be previewed in the browser",
 }: {
-  resourceId: string
+  courseMaterialId?: string
+  resourceId?: string
   fileName: string
   fileSize: number
   message?: string
 }) {
+  const id = courseMaterialId || resourceId || ""
   return (
     <div
       className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-border bg-muted/30 px-6 py-12 text-center"
@@ -33,7 +36,7 @@ export function DownloadFallback({
       <Button
         nativeButton={false}
         render={
-          <a href={resourceDownloadUrl(resourceId)} download={fileName} />
+          <a href={courseMaterialDownloadUrl(id)} download={fileName} />
         }
       >
         Download

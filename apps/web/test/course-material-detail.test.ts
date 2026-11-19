@@ -2,18 +2,18 @@ import test from "node:test"
 import assert from "node:assert/strict"
 import {
   resolvePreviewType,
-  resourceDownloadUrl,
-  resourcePreviewUrl,
-} from "../app/resources/presentation.js"
+  courseMaterialDownloadUrl,
+  courseMaterialPreviewUrl,
+} from "../app/course-materials/presentation.js"
 
-test("resourcePreviewUrl and resourceDownloadUrl point at streaming endpoints", () => {
+test("courseMaterialPreviewUrl and courseMaterialDownloadUrl point at streaming endpoints", () => {
   assert.strictEqual(
-    resourcePreviewUrl("abc"),
-    "/api/resources/abc/preview"
+    courseMaterialPreviewUrl("abc"),
+    "/api/course-materials/abc/preview"
   )
   assert.strictEqual(
-    resourceDownloadUrl("abc"),
-    "/api/resources/abc/download"
+    courseMaterialDownloadUrl("abc"),
+    "/api/course-materials/abc/download"
   )
 })
 

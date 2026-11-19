@@ -34,7 +34,7 @@ export function CourseDirectoryClient({
           </h2>
           <p className="text-sm text-muted-foreground">
             Filter by department, then select a course. This picker is reused
-            when uploading resources or posting questions.
+            when uploading course materials or posting questions.
           </p>
         </div>
         <CoursePicker
