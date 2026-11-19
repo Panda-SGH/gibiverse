@@ -48,6 +48,7 @@ export default async function ResourcesPage() {
         departments={scopedDepartments}
         courses={courses}
         initialResources={resources}
+        universityName={primaryUniversity?.name ?? null}
       />
     </div>
   )

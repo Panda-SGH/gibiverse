@@ -2,7 +2,14 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { ChevronDown, X } from "lucide-react"
+import {
+  BookOpen,
+  ChevronDown,
+  File,
+  FileText,
+  Presentation,
+  X,
+} from "lucide-react"
 import { cn } from "@gibiverse/ui/lib/utils"
 import { Badge } from "@gibiverse/ui/components/badge"
 import { Button } from "@gibiverse/ui/components/button"
@@ -22,7 +29,7 @@ import {
 import { client } from "@gibiverse/api-client"
 import type { Course, Department } from "@/app/courses/presentation"
 import { filterCoursesByDepartment } from "@/app/courses/presentation"
-import { formatAcademicPeriod, formatRelativeUploadDate } from "@/lib/formatters"
+import { formatRelativeUploadDate } from "@/lib/formatters"
 import {
   catalogEmptyState,
   hasActiveCatalogFilters,
@@ -41,14 +48,38 @@ const ALL_TYPE_KEY = "__all_types__"
 const ACTIVE_TOGGLE_CLASSES =
   "aria-pressed:bg-emerald-50 aria-pressed:text-emerald-700 aria-pressed:border-emerald-600/30 data-[state=on]:bg-emerald-50 data-[state=on]:text-emerald-700 data-[state=on]:border-emerald-600/30 dark:aria-pressed:bg-emerald-950/40 dark:aria-pressed:text-emerald-400 dark:aria-pressed:border-emerald-500/30 dark:data-[state=on]:bg-emerald-950/40 dark:data-[state=on]:text-emerald-400 dark:data-[state=on]:border-emerald-500/30"
 
+function FileTypeIcon({
+  resourceType,
+  className,
+}: {
+  resourceType: string
+  className?: string
+}) {
+  const cls = cn("size-8 text-muted-foreground/60", className)
+  switch (resourceType) {
+    case "exam":
+    case "notes":
+    case "assignment":
+      return <FileText className={cls} />
+    case "slides":
+      return <Presentation className={cls} />
+    case "lab":
+      return <BookOpen className={cls} />
+    default:
+      return <File className={cls} />
+  }
+}
+
 export function ResourceCatalogClient({
   departments,
   courses,
   initialResources,
+  universityName = null,
 }: {
   departments: Department[]
   courses: Course[]
   initialResources: CatalogResource[]
+  universityName?: string | null
 }) {
   const [filters, setFilters] = React.useState<CatalogFilters>({
     resourceType: null,
@@ -156,33 +187,74 @@ export function ResourceCatalogClient({
           </div>
         ) : (
           <ul
-            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+            className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
             data-testid="resources-grid"
           >
             {resources.map((resource) => (
               <li key={resource.id}>
                 <Link
                   href={`/resources/${resource.id}`}
-                  className="flex h-full flex-col gap-3 rounded-lg border border-border bg-background p-4 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                  className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-background transition-all hover:border-foreground/20 hover:shadow-md focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                   data-testid={`resource-card-${resource.id}`}
                 >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary">{resource.courseCode}</Badge>
-                    <Badge variant="outline">
-                      {resourceTypePillLabels[resource.resourceType as ResourceType] ??
-                        resource.resourceType}
-                    </Badge>
+                  {/* Thumbnail */}
+                  <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-muted/50">
+                    {resource.thumbnailPath ? (
+                      <img
+                        src={`/api/resources/${resource.id}/thumbnail`}
+                        alt=""
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center transition-transform duration-300 group-hover:scale-105">
+                        <FileTypeIcon resourceType={resource.resourceType} />
+                      </div>
+                    )}
                   </div>
-                  <h3 className="text-base font-semibold text-foreground">
-                    {resource.title}
-                  </h3>
-                  <p className="mt-auto text-sm text-muted-foreground">
-                    {formatAcademicPeriod(resource.year, resource.semester)}
-                    <span aria-hidden="true"> · </span>
-                    <time dateTime={resource.createdAt}>
-                      {formatRelativeUploadDate(resource.createdAt)}
-                    </time>
-                  </p>
+
+                  {/* Content: Title, University + Course Code, Type (left) + Date (right) */}
+                  <div className="flex flex-1 flex-col gap-2 p-4">
+                    {/* Title */}
+                    <h3 className="line-clamp-2 text-base font-semibold text-foreground transition-colors group-hover:text-primary">
+                      {resource.title}
+                    </h3>
+
+                    {/* University name + Course code on the same line */}
+                    <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                      {universityName ? (
+                        <>
+                          <span className="truncate font-medium text-foreground/80">
+                            {universityName}
+                          </span>
+                          <span
+                            aria-hidden="true"
+                            className="text-muted-foreground/50"
+                          >
+                            ·
+                          </span>
+                        </>
+                      ) : null}
+                      <Badge
+                        variant="secondary"
+                        className="shrink-0 font-mono text-[11px]"
+                      >
+                        {resource.courseCode}
+                      </Badge>
+                    </div>
+
+                    {/* Type on left + Upload date on right */}
+                    <div className="mt-auto flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
+                      <Badge variant="outline" className="text-xs">
+                        {resourceTypePillLabels[
+                          resource.resourceType as ResourceType
+                        ] ?? resource.resourceType}
+                      </Badge>
+                      <time dateTime={resource.createdAt}>
+                        {formatRelativeUploadDate(resource.createdAt)}
+                      </time>
+                    </div>
+                  </div>
                 </Link>
               </li>
             ))}

@@ -25,6 +25,7 @@ export type CatalogResource = {
   courseCode: string
   courseName: string
   departmentId: string
+  thumbnailPath?: string | null
 }
 
 export function hasActiveCatalogFilters(filters: CatalogFilters): boolean {
