@@ -6,6 +6,7 @@ import {
   VariantA,
   VariantB,
   VariantC,
+  VariantD,
   type DetailResourceData,
 } from "./detail-layout-variants"
 import { PrototypeSwitcher } from "@/components/prototype-switcher"
@@ -20,16 +21,37 @@ export default async function ResourceDetailPage({
   searchParams,
 }: ResourcePageProps) {
   const { id } = await params
-  const { variant = "A" } = (await searchParams) ?? {}
+  const { variant = "D" } = (await searchParams) ?? {}
 
-  const res = await client.api.resources[":id"]
-    .$get({
-      param: { id },
-    })
-    .catch(() => null)
+  const [res, coursesRes, deptRes, univRes] = await Promise.all([
+    client.api.resources[":id"]
+      .$get({
+        param: { id },
+      })
+      .catch(() => null),
+    client.api.courses.$get().catch(() => null),
+    client.api.departments.$get().catch(() => null),
+    client.api.universities.$get().catch(() => null),
+  ])
 
   if (!res || !res.ok) notFound()
   const resource = await res.json()
+
+  const courses = coursesRes && coursesRes.ok ? await coursesRes.json() : []
+  const departments = deptRes && deptRes.ok ? await deptRes.json() : []
+  const universities = univRes && univRes.ok ? await univRes.json() : []
+
+  const matchedCourse = courses.find((c) => c.id === resource.courseId)
+  const matchedDept = departments.find(
+    (d) => d.id === matchedCourse?.departmentId
+  )
+  const matchedUni = universities.find(
+    (u) => u.id === matchedDept?.universityId
+  )
+
+  const universityName =
+    matchedUni?.name ?? universities[0]?.name ?? "Gibiverse University"
+  const departmentName = matchedDept?.name ?? "Computer Science"
 
   const previewType = resolvePreviewType(resource.fileName, resource.mimeType)
   const typeLabel =
@@ -38,15 +60,18 @@ export default async function ResourceDetailPage({
 
   const detailData: DetailResourceData = {
     ...resource,
+    departmentName,
+    universityName,
     typeLabel,
     previewType,
   }
 
-  const activeVariant = ["A", "B", "C"].includes(variant.toUpperCase())
+  const activeVariant = ["A", "B", "C", "D"].includes(variant.toUpperCase())
     ? variant.toUpperCase()
-    : "A"
+    : "D"
 
   const variantsList = [
+    { key: "D", name: "Uncarded (Left Download)" },
     { key: "A", name: "Split Reader" },
     { key: "B", name: "Academic Brief" },
     { key: "C", name: "Workspace Ribbon" },
@@ -54,6 +79,7 @@ export default async function ResourceDetailPage({
 
   return (
     <>
+      {activeVariant === "D" && <VariantD resource={detailData} />}
       {activeVariant === "A" && <VariantA resource={detailData} />}
       {activeVariant === "B" && <VariantB resource={detailData} />}
       {activeVariant === "C" && <VariantC resource={detailData} />}

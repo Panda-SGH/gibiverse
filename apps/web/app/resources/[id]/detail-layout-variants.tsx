@@ -36,6 +36,8 @@ export type DetailResourceData = {
   studentName: string
   courseCode: string
   courseName: string
+  departmentName?: string | null
+  universityName?: string | null
   year: number
   semester: string
   createdAt: string
@@ -411,6 +413,110 @@ export function VariantC({ resource }: { resource: DetailResourceData }) {
           title={resource.title}
         />
       </div>
+    </div>
+  )
+}
+
+/**
+ * Variant D: Linear Uncarded Hierarchy (Left Download + Clean Typography)
+ * - Title at top with Download button to its far left (with file type and size hint)
+ * - Middle: University name, department name, course name, academic year
+ * - Bottom: Uploader name, upload time
+ * - No card wrapper: clean, open typography
+ */
+export function VariantD({ resource }: { resource: DetailResourceData }) {
+  const fileExt = resource.fileName.split(".").pop()?.toUpperCase() ?? "FILE"
+  const university = resource.universityName ?? "Gibiverse University"
+  const department = resource.departmentName ?? "Computer Science"
+
+  return (
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* Top back navigation */}
+      <div className="mb-8">
+        <Button
+          variant="ghost"
+          size="sm"
+          nativeButton={false}
+          render={<Link href="/resources" />}
+          className="gap-2 text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          Back to resources
+        </Button>
+      </div>
+
+      {/* Uncarded Header Section */}
+      <div className="mb-8 flex flex-col gap-4">
+        {/* Row 1: Download button to the far left of title */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+          <Button
+            size="lg"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shrink-0 shadow-sm"
+            nativeButton={false}
+            render={
+              <a
+                href={resourceDownloadUrl(resource.id)}
+                download={resource.fileName}
+              />
+            }
+            data-testid="download-button"
+          >
+            <Download className="size-4 mr-2" />
+            Download
+            <span className="ml-2.5 rounded bg-emerald-700/80 px-2 py-0.5 text-xs font-mono font-normal tracking-wide">
+              {fileExt} · {formatBytes(resource.fileSize)}
+            </span>
+          </Button>
+
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            {resource.title}
+          </h1>
+        </div>
+
+        {/* Row 2: University, Department, Course, Academic Year in middle */}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm sm:text-base text-muted-foreground pt-1">
+          <span className="font-medium text-foreground">{university}</span>
+          <span className="text-muted-foreground/40">·</span>
+          <span>{department}</span>
+          <span className="text-muted-foreground/40">·</span>
+          <span className="font-medium text-foreground">
+            {resource.courseCode} ({resource.courseName})
+          </span>
+          <span className="text-muted-foreground/40">·</span>
+          <span>{formatAcademicPeriod(resource.year, resource.semester)}</span>
+        </div>
+
+        {/* Row 3: Uploader name, upload time at bottom */}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm text-muted-foreground">
+          <span>
+            Uploaded by <strong className="font-medium text-foreground">{resource.studentName}</strong>
+          </span>
+          <span className="text-muted-foreground/40">·</span>
+          <span>
+            {formatUploadDate(resource.createdAt)} ({formatRelativeUploadDate(resource.createdAt)})
+          </span>
+        </div>
+
+        {/* Optional Description */}
+        {resource.description ? (
+          <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-3xl">
+            {resource.description}
+          </p>
+        ) : null}
+      </div>
+
+      {/* Document Preview Section */}
+      <section aria-labelledby="preview-heading" className="flex flex-col gap-4">
+        <div className="rounded-xl border bg-card p-2 sm:p-4 shadow-sm">
+          <ResourcePreview
+            resourceId={resource.id}
+            fileName={resource.fileName}
+            fileSize={resource.fileSize}
+            previewType={resource.previewType}
+            title={resource.title}
+          />
+        </div>
+      </section>
     </div>
   )
 }
