@@ -10,7 +10,7 @@ export default async function ResourcesPage({
 }) {
   const resolvedParams = await searchParams
   const variant =
-    typeof resolvedParams.variant === "string" ? resolvedParams.variant : "A"
+    typeof resolvedParams.variant === "string" ? resolvedParams.variant : "D"
 
   const [univRes, deptRes, courseRes, resourcesRes] = await Promise.all([
     client.api.universities.$get(),

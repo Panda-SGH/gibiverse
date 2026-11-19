@@ -50,7 +50,7 @@ export function ResourceCatalogClient({
   departments,
   courses,
   initialResources,
-  variant = "A",
+  variant = "D",
   universityName = null,
 }: {
   departments: Department[]
