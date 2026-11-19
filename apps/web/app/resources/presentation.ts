@@ -1,5 +1,5 @@
 import { formatAcademicPeriod, formatRelativeUploadDate } from "@/lib/formatters"
-import type { ResourceType, Semester } from "@gibiverse/shared/types"
+import type { CourseMaterialType as ResourceType, Semester } from "@gibiverse/shared/types"
 
 export { formatAcademicPeriod, formatRelativeUploadDate }
 
@@ -17,7 +17,8 @@ export type CatalogEmptyState = {
 export type CatalogResource = {
   id: string
   title: string
-  resourceType: ResourceType | string
+  courseMaterialType?: ResourceType | string
+  resourceType?: ResourceType | string
   year: number
   semester: Semester | string
   createdAt: string

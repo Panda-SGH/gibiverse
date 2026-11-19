@@ -32,19 +32,25 @@ test("subpath export ./types resolves and provides type definitions", async () =
     "acceptAnswerSchema should be exported"
   )
   assert.ok(
-    typesModule.resourceTypeSchema,
-    "resourceTypeSchema should be exported"
+    typesModule.courseMaterialTypeSchema,
+    "courseMaterialTypeSchema should be exported"
   )
   assert.ok(typesModule.semesterSchema, "semesterSchema should be exported")
   assert.ok(
-    typesModule.resourceTypeOptions,
-    "resourceTypeOptions should be exported"
+    typesModule.courseMaterialTypeOptions,
+    "courseMaterialTypeOptions should be exported"
   )
   assert.ok(typesModule.semesterOptions, "semesterOptions should be exported")
   assert.ok(typesModule.yearOptions, "yearOptions should be exported")
   assert.ok(
-    typesModule.resourceTypePillLabels,
-    "resourceTypePillLabels should be exported"
+    typesModule.courseMaterialTypePillLabels,
+    "courseMaterialTypePillLabels should be exported"
+  )
+  assert.equal(
+    // @ts-expect-error resourceTypeSchema should not exist
+    typesModule.resourceTypeSchema,
+    undefined,
+    "resourceTypeSchema should not be exported (clean cut)"
   )
   assert.equal(typesModule.MAX_FILE_SIZE_MB, 50)
   assert.equal(typesModule.MAX_FILE_SIZE_BYTES, 50 * 1024 * 1024)
@@ -94,6 +100,24 @@ test("subpath export ./validation resolves and provides validation schemas", asy
   assert.ok(
     validationModule.acceptAnswerSchema,
     "acceptAnswerSchema should be exported"
+  )
+  assert.ok(
+    validationModule.courseMaterialTypeSchema,
+    "courseMaterialTypeSchema should be exported"
+  )
+  assert.ok(
+    validationModule.listCourseMaterialsQuerySchema,
+    "listCourseMaterialsQuerySchema should be exported"
+  )
+  assert.ok(
+    validationModule.uploadCourseMaterialSchema,
+    "uploadCourseMaterialSchema should be exported"
+  )
+  assert.equal(
+    // @ts-expect-error uploadResourceSchema should not exist
+    validationModule.uploadResourceSchema,
+    undefined,
+    "uploadResourceSchema should not be exported (clean cut)"
   )
 
   // Verify runtime schema behavior

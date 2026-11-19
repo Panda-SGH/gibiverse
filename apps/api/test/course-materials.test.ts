@@ -7,23 +7,23 @@ import { eq } from "drizzle-orm"
 import { app } from "../src/app.js"
 import db from "../src/db/index.js"
 import { university, department, course } from "../src/db/schema/academic.js"
-import { resource } from "../src/db/schema/resource.js"
+import { courseMaterial } from "../src/db/schema/course-material.js"
 
 const suffix = Date.now()
-const uniId = `uni_res_${suffix}`
-const deptId = `dept_res_${suffix}`
-const courseId = `course_res_${suffix}`
-const courseCode = `RS${String(suffix).slice(-3)}`
+const uniId = `uni_cm_${suffix}`
+const deptId = `dept_cm_${suffix}`
+const courseId = `course_cm_${suffix}`
+const courseCode = `CM${String(suffix).slice(-3)}`
 
 let storageDir: string
 let previousStoragePath: string | undefined
 let previousStorageProvider: string | undefined
 let sessionCookie: string
 let studentId: string
-const createdResourceIds: string[] = []
+const createdMaterialIds: string[] = []
 
 before(async () => {
-  storageDir = await mkdtemp(path.join(tmpdir(), "gibiverse-res-upload-"))
+  storageDir = await mkdtemp(path.join(tmpdir(), "gibiverse-cm-upload-"))
   previousStoragePath = process.env.STORAGE_LOCAL_PATH
   previousStorageProvider = process.env.STORAGE_PROVIDER
   process.env.STORAGE_LOCAL_PATH = storageDir
@@ -31,49 +31,50 @@ before(async () => {
 
   await db.insert(university).values({
     id: uniId,
-    name: `Resource Uni ${suffix}`,
+    name: `Course Material Uni ${suffix}`,
   })
   await db.insert(department).values({
     id: deptId,
-    name: `Resource Dept ${suffix}`,
+    name: `Course Material Dept ${suffix}`,
     universityId: uniId,
   })
   await db.insert(course).values({
     id: courseId,
-    name: "Resource Course",
+    name: "Course Material Course",
     code: courseCode,
     departmentId: deptId,
   })
 
-  const email = `resource_${suffix}@university.edu`
-  const password = "ResourcePassword123!"
+  const email = `cm_${suffix}@university.edu`
+  const password = "CourseMaterialPassword123!"
   const signUpRes = await app.request("/api/auth/sign-up/email", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
-      name: "Resource Student",
       email,
       password,
+      name: `Course Material Student ${suffix}`,
     }),
   })
   assert.strictEqual(signUpRes.status, 200)
-  const setCookie = signUpRes.headers.get("set-cookie")
-  assert.ok(setCookie)
-  sessionCookie = setCookie.split(";")[0]!
+
+  const rawCookie = signUpRes.headers.get("set-cookie")
+  assert.ok(rawCookie)
+  sessionCookie = rawCookie.split(";")[0]!
 
   const sessionRes = await app.request("/api/auth/get-session", {
     headers: { cookie: sessionCookie },
   })
+  assert.strictEqual(sessionRes.status, 200)
   const sessionBody = (await sessionRes.json()) as {
-    user?: { id: string }
+    user: { id: string }
   }
-  assert.ok(sessionBody.user?.id)
   studentId = sessionBody.user.id
 })
 
 after(async () => {
-  for (const id of createdResourceIds) {
-    await db.delete(resource).where(eq(resource.id, id))
+  for (const id of createdMaterialIds) {
+    await db.delete(courseMaterial).where(eq(courseMaterial.id, id))
   }
   await db.delete(course).where(eq(course.id, courseId))
   await db.delete(department).where(eq(department.id, deptId))
@@ -87,11 +88,11 @@ after(async () => {
   await rm(storageDir, { recursive: true, force: true })
 })
 
-test("POST /api/resources requires authentication", async () => {
+test("POST /api/course-materials requires authentication", async () => {
   const form = new FormData()
   form.set("title", "Midterm Exam")
   form.set("courseId", courseId)
-  form.set("resourceType", "exam")
+  form.set("courseMaterialType", "exam")
   form.set("year", "2024")
   form.set("semester", "1")
   form.set(
@@ -101,18 +102,18 @@ test("POST /api/resources requires authentication", async () => {
     })
   )
 
-  const res = await app.request("/api/resources", {
+  const res = await app.request("/api/course-materials", {
     method: "POST",
     body: form,
   })
   assert.strictEqual(res.status, 401)
 })
 
-test("POST /api/resources stores file and creates resource record", async () => {
+test("POST /api/course-materials stores file and creates course material record", async () => {
   const form = new FormData()
   form.set("title", "CS Midterm 2024")
   form.set("courseId", courseId)
-  form.set("resourceType", "exam")
+  form.set("courseMaterialType", "exam")
   form.set("year", "2024")
   form.set("semester", "1")
   form.set("description", "Practice midterm")
@@ -123,7 +124,7 @@ test("POST /api/resources stores file and creates resource record", async () => 
     })
   )
 
-  const res = await app.request("/api/resources", {
+  const res = await app.request("/api/course-materials", {
     method: "POST",
     headers: { cookie: sessionCookie },
     body: form,
@@ -134,7 +135,7 @@ test("POST /api/resources stores file and creates resource record", async () => 
     title: string
     courseId: string
     userId: string
-    resourceType: string
+    courseMaterialType: string
     year: number
     semester: string
     fileName: string
@@ -143,32 +144,33 @@ test("POST /api/resources stores file and creates resource record", async () => 
     filePath: string
   }
 
-  createdResourceIds.push(body.id)
+  createdMaterialIds.push(body.id)
   assert.strictEqual(body.title, "CS Midterm 2024")
   assert.strictEqual(body.courseId, courseId)
   assert.strictEqual(body.userId, studentId)
-  assert.strictEqual(body.resourceType, "exam")
+  assert.strictEqual(body.courseMaterialType, "exam")
   assert.strictEqual(body.year, 2024)
   assert.strictEqual(body.semester, "1")
   assert.strictEqual(body.fileName, "cs-midterm.pdf")
   assert.strictEqual(body.mimeType, "application/pdf")
   assert.ok(body.fileSize > 0)
-  assert.ok(body.filePath.length > 0)
+  assert.ok(body.filePath.startsWith("course-materials/"))
 
   const [row] = await db
     .select()
-    .from(resource)
-    .where(eq(resource.id, body.id))
+    .from(courseMaterial)
+    .where(eq(courseMaterial.id, body.id))
   assert.ok(row)
   assert.strictEqual(row.title, "CS Midterm 2024")
   assert.strictEqual(row.userId, studentId)
+  assert.strictEqual(row.courseMaterialType, "exam")
 })
 
-test("POST /api/resources rejects invalid files", async () => {
+test("POST /api/course-materials rejects invalid files", async () => {
   const form = new FormData()
   form.set("title", "Bad File")
   form.set("courseId", courseId)
-  form.set("resourceType", "other")
+  form.set("courseMaterialType", "other")
   form.set("year", "2024")
   form.set("semester", "2")
   form.set(
@@ -178,7 +180,7 @@ test("POST /api/resources rejects invalid files", async () => {
     })
   )
 
-  const res = await app.request("/api/resources", {
+  const res = await app.request("/api/course-materials", {
     method: "POST",
     headers: { cookie: sessionCookie },
     body: form,
@@ -188,12 +190,12 @@ test("POST /api/resources rejects invalid files", async () => {
   assert.match(body.error, /unsupported|invalid|format/i)
 })
 
-test("POST /api/resources validates inputs at route boundary with Zod", async () => {
+test("POST /api/course-materials validates inputs at route boundary with Zod", async () => {
   // Invalid year
   const formYear = new FormData()
   formYear.set("title", "Year Test")
   formYear.set("courseId", courseId)
-  formYear.set("resourceType", "exam")
+  formYear.set("courseMaterialType", "exam")
   formYear.set("year", "1990")
   formYear.set("semester", "1")
   formYear.set(
@@ -203,7 +205,7 @@ test("POST /api/resources validates inputs at route boundary with Zod", async ()
     })
   )
 
-  const resYear = await app.request("/api/resources", {
+  const resYear = await app.request("/api/course-materials", {
     method: "POST",
     headers: { cookie: sessionCookie },
     body: formYear,
@@ -216,7 +218,7 @@ test("POST /api/resources validates inputs at route boundary with Zod", async ()
   const formSem = new FormData()
   formSem.set("title", "Sem Test")
   formSem.set("courseId", courseId)
-  formSem.set("resourceType", "exam")
+  formSem.set("courseMaterialType", "exam")
   formSem.set("year", "2024")
   formSem.set("semester", "spring")
   formSem.set(
@@ -226,7 +228,7 @@ test("POST /api/resources validates inputs at route boundary with Zod", async ()
     })
   )
 
-  const resSem = await app.request("/api/resources", {
+  const resSem = await app.request("/api/course-materials", {
     method: "POST",
     headers: { cookie: sessionCookie },
     body: formSem,
@@ -235,11 +237,11 @@ test("POST /api/resources validates inputs at route boundary with Zod", async ()
   const bodySem = (await resSem.json()) as { error: string }
   assert.match(bodySem.error, /semester/i)
 
-  // Invalid resourceType
+  // Invalid courseMaterialType
   const formType = new FormData()
   formType.set("title", "Type Test")
   formType.set("courseId", courseId)
-  formType.set("resourceType", "handout")
+  formType.set("courseMaterialType", "handout")
   formType.set("year", "2024")
   formType.set("semester", "1")
   formType.set(
@@ -249,19 +251,21 @@ test("POST /api/resources validates inputs at route boundary with Zod", async ()
     })
   )
 
-  const resType = await app.request("/api/resources", {
+  const resType = await app.request("/api/course-materials", {
     method: "POST",
     headers: { cookie: sessionCookie },
     body: formType,
   })
   assert.strictEqual(resType.status, 400)
   const bodyType = (await resType.json()) as { error: string }
-  assert.match(bodyType.error, /resource type/i)
+  assert.match(bodyType.error, /course material type/i)
 })
 
-test("GET /api/resources validates query parameters at route boundary with Zod", async () => {
-  const res = await app.request("/api/resources?resourceType=invalid_type")
+test("GET /api/course-materials validates query parameters at route boundary with Zod", async () => {
+  const res = await app.request(
+    "/api/course-materials?courseMaterialType=invalid_type"
+  )
   assert.strictEqual(res.status, 400)
   const body = (await res.json()) as { error: string }
-  assert.match(body.error, /resource type/i)
+  assert.match(body.error, /course material type/i)
 })

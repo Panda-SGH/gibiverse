@@ -7,7 +7,7 @@ import { eq } from "drizzle-orm"
 import { app } from "../src/app.js"
 import db from "../src/db/index.js"
 import { university, department, course } from "../src/db/schema/academic.js"
-import { resource } from "../src/db/schema/resource.js"
+import { courseMaterial } from "../src/db/schema/course-material.js"
 
 const suffix = Date.now()
 const uniId = `uni_detail_${suffix}`
@@ -22,12 +22,12 @@ let previousStorageProvider: string | undefined
 let sessionCookie: string
 let studentId: string
 let studentName: string
-let resourceId: string
+let courseMaterialId: string
 const pdfBytes = Buffer.from("%PDF-1.4 detail-preview")
 const originalFileName = "CS Midterm 2024.pdf"
 
 before(async () => {
-  storageDir = await mkdtemp(path.join(tmpdir(), "gibiverse-res-detail-"))
+  storageDir = await mkdtemp(path.join(tmpdir(), "gibiverse-cm-detail-"))
   previousStoragePath = process.env.STORAGE_LOCAL_PATH
   previousStorageProvider = process.env.STORAGE_PROVIDER
   process.env.STORAGE_LOCAL_PATH = storageDir
@@ -78,7 +78,7 @@ before(async () => {
   const form = new FormData()
   form.set("title", "CS Midterm 2024")
   form.set("courseId", courseId)
-  form.set("resourceType", "exam")
+  form.set("courseMaterialType", "exam")
   form.set("year", "2024")
   form.set("semester", "1")
   form.set("description", "Practice midterm for preview")
@@ -89,19 +89,19 @@ before(async () => {
     })
   )
 
-  const createRes = await app.request("/api/resources", {
+  const createRes = await app.request("/api/course-materials", {
     method: "POST",
     headers: { cookie: sessionCookie },
     body: form,
   })
   assert.strictEqual(createRes.status, 201)
   const created = (await createRes.json()) as { id: string }
-  resourceId = created.id
+  courseMaterialId = created.id
 })
 
 after(async () => {
-  if (resourceId) {
-    await db.delete(resource).where(eq(resource.id, resourceId))
+  if (courseMaterialId) {
+    await db.delete(courseMaterial).where(eq(courseMaterial.id, courseMaterialId))
   }
   await db.delete(course).where(eq(course.id, courseId))
   await db.delete(department).where(eq(department.id, deptId))
@@ -115,15 +115,15 @@ after(async () => {
   await rm(storageDir, { recursive: true, force: true })
 })
 
-test("GET /api/resources/:id returns resource detail metadata", async () => {
-  const res = await app.request(`/api/resources/${resourceId}`)
+test("GET /api/course-materials/:id returns course material detail metadata", async () => {
+  const res = await app.request(`/api/course-materials/${courseMaterialId}`)
   assert.strictEqual(res.status, 200)
 
   const body = (await res.json()) as {
     id: string
     title: string
     description: string | null
-    resourceType: string
+    courseMaterialType: string
     year: number
     semester: string
     fileName: string
@@ -137,10 +137,10 @@ test("GET /api/resources/:id returns resource detail metadata", async () => {
     studentName: string
   }
 
-  assert.strictEqual(body.id, resourceId)
+  assert.strictEqual(body.id, courseMaterialId)
   assert.strictEqual(body.title, "CS Midterm 2024")
   assert.strictEqual(body.description, "Practice midterm for preview")
-  assert.strictEqual(body.resourceType, "exam")
+  assert.strictEqual(body.courseMaterialType, "exam")
   assert.strictEqual(body.year, 2024)
   assert.strictEqual(body.semester, "1")
   assert.strictEqual(body.fileName, originalFileName)
@@ -154,15 +154,15 @@ test("GET /api/resources/:id returns resource detail metadata", async () => {
   assert.strictEqual(body.studentName, studentName)
 })
 
-test("GET /api/resources/:id returns 404 for unknown resource", async () => {
-  const res = await app.request("/api/resources/does-not-exist")
+test("GET /api/course-materials/:id returns 404 for unknown course material", async () => {
+  const res = await app.request("/api/course-materials/does-not-exist")
   assert.strictEqual(res.status, 404)
   const body = (await res.json()) as { error: string }
   assert.match(body.error, /not found/i)
 })
 
-test("GET /api/resources/:id/download streams attachment with original filename", async () => {
-  const res = await app.request(`/api/resources/${resourceId}/download`)
+test("GET /api/course-materials/:id/download streams attachment with original filename", async () => {
+  const res = await app.request(`/api/course-materials/${courseMaterialId}/download`)
   assert.strictEqual(res.status, 200)
   assert.strictEqual(res.headers.get("content-type"), "application/pdf")
   assert.match(
@@ -177,8 +177,8 @@ test("GET /api/resources/:id/download streams attachment with original filename"
   assert.deepEqual(bytes, pdfBytes)
 })
 
-test("GET /api/resources/:id/preview streams inline with matching MIME type", async () => {
-  const res = await app.request(`/api/resources/${resourceId}/preview`)
+test("GET /api/course-materials/:id/preview streams inline with matching MIME type", async () => {
+  const res = await app.request(`/api/course-materials/${courseMaterialId}/preview`)
   assert.strictEqual(res.status, 200)
   assert.strictEqual(res.headers.get("content-type"), "application/pdf")
   assert.match(res.headers.get("content-disposition") ?? "", /inline/i)
@@ -186,15 +186,15 @@ test("GET /api/resources/:id/preview streams inline with matching MIME type", as
   assert.deepEqual(bytes, pdfBytes)
 })
 
-test("GET /api/resources/:id/download returns 404 for unknown resource", async () => {
-  const res = await app.request("/api/resources/does-not-exist/download")
+test("GET /api/course-materials/:id/download returns 404 for unknown course material", async () => {
+  const res = await app.request("/api/course-materials/does-not-exist/download")
   assert.strictEqual(res.status, 404)
   const body = (await res.json()) as { error: string }
   assert.match(body.error, /not found/i)
 })
 
-test("GET /api/resources/:id/preview returns 404 for unknown resource", async () => {
-  const res = await app.request("/api/resources/does-not-exist/preview")
+test("GET /api/course-materials/:id/preview returns 404 for unknown course material", async () => {
+  const res = await app.request("/api/course-materials/does-not-exist/preview")
   assert.strictEqual(res.status, 404)
   const body = (await res.json()) as { error: string }
   assert.match(body.error, /not found/i)

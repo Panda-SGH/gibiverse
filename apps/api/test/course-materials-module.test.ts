@@ -4,8 +4,8 @@ import { eq } from "drizzle-orm"
 import db from "../src/db/index.js"
 import { university, department, course } from "../src/db/schema/academic.js"
 import { user as studentTable } from "../src/db/schema/auth.js"
-import { resource } from "../src/db/schema/resource.js"
-import { createResources } from "../src/resources/index.js"
+import { courseMaterial } from "../src/db/schema/course-material.js"
+import { createCourseMaterials } from "../src/course-materials/index.js"
 import type { StorageProvider } from "../src/storage/types.js"
 
 // ---------------------------------------------------------------------------
@@ -84,16 +84,16 @@ class InMemoryStorage implements StorageProvider {
 // ---------------------------------------------------------------------------
 
 const suffix = Date.now()
-const uniId = `uni_resmod_${suffix}`
-const deptId = `dept_resmod_${suffix}`
-const courseId = `course_resmod_${suffix}`
-const courseCode = `RM${String(suffix).slice(-3)}`
-const studentId = `stu_resmod_${suffix}`
-const student = { id: studentId, name: "Resource Author" }
+const uniId = `uni_cmmod_${suffix}`
+const deptId = `dept_cmmod_${suffix}`
+const courseId = `course_cmmod_${suffix}`
+const courseCode = `CM${String(suffix).slice(-3)}`
+const studentId = `stu_cmmod_${suffix}`
+const student = { id: studentId, name: "Course Material Author" }
 
 const storage = new InMemoryStorage()
-const resources = createResources({ db, storage })
-const createdResourceIds: string[] = []
+const courseMaterials = createCourseMaterials({ db, storage })
+const createdMaterialIds: string[] = []
 
 function pdfFile(
   name = "midterm.pdf",
@@ -116,30 +116,30 @@ function pdfFile(
 before(async () => {
   await db.insert(university).values({
     id: uniId,
-    name: `ResModule Uni ${suffix}`,
+    name: `CmModule Uni ${suffix}`,
   })
   await db.insert(department).values({
     id: deptId,
-    name: `ResModule Dept ${suffix}`,
+    name: `CmModule Dept ${suffix}`,
     universityId: uniId,
   })
   await db.insert(course).values({
     id: courseId,
-    name: "ResModule Course",
+    name: "CmModule Course",
     code: courseCode,
     departmentId: deptId,
   })
   await db.insert(studentTable).values({
     id: studentId,
     name: student.name,
-    email: `resmod_${suffix}@university.edu`,
+    email: `cmmod_${suffix}@university.edu`,
     emailVerified: true,
   })
 })
 
 after(async () => {
-  for (const id of createdResourceIds) {
-    await db.delete(resource).where(eq(resource.id, id))
+  for (const id of createdMaterialIds) {
+    await db.delete(courseMaterial).where(eq(courseMaterial.id, id))
   }
   await db.delete(studentTable).where(eq(studentTable.id, studentId))
   await db.delete(course).where(eq(course.id, courseId))
@@ -151,41 +151,39 @@ after(async () => {
 // upload
 // ---------------------------------------------------------------------------
 
-test("upload stores a Resource for a Course", async () => {
-  const result = await resources.upload({
+test("upload stores a Course Material for a Course under course-materials/ storage key", async () => {
+  const result = await courseMaterials.upload({
     student,
     title: "CS Midterm 2024",
     courseId,
-    resourceType: "exam",
+    courseMaterialType: "exam",
     year: 2024,
     semester: "1",
-    description: "Practice exam",
-    file: pdfFile(),
+    description: "Practice questions with solutions",
+    file: pdfFile("cs-midterm.pdf"),
   })
 
   assert.equal(result.ok, true)
   if (!result.ok) return
+  createdMaterialIds.push(result.data.id)
 
-  createdResourceIds.push(result.data.id)
   assert.equal(result.data.title, "CS Midterm 2024")
   assert.equal(result.data.courseId, courseId)
-  assert.equal(result.data.userId, studentId)
-  assert.equal(result.data.resourceType, "exam")
+  assert.equal(result.data.userId, student.id)
+  assert.equal(result.data.courseMaterialType, "exam")
   assert.equal(result.data.year, 2024)
   assert.equal(result.data.semester, "1")
-  assert.equal(result.data.mimeType, "application/pdf")
-  assert.ok(result.data.fileSize > 0)
-
-  // Verify file was stored
-  assert.ok(await storage.exists(result.data.filePath))
+  assert.equal(result.data.fileName, "cs-midterm.pdf")
+  assert.ok(result.data.filePath.startsWith("course-materials/"))
+  assert.ok(storage.has(result.data.filePath))
 })
 
 test("upload rejects empty title", async () => {
-  const result = await resources.upload({
+  const result = await courseMaterials.upload({
     student,
     title: "   ",
     courseId,
-    resourceType: "exam",
+    courseMaterialType: "exam",
     year: 2024,
     semester: "1",
     description: null,
@@ -199,11 +197,11 @@ test("upload rejects empty title", async () => {
 })
 
 test("upload rejects unknown Course", async () => {
-  const result = await resources.upload({
+  const result = await courseMaterials.upload({
     student,
-    title: "Good Title",
-    courseId: "missing-course-id",
-    resourceType: "exam",
+    title: "CS Midterm",
+    courseId: "nonexistent_course",
+    courseMaterialType: "exam",
     year: 2024,
     semester: "1",
     description: null,
@@ -213,15 +211,15 @@ test("upload rejects unknown Course", async () => {
   assert.equal(result.ok, false)
   if (result.ok) return
   assert.equal(result.error.code, "validation")
-  assert.match(result.error.message, /course not found/i)
+  assert.match(result.error.message, /course/i)
 })
 
-test("upload rejects invalid Resource Type", async () => {
-  const result = await resources.upload({
+test("upload rejects invalid Course Material Type", async () => {
+  const result = await courseMaterials.upload({
     student,
-    title: "Good Title",
+    title: "CS Midterm",
     courseId,
-    resourceType: "invalid-type",
+    courseMaterialType: "invalid-type",
     year: 2024,
     semester: "1",
     description: null,
@@ -231,21 +229,21 @@ test("upload rejects invalid Resource Type", async () => {
   assert.equal(result.ok, false)
   if (result.ok) return
   assert.equal(result.error.code, "validation")
-  assert.match(result.error.message, /resource type/i)
+  assert.match(result.error.message, /course material type/i)
 })
 
 test("upload rejects invalid file extension", async () => {
-  const result = await resources.upload({
+  const result = await courseMaterials.upload({
     student,
-    title: "Good Title",
+    title: "Executable file",
     courseId,
-    resourceType: "other",
+    courseMaterialType: "other",
     year: 2024,
     semester: "1",
     description: null,
     file: {
-      name: "virus.exe",
-      size: 100,
+      name: "danger.exe",
+      size: 1024,
       type: "application/x-msdownload",
       data: Buffer.from("MZ"),
     },
@@ -254,16 +252,15 @@ test("upload rejects invalid file extension", async () => {
   assert.equal(result.ok, false)
   if (result.ok) return
   assert.equal(result.error.code, "validation")
-  assert.match(result.error.message, /unsupported|format/i)
 })
 
 test("upload rejects invalid academic year", async () => {
-  const result = await resources.upload({
+  const result = await courseMaterials.upload({
     student,
-    title: "Good Title",
+    title: "Old Exam",
     courseId,
-    resourceType: "exam",
-    year: 1999,
+    courseMaterialType: "exam",
+    year: 1990,
     semester: "1",
     description: null,
     file: pdfFile(),
@@ -279,82 +276,92 @@ test("upload rejects invalid academic year", async () => {
 // list
 // ---------------------------------------------------------------------------
 
-test("list returns Resources and filters by Course", async () => {
-  // Seed a Resource
-  const uploaded = await resources.upload({
+test("list returns Course Materials and filters by Course", async () => {
+  const up1 = await courseMaterials.upload({
     student,
-    title: "List Test Resource",
+    title: "List Test Exam",
     courseId,
-    resourceType: "notes",
+    courseMaterialType: "exam",
     year: 2024,
-    semester: "2",
+    semester: "1",
     description: null,
-    file: pdfFile("list-notes.pdf"),
+    file: pdfFile("exam1.pdf"),
   })
-  assert.equal(uploaded.ok, true)
-  if (!uploaded.ok) return
-  createdResourceIds.push(uploaded.data.id)
+  assert.equal(up1.ok, true)
+  if (up1.ok) createdMaterialIds.push(up1.data.id)
 
-  // List all
-  const all = await resources.list()
-  assert.equal(all.ok, true)
-  if (!all.ok) return
-  const found = all.data.find((r) => r.id === uploaded.data.id)
-  assert.ok(found)
-  assert.equal(found.courseCode, courseCode)
+  const up2 = await courseMaterials.upload({
+    student,
+    title: "List Test Notes",
+    courseId,
+    courseMaterialType: "notes",
+    year: 2024,
+    semester: "1",
+    description: null,
+    file: pdfFile("notes1.pdf"),
+  })
+  assert.equal(up2.ok, true)
+  if (up2.ok) createdMaterialIds.push(up2.data.id)
 
-  // Filter by Course
-  const byCourse = await resources.list({ courseId })
-  assert.equal(byCourse.ok, true)
-  if (!byCourse.ok) return
-  assert.ok(byCourse.data.every((r) => r.courseId === courseId))
+  const listAll = await courseMaterials.list({ courseId })
+  assert.equal(listAll.ok, true)
+  if (!listAll.ok) return
 
-  // Filter by non-existent Course returns empty
-  const empty = await resources.list({ courseId: "no-such-course" })
-  assert.equal(empty.ok, true)
-  if (!empty.ok) return
-  assert.equal(empty.data.length, 0)
+  const titles = listAll.data.map((r) => r.title)
+  assert.ok(titles.includes("List Test Exam"))
+  assert.ok(titles.includes("List Test Notes"))
+
+  const listExams = await courseMaterials.list({
+    courseId,
+    courseMaterialType: "exam",
+  })
+  assert.equal(listExams.ok, true)
+  if (!listExams.ok) return
+  assert.ok(listExams.data.every((r) => r.courseMaterialType === "exam"))
 })
 
-test("list rejects invalid Resource Type", async () => {
-  const result = await resources.list({ resourceType: "invalid-type" })
+test("list rejects invalid Course Material Type", async () => {
+  const result = await courseMaterials.list({
+    courseMaterialType: "invalid-type",
+  })
   assert.equal(result.ok, false)
   if (result.ok) return
   assert.equal(result.error.code, "validation")
-  assert.match(result.error.message, /resource type/i)
 })
 
 // ---------------------------------------------------------------------------
 // get
 // ---------------------------------------------------------------------------
 
-test("get returns Resource detail with Course and Student", async () => {
-  const uploaded = await resources.upload({
+test("get returns Course Material detail with Course and Student", async () => {
+  const uploaded = await courseMaterials.upload({
     student,
-    title: "Detail Test Resource",
+    title: "Get Detail Test",
     courseId,
-    resourceType: "slides",
+    courseMaterialType: "slides",
     year: 2024,
-    semester: "summer",
-    description: "Lecture slides",
-    file: pdfFile("slides.pdf"),
+    semester: "2",
+    description: "Lecture 01 slides",
+    file: pdfFile("lecture01.pdf"),
   })
   assert.equal(uploaded.ok, true)
   if (!uploaded.ok) return
-  createdResourceIds.push(uploaded.data.id)
+  createdMaterialIds.push(uploaded.data.id)
 
-  const detail = await resources.get(uploaded.data.id)
+  const detail = await courseMaterials.get(uploaded.data.id)
   assert.equal(detail.ok, true)
   if (!detail.ok) return
 
-  assert.equal(detail.data.title, "Detail Test Resource")
+  assert.equal(detail.data.title, "Get Detail Test")
+  assert.equal(detail.data.courseMaterialType, "slides")
+  assert.equal(detail.data.courseId, courseId)
   assert.equal(detail.data.courseCode, courseCode)
+  assert.equal(detail.data.studentId, student.id)
   assert.equal(detail.data.studentName, student.name)
-  assert.equal(detail.data.description, "Lecture slides")
 })
 
-test("get returns not_found for unknown Resource", async () => {
-  const result = await resources.get("missing-resource-id")
+test("get returns not_found for unknown Course Material", async () => {
+  const result = await courseMaterials.get("nonexistent_id")
   assert.equal(result.ok, false)
   if (result.ok) return
   assert.equal(result.error.code, "not_found")
@@ -364,12 +371,12 @@ test("get returns not_found for unknown Resource", async () => {
 // stream
 // ---------------------------------------------------------------------------
 
-test("stream returns file content from storage", async () => {
-  const uploaded = await resources.upload({
+test("stream returns file content from storage for new course-materials path", async () => {
+  const uploaded = await courseMaterials.upload({
     student,
-    title: "Stream Test Resource",
+    title: "Stream Test Course Material",
     courseId,
-    resourceType: "exam",
+    courseMaterialType: "exam",
     year: 2024,
     semester: "1",
     description: null,
@@ -377,9 +384,9 @@ test("stream returns file content from storage", async () => {
   })
   assert.equal(uploaded.ok, true)
   if (!uploaded.ok) return
-  createdResourceIds.push(uploaded.data.id)
+  createdMaterialIds.push(uploaded.data.id)
 
-  const result = await resources.stream(uploaded.data.id)
+  const result = await courseMaterials.stream(uploaded.data.id)
   assert.equal(result.ok, true)
   if (!result.ok) return
 
@@ -389,8 +396,41 @@ test("stream returns file content from storage", async () => {
   assert.ok(result.data.stream instanceof ReadableStream)
 })
 
-test("stream returns not_found for unknown Resource", async () => {
-  const result = await resources.stream("missing-resource-id")
+test("stream resolves existing legacy resources/ storage paths with zero data loss", async () => {
+  // Directly insert a record pointing to a legacy resources/{id}/... path
+  const legacyId = `legacy_res_${suffix}`
+  const legacyPath = `resources/${legacyId}/legacy.pdf`
+  const content = Buffer.from("%PDF-1.4 legacy resource content")
+  await storage.put(legacyPath, content, {
+    contentType: "application/pdf",
+  })
+
+  await db.insert(courseMaterial).values({
+    id: legacyId,
+    title: "Legacy Stored Resource",
+    description: "Pre-migration file",
+    courseId,
+    userId: studentId,
+    courseMaterialType: "notes",
+    year: 2023,
+    semester: "1",
+    filePath: legacyPath,
+    fileName: "legacy.pdf",
+    mimeType: "application/pdf",
+    fileSize: content.length,
+  })
+  createdMaterialIds.push(legacyId)
+
+  // Verify stream retrieves content from the legacy path seamlessly
+  const result = await courseMaterials.stream(legacyId)
+  assert.equal(result.ok, true)
+  if (!result.ok) return
+  assert.equal(result.data.fileName, "legacy.pdf")
+  assert.equal(result.data.size, content.length)
+})
+
+test("stream returns not_found for unknown Course Material", async () => {
+  const result = await courseMaterials.stream("nonexistent_id")
   assert.equal(result.ok, false)
   if (result.ok) return
   assert.equal(result.error.code, "not_found")

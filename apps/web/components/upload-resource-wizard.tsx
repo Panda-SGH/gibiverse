@@ -34,14 +34,14 @@ import { CoursePicker } from "@/components/course-picker"
 import type { Course, Department } from "@/app/courses/presentation"
 import {
   MAX_FILE_SIZE_MB,
-  resourceTypeOptions,
+  courseMaterialTypeOptions as resourceTypeOptions,
   semesterOptions,
   yearOptions,
-  type ResourceType,
+  type CourseMaterialType as ResourceType,
   type Semester,
 } from "@gibiverse/shared/types"
 import { formatBytes } from "@gibiverse/shared/utils"
-import { uploadResourceSchema } from "@gibiverse/shared/validation"
+import { uploadCourseMaterialSchema as uploadResourceSchema } from "@gibiverse/shared/validation"
 import {
   detectResourceType,
   sanitizeTitleFromFilename,
@@ -136,7 +136,7 @@ export function UploadResourceWizard({
       file: selectedFile,
       title,
       courseId,
-      resourceType,
+      courseMaterialType: resourceType,
       year,
       semester,
       description: description.trim() || null,
@@ -160,7 +160,7 @@ export function UploadResourceWizard({
           file: validation.data.file,
           title: validation.data.title,
           courseId: validation.data.courseId,
-          resourceType: validation.data.resourceType,
+          resourceType: validation.data.courseMaterialType,
           year: validation.data.year,
           semester: validation.data.semester,
           description: validation.data.description ?? "",

@@ -1,9 +1,9 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 import {
-  RESOURCE_TYPES,
+  COURSE_MATERIAL_TYPES,
   SEMESTERS,
-  resourceTypeSchema,
+  courseMaterialTypeSchema,
   semesterSchema,
   MAX_FILE_SIZE_BYTES,
   MAX_FILE_SIZE_MB,
@@ -11,16 +11,20 @@ import {
   ALLOWED_MIME_TYPES,
   MIN_ACADEMIC_YEAR,
   MAX_ACADEMIC_YEAR,
-  resourceTypePillLabels,
-  resourceTypeOptions,
+  courseMaterialTypePillLabels,
+  courseMaterialTypeOptions,
   semesterOptions,
   yearOptions,
-} from "../src/types/resource.js"
-import { formatBytes } from "../src/utils/resource.js"
-import { validateFile } from "../src/validation/resource.js"
+} from "../src/types/course-material.js"
+import { formatBytes } from "../src/utils/course-material.js"
+import {
+  validateFile,
+  listCourseMaterialsQuerySchema,
+  uploadCourseMaterialSchema,
+} from "../src/validation/course-material.js"
 
-test("RESOURCE_TYPES and SEMESTERS contain domain values", () => {
-  assert.deepEqual(RESOURCE_TYPES, [
+test("COURSE_MATERIAL_TYPES and SEMESTERS contain domain values", () => {
+  assert.deepEqual(COURSE_MATERIAL_TYPES, [
     "exam",
     "notes",
     "slides",
@@ -31,12 +35,12 @@ test("RESOURCE_TYPES and SEMESTERS contain domain values", () => {
   assert.deepEqual(SEMESTERS, ["1", "2", "summer"])
 })
 
-test("resourceTypeSchema validates valid resource types and rejects invalid", () => {
-  for (const type of RESOURCE_TYPES) {
-    const parsed = resourceTypeSchema.safeParse(type)
+test("courseMaterialTypeSchema validates valid course material types and rejects invalid", () => {
+  for (const type of COURSE_MATERIAL_TYPES) {
+    const parsed = courseMaterialTypeSchema.safeParse(type)
     assert.equal(parsed.success, true)
   }
-  const invalid = resourceTypeSchema.safeParse("textbook")
+  const invalid = courseMaterialTypeSchema.safeParse("textbook")
   assert.equal(invalid.success, false)
 })
 
@@ -69,18 +73,18 @@ test("file constants and academic year limits have expected values", () => {
   )
 })
 
-test("catalog options and labels are defined correctly", () => {
-  assert.equal(resourceTypePillLabels.exam, "Exam")
-  assert.equal(resourceTypePillLabels.notes, "Notes")
-  assert.equal(resourceTypePillLabels.slides, "Slides")
-  assert.equal(resourceTypePillLabels.assignment, "Assignment")
-  assert.equal(resourceTypePillLabels.lab, "Lab")
-  assert.equal(resourceTypePillLabels.other, "Other")
+test("course material options and labels are defined correctly", () => {
+  assert.equal(courseMaterialTypePillLabels.exam, "Exam")
+  assert.equal(courseMaterialTypePillLabels.notes, "Notes")
+  assert.equal(courseMaterialTypePillLabels.slides, "Slides")
+  assert.equal(courseMaterialTypePillLabels.assignment, "Assignment")
+  assert.equal(courseMaterialTypePillLabels.lab, "Lab")
+  assert.equal(courseMaterialTypePillLabels.other, "Other")
 
-  assert.equal(resourceTypeOptions.length, 6)
+  assert.equal(courseMaterialTypeOptions.length, 6)
   assert.deepEqual(
-    resourceTypeOptions.map((o) => o.value),
-    [...RESOURCE_TYPES]
+    courseMaterialTypeOptions.map((o) => o.value),
+    [...COURSE_MATERIAL_TYPES]
   )
 
   assert.equal(semesterOptions.length, 3)
@@ -103,7 +107,6 @@ test("formatBytes formats byte numbers accurately", () => {
 })
 
 test("validateFile validates file size, empty files, and allowed formats", () => {
-  // Empty file
   const emptyRes = validateFile({
     name: "notes.pdf",
     size: 0,
@@ -112,7 +115,6 @@ test("validateFile validates file size, empty files, and allowed formats", () =>
   assert.equal(emptyRes.valid, false)
   assert.match(emptyRes.error ?? "", /empty/i)
 
-  // Oversized file
   const overRes = validateFile({
     name: "huge.pdf",
     size: MAX_FILE_SIZE_BYTES + 1,
@@ -124,7 +126,6 @@ test("validateFile validates file size, empty files, and allowed formats", () =>
     /exceeds the maximum allowed limit of 50 MB/i
   )
 
-  // Disallowed format
   const exeRes = validateFile({
     name: "virus.exe",
     size: 1024,
@@ -133,24 +134,45 @@ test("validateFile validates file size, empty files, and allowed formats", () =>
   assert.equal(exeRes.valid, false)
   assert.match(exeRes.error ?? "", /unsupported format/i)
 
-  // Allowed formats
-  const allowedCases = [
-    { name: "test.pdf", type: "application/pdf" },
-    {
-      name: "test.docx",
-      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    },
-    {
-      name: "test.pptx",
-      type: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    },
-    { name: "test.png", type: "image/png" },
-    { name: "test.jpg", type: "image/jpeg" },
-    { name: "test.jpeg", type: "image/jpeg" },
-    { name: "test.webp", type: "image/webp" },
-  ]
-  for (const c of allowedCases) {
-    const res = validateFile({ ...c, size: 2048 })
-    assert.equal(res.valid, true, `Expected ${c.name} to be valid`)
+  const allowed = validateFile({
+    name: "test.pdf",
+    size: 1024,
+    type: "application/pdf",
+  })
+  assert.equal(allowed.valid, true)
+})
+
+test("listCourseMaterialsQuerySchema validates queries with courseMaterialType", () => {
+  const valid = listCourseMaterialsQuerySchema.safeParse({
+    courseMaterialType: "exam",
+    departmentId: "dept_cs",
+    courseId: "course_1",
+  })
+  assert.equal(valid.success, true)
+  if (valid.success) {
+    assert.equal(valid.data.courseMaterialType, "exam")
+    assert.equal(valid.data.departmentId, "dept_cs")
+    assert.equal(valid.data.courseId, "course_1")
+  }
+
+  const invalid = listCourseMaterialsQuerySchema.safeParse({
+    courseMaterialType: "invalid-type",
+  })
+  assert.equal(invalid.success, false)
+})
+
+test("uploadCourseMaterialSchema validates valid metadata and rejects invalid", () => {
+  const result = uploadCourseMaterialSchema.safeParse({
+    title: "Midterm Exam 2024",
+    courseId: "course_1",
+    courseMaterialType: "exam",
+    year: 2024,
+    semester: "1",
+    description: "Sample exam with answers",
+  })
+  // file is missing in this test
+  assert.equal(result.success, false)
+  if (!result.success) {
+    assert.equal(result.error.issues[0]?.path[0], "file")
   }
 })

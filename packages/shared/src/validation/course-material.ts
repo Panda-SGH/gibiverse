@@ -6,10 +6,10 @@ import {
   MAX_FILE_SIZE_MB,
   MIN_ACADEMIC_YEAR,
   MAX_ACADEMIC_YEAR,
-  resourceTypeSchema,
+  courseMaterialTypeSchema,
   semesterSchema,
-} from "../types/resource.js"
-import { formatBytes } from "../utils/resource.js"
+} from "../types/course-material.js"
+import { formatBytes } from "../utils/course-material.js"
 
 export type FileLike = {
   name: string
@@ -59,19 +59,26 @@ const optionalString = z
   .optional()
   .transform((val) => (val && val.length > 0 ? val : undefined))
 
-export const listResourcesQuerySchema = z.object({
-  resourceType: resourceTypeSchema.optional(),
+export const listCourseMaterialsQuerySchema = z.object({
+  courseMaterialType: z
+    .string()
+    .trim()
+    .optional()
+    .transform((val) => (val && val.length > 0 ? val : undefined))
+    .pipe(courseMaterialTypeSchema.optional()),
   departmentId: optionalString,
   courseId: optionalString,
 })
 
-export type ListResourcesQuery = z.infer<typeof listResourcesQuerySchema>
+export type ListCourseMaterialsQuery = z.infer<
+  typeof listCourseMaterialsQuerySchema
+>
 
-export const uploadResourceSchema = z
+export const uploadCourseMaterialSchema = z
   .object({
     title: z.string().trim().min(1, "Title is required"),
     courseId: z.string().trim().min(1, "Course is required"),
-    resourceType: resourceTypeSchema,
+    courseMaterialType: courseMaterialTypeSchema,
     year: z.coerce
       .number({ message: "Invalid academic year" })
       .int("Invalid academic year")
@@ -106,4 +113,6 @@ export const uploadResourceSchema = z
     }
   })
 
-export type UploadResourceInput = z.infer<typeof uploadResourceSchema>
+export type UploadCourseMaterialInput = z.infer<
+  typeof uploadCourseMaterialSchema
+>

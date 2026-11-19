@@ -8,7 +8,7 @@ import {
 import { course } from "./academic.js"
 import { user } from "./auth.js"
 
-export const resource = pgTable("resource", {
+export const courseMaterial = pgTable("course_material", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
@@ -18,7 +18,7 @@ export const resource = pgTable("resource", {
   userId: text("user_id")
     .notNull()
     .references(() => user.id),
-  resourceType: text("resource_type").notNull(),
+  courseMaterialType: text("course_material_type").notNull(),
   year: integer("year").notNull(),
   semester: text("semester").notNull(),
   filePath: text("file_path").notNull(),
@@ -32,13 +32,13 @@ export const resource = pgTable("resource", {
     .notNull(),
 })
 
-export const resourceRelations = relations(resource, ({ one }) => ({
+export const courseMaterialRelations = relations(courseMaterial, ({ one }) => ({
   course: one(course, {
-    fields: [resource.courseId],
+    fields: [courseMaterial.courseId],
     references: [course.id],
   }),
   author: one(user, {
-    fields: [resource.userId],
+    fields: [courseMaterial.userId],
     references: [user.id],
   }),
 }))

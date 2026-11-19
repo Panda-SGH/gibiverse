@@ -22,7 +22,7 @@ export function uploadResource(
     form.set("file", payload.file)
     form.set("title", payload.title)
     form.set("courseId", payload.courseId)
-    form.set("resourceType", payload.resourceType)
+    form.set("courseMaterialType", payload.resourceType)
     form.set("year", String(payload.year))
     form.set("semester", payload.semester)
     if (payload.description?.trim()) {
@@ -30,7 +30,7 @@ export function uploadResource(
     }
 
     const xhr = new XMLHttpRequest()
-    xhr.open("POST", "/api/resources")
+    xhr.open("POST", "/api/course-materials")
     xhr.responseType = "json"
 
     xhr.upload.onprogress = (event) => {

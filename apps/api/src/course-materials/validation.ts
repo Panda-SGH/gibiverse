@@ -1,4 +1,10 @@
-// Re-export canonical resource domain definitions from @gibiverse/shared
+import {
+  COURSE_MATERIAL_TYPES,
+  SEMESTERS,
+  type CourseMaterialType,
+  type Semester,
+} from "@gibiverse/shared/types"
+
 export {
   MAX_FILE_SIZE_BYTES,
   MAX_FILE_SIZE_MB,
@@ -6,9 +12,9 @@ export {
   MAX_ACADEMIC_YEAR,
   ALLOWED_EXTENSIONS,
   ALLOWED_MIME_TYPES,
-  RESOURCE_TYPES,
+  COURSE_MATERIAL_TYPES,
   SEMESTERS,
-  type ResourceType,
+  type CourseMaterialType,
   type Semester,
 } from "@gibiverse/shared/types"
 
@@ -20,15 +26,10 @@ export {
 
 export { formatBytes } from "@gibiverse/shared/utils"
 
-import {
-  RESOURCE_TYPES,
-  SEMESTERS,
-  type ResourceType,
-  type Semester,
-} from "@gibiverse/shared/types"
-
-export function isResourceType(value: string): value is ResourceType {
-  return (RESOURCE_TYPES as readonly string[]).includes(value)
+export function isCourseMaterialType(
+  value: string
+): value is CourseMaterialType {
+  return (COURSE_MATERIAL_TYPES as readonly string[]).includes(value)
 }
 
 export function isSemester(value: string): value is Semester {

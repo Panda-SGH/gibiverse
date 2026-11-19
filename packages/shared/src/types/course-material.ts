@@ -1,9 +1,9 @@
 import { z } from "zod"
 
 /**
- * Allowed resource classifications in Gibiverse.
+ * Allowed course material classifications in Gibiverse.
  */
-export const RESOURCE_TYPES = [
+export const COURSE_MATERIAL_TYPES = [
   "exam",
   "notes",
   "slides",
@@ -12,11 +12,11 @@ export const RESOURCE_TYPES = [
   "other",
 ] as const
 
-export const resourceTypeSchema = z.enum(RESOURCE_TYPES, {
-  message: "Invalid resource type",
+export const courseMaterialTypeSchema = z.enum(COURSE_MATERIAL_TYPES, {
+  message: "Invalid course material type",
 })
 
-export type ResourceType = z.infer<typeof resourceTypeSchema>
+export type CourseMaterialType = z.infer<typeof courseMaterialTypeSchema>
 
 /**
  * Allowed academic semesters in Gibiverse.
@@ -45,7 +45,7 @@ export const MAX_FILE_SIZE_MB = 50
 export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 
 /**
- * Academic year limits for resources in Gibiverse.
+ * Academic year limits for course materials in Gibiverse.
  */
 export const MIN_ACADEMIC_YEAR = 2000
 export const MAX_ACADEMIC_YEAR = 2100
@@ -70,9 +70,9 @@ export const ALLOWED_MIME_TYPES = [
 ] as const
 
 /**
- * UI Pill labels for ResourceType.
+ * UI Pill labels for CourseMaterialType.
  */
-export const resourceTypePillLabels: Record<ResourceType, string> = {
+export const courseMaterialTypePillLabels: Record<CourseMaterialType, string> = {
   exam: "Exam",
   notes: "Notes",
   slides: "Slides",
@@ -82,10 +82,10 @@ export const resourceTypePillLabels: Record<ResourceType, string> = {
 }
 
 /**
- * Select options for ResourceType.
+ * Select options for CourseMaterialType.
  */
-export const resourceTypeOptions: Array<{
-  value: ResourceType
+export const courseMaterialTypeOptions: Array<{
+  value: CourseMaterialType
   label: string
 }> = [
   { value: "exam", label: "Past Exam" },

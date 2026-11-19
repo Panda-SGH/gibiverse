@@ -1,4 +1,4 @@
-import type { ResourceType, Semester } from "@gibiverse/shared/types"
+import type { CourseMaterialType as ResourceType, Semester } from "@gibiverse/shared/types"
 import {
   MAX_FILE_SIZE_BYTES,
   MAX_FILE_SIZE_MB,

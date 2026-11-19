@@ -8,13 +8,18 @@ export default async function ResourcesPage() {
     client.api.universities.$get(),
     client.api.departments.$get(),
     client.api.courses.$get(),
-    client.api.resources.$get(),
+    client.api["course-materials"].$get({ query: {} }),
   ])
 
   const universities = univRes.ok ? await univRes.json() : []
   const departments = deptRes.ok ? await deptRes.json() : []
   const courses = courseRes.ok ? await courseRes.json() : []
-  const resources = resourcesRes.ok ? await resourcesRes.json() : []
+  const resources = resourcesRes.ok
+    ? (await resourcesRes.json()).map((r) => ({
+        ...r,
+        resourceType: r.courseMaterialType,
+      }))
+    : []
 
   const primaryUniversity = universities[0] ?? null
   const scopedDepartments = primaryUniversity

@@ -37,9 +37,9 @@ import {
   type CatalogResource,
 } from "./presentation"
 import {
-  resourceTypeOptions,
-  resourceTypePillLabels,
-  type ResourceType,
+  courseMaterialTypeOptions as resourceTypeOptions,
+  courseMaterialTypePillLabels as resourceTypePillLabels,
+  type CourseMaterialType as ResourceType,
 } from "@gibiverse/shared/types"
 
 const ALL_VALUE = "__all__"
@@ -102,10 +102,10 @@ export function ResourceCatalogClient({
     setIsLoading(true)
     setError(null)
 
-    client.api.resources
+    client.api["course-materials"]
       .$get({
         query: {
-          resourceType: filters.resourceType || undefined,
+          courseMaterialType: filters.resourceType || undefined,
           departmentId: filters.departmentId || undefined,
           courseId: filters.courseId || undefined,
         },
@@ -115,7 +115,7 @@ export function ResourceCatalogClient({
         return res.json()
       })
       .then((next) => {
-        if (!cancelled) setResources(next)
+        if (!cancelled) setResources(next as unknown as CatalogResource[])
       })
       .catch(() => {
         if (!cancelled) {
@@ -208,7 +208,13 @@ export function ResourceCatalogClient({
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center transition-transform duration-300 group-hover:scale-105">
-                        <FileTypeIcon resourceType={resource.resourceType} />
+                        <FileTypeIcon
+                          resourceType={
+                            resource.courseMaterialType ??
+                            resource.resourceType ??
+                            "other"
+                          }
+                        />
                       </div>
                     )}
                   </div>
@@ -247,8 +253,11 @@ export function ResourceCatalogClient({
                     <div className="mt-auto flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
                       <Badge variant="outline" className="text-xs">
                         {resourceTypePillLabels[
-                          resource.resourceType as ResourceType
-                        ] ?? resource.resourceType}
+                          (resource.courseMaterialType ??
+                            resource.resourceType) as ResourceType
+                        ] ??
+                          resource.courseMaterialType ??
+                          resource.resourceType}
                       </Badge>
                       <time dateTime={resource.createdAt}>
                         {formatRelativeUploadDate(resource.createdAt)}

@@ -4,27 +4,27 @@ import { eq, inArray } from "drizzle-orm"
 import { app } from "../src/app.js"
 import db from "../src/db/index.js"
 import { university, department, course } from "../src/db/schema/academic.js"
-import { resource } from "../src/db/schema/resource.js"
+import { courseMaterial } from "../src/db/schema/course-material.js"
 import { user } from "../src/db/schema/auth.js"
 
 const suffix = Date.now()
-const uniId = `uni_list_${suffix}`
+const uniId = `uni_cmlist_${suffix}`
 const deptCsId = `dept_cs_${suffix}`
 const deptMathId = `dept_math_${suffix}`
 const courseCsId = `course_cs_${suffix}`
 const courseMathId = `course_math_${suffix}`
 const courseCsCode = `LC${String(suffix).slice(-3)}`
 const courseMathCode = `LM${String(suffix).slice(-3)}`
-const studentId = `user_list_${suffix}`
+const studentId = `user_cmlist_${suffix}`
 
-const examId = `res_exam_${suffix}`
-const notesId = `res_notes_${suffix}`
-const mathExamId = `res_math_exam_${suffix}`
+const examId = `cm_exam_${suffix}`
+const notesId = `cm_notes_${suffix}`
+const mathExamId = `cm_math_exam_${suffix}`
 
-type ListedResource = {
+type ListedCourseMaterial = {
   id: string
   title: string
-  resourceType: string
+  courseMaterialType: string
   year: number
   semester: string
   createdAt: string
@@ -68,24 +68,24 @@ before(async () => {
   await db.insert(user).values({
     id: studentId,
     name: "List Student",
-    email: `list_${suffix}@university.edu`,
+    email: `cmlist_${suffix}@university.edu`,
     emailVerified: true,
   })
 
   const fileMeta = {
     userId: studentId,
-    filePath: `resources/${suffix}/stub.pdf`,
+    filePath: `course-materials/${suffix}/stub.pdf`,
     fileName: "stub.pdf",
     mimeType: "application/pdf",
     fileSize: 128,
   }
 
-  await db.insert(resource).values([
+  await db.insert(courseMaterial).values([
     {
       id: examId,
       title: "CS Midterm",
       courseId: courseCsId,
-      resourceType: "exam",
+      courseMaterialType: "exam",
       year: 2024,
       semester: "1",
       ...fileMeta,
@@ -94,22 +94,22 @@ before(async () => {
       id: notesId,
       title: "CS Lecture Notes",
       courseId: courseCsId,
-      resourceType: "notes",
+      courseMaterialType: "notes",
       year: 2024,
       semester: "2",
       ...fileMeta,
-      filePath: `resources/${suffix}/notes.pdf`,
+      filePath: `course-materials/${suffix}/notes.pdf`,
       fileName: "notes.pdf",
     },
     {
       id: mathExamId,
       title: "Math Final",
       courseId: courseMathId,
-      resourceType: "exam",
+      courseMaterialType: "exam",
       year: 2023,
       semester: "summer",
       ...fileMeta,
-      filePath: `resources/${suffix}/math.pdf`,
+      filePath: `course-materials/${suffix}/math.pdf`,
       fileName: "math.pdf",
     },
   ])
@@ -117,8 +117,8 @@ before(async () => {
 
 after(async () => {
   await db
-    .delete(resource)
-    .where(inArray(resource.id, [examId, notesId, mathExamId]))
+    .delete(courseMaterial)
+    .where(inArray(courseMaterial.id, [examId, notesId, mathExamId]))
   await db.delete(user).where(eq(user.id, studentId))
   await db.delete(course).where(inArray(course.id, [courseCsId, courseMathId]))
   await db
@@ -127,16 +127,16 @@ after(async () => {
   await db.delete(university).where(eq(university.id, uniId))
 })
 
-test("GET /api/resources lists catalog fields for each resource", async () => {
-  const res = await app.request("/api/resources")
+test("GET /api/course-materials lists catalog fields for each course material", async () => {
+  const res = await app.request("/api/course-materials")
   assert.strictEqual(res.status, 200)
-  const body = (await res.json()) as ListedResource[]
+  const body = (await res.json()) as ListedCourseMaterial[]
   assert.ok(Array.isArray(body))
 
   const match = body.find((row) => row.id === examId)
   assert.ok(match, "Seeded exam should appear in listing")
   assert.strictEqual(match.title, "CS Midterm")
-  assert.strictEqual(match.resourceType, "exam")
+  assert.strictEqual(match.courseMaterialType, "exam")
   assert.strictEqual(match.year, 2024)
   assert.strictEqual(match.semester, "1")
   assert.strictEqual(match.courseId, courseCsId)
@@ -146,23 +146,23 @@ test("GET /api/resources lists catalog fields for each resource", async () => {
   assert.ok(typeof match.createdAt === "string" && match.createdAt.length > 0)
 })
 
-test("GET /api/resources filters by resourceType", async () => {
-  const res = await app.request("/api/resources?resourceType=notes")
+test("GET /api/course-materials filters by courseMaterialType", async () => {
+  const res = await app.request("/api/course-materials?courseMaterialType=notes")
   assert.strictEqual(res.status, 200)
-  const body = (await res.json()) as ListedResource[]
+  const body = (await res.json()) as ListedCourseMaterial[]
   const ids = body.map((row) => row.id)
   assert.ok(ids.includes(notesId))
   assert.ok(!ids.includes(examId))
   assert.ok(!ids.includes(mathExamId))
-  assert.ok(body.every((row) => row.resourceType === "notes"))
+  assert.ok(body.every((row) => row.courseMaterialType === "notes"))
 })
 
-test("GET /api/resources filters by departmentId", async () => {
+test("GET /api/course-materials filters by departmentId", async () => {
   const res = await app.request(
-    `/api/resources?departmentId=${encodeURIComponent(deptMathId)}`
+    `/api/course-materials?departmentId=${encodeURIComponent(deptMathId)}`
   )
   assert.strictEqual(res.status, 200)
-  const body = (await res.json()) as ListedResource[]
+  const body = (await res.json()) as ListedCourseMaterial[]
   const ids = body.map((row) => row.id)
   assert.ok(ids.includes(mathExamId))
   assert.ok(!ids.includes(examId))
@@ -170,12 +170,12 @@ test("GET /api/resources filters by departmentId", async () => {
   assert.ok(body.every((row) => row.departmentId === deptMathId))
 })
 
-test("GET /api/resources filters by courseId", async () => {
+test("GET /api/course-materials filters by courseId", async () => {
   const res = await app.request(
-    `/api/resources?courseId=${encodeURIComponent(courseCsId)}`
+    `/api/course-materials?courseId=${encodeURIComponent(courseCsId)}`
   )
   assert.strictEqual(res.status, 200)
-  const body = (await res.json()) as ListedResource[]
+  const body = (await res.json()) as ListedCourseMaterial[]
   const ids = body.map((row) => row.id)
   assert.ok(ids.includes(examId))
   assert.ok(ids.includes(notesId))
@@ -183,30 +183,32 @@ test("GET /api/resources filters by courseId", async () => {
   assert.ok(body.every((row) => row.courseId === courseCsId))
 })
 
-test("GET /api/resources returns empty list when filter combo matches nothing", async () => {
+test("GET /api/course-materials returns empty list when filter combo matches nothing", async () => {
   const res = await app.request(
-    `/api/resources?resourceType=exam&departmentId=${encodeURIComponent(deptCsId)}&courseId=${encodeURIComponent(courseMathId)}`
+    `/api/course-materials?courseMaterialType=exam&departmentId=${encodeURIComponent(deptCsId)}&courseId=${encodeURIComponent(courseMathId)}`
   )
   assert.strictEqual(res.status, 200)
-  const body = (await res.json()) as ListedResource[]
+  const body = (await res.json()) as ListedCourseMaterial[]
   assert.deepStrictEqual(body, [])
 })
 
-test("GET /api/resources applies resourceType and departmentId together", async () => {
+test("GET /api/course-materials applies courseMaterialType and departmentId together", async () => {
   const res = await app.request(
-    `/api/resources?resourceType=exam&departmentId=${encodeURIComponent(deptCsId)}`
+    `/api/course-materials?courseMaterialType=exam&departmentId=${encodeURIComponent(deptCsId)}`
   )
   assert.strictEqual(res.status, 200)
-  const body = (await res.json()) as ListedResource[]
+  const body = (await res.json()) as ListedCourseMaterial[]
   const ids = body.map((row) => row.id)
   assert.ok(ids.includes(examId))
   assert.ok(!ids.includes(notesId))
   assert.ok(!ids.includes(mathExamId))
 })
 
-test("GET /api/resources rejects invalid resourceType", async () => {
-  const res = await app.request("/api/resources?resourceType=handout")
+test("GET /api/course-materials rejects invalid courseMaterialType", async () => {
+  const res = await app.request(
+    "/api/course-materials?courseMaterialType=handout"
+  )
   assert.strictEqual(res.status, 400)
   const body = (await res.json()) as { error: string }
-  assert.match(body.error, /resource type/i)
+  assert.match(body.error, /course material type/i)
 })

@@ -22,8 +22,8 @@ import {
   formatRelativeUploadDate,
 } from "@/lib/formatters"
 import {
-  resourceTypePillLabels,
-  type ResourceType,
+  courseMaterialTypePillLabels as resourceTypePillLabels,
+  type CourseMaterialType as ResourceType,
 } from "@gibiverse/shared/types"
 
 export const dynamic = "force-dynamic"

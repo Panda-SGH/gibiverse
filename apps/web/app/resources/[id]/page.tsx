@@ -29,7 +29,7 @@ function formatUploadDate(createdAt: string): string {
 export default async function ResourceDetailPage({ params }: ResourcePageProps) {
   const { id } = await params
   const [res, coursesRes, deptRes, univRes] = await Promise.all([
-    client.api.resources[":id"]
+    client.api["course-materials"][":id"]
       .$get({
         param: { id },
       })

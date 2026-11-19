@@ -1,16 +1,19 @@
 import { Hono, type Context } from "hono"
 import { zValidator } from "@hono/zod-validator"
 import {
-  listResourcesQuerySchema,
-  uploadResourceSchema,
+  listCourseMaterialsQuerySchema,
+  uploadCourseMaterialSchema,
 } from "@gibiverse/shared/validation"
 import db from "../db/index.js"
 import { statusFor } from "../lib/result.js"
 import { requireAuth } from "../middleware/auth.js"
-import { createResources } from "../resources/index.js"
+import { createCourseMaterials } from "../course-materials/index.js"
 import { createStorage } from "../storage/index.js"
 
-const resourceModule = createResources({ db, storage: createStorage() })
+const courseMaterialModule = createCourseMaterials({
+  db,
+  storage: createStorage(),
+})
 
 function contentDisposition(
   disposition: "inline" | "attachment",
@@ -20,12 +23,12 @@ function contentDisposition(
   return `${disposition}; filename="${escaped}"`
 }
 
-async function streamResourceFile(
+async function streamCourseMaterialFile(
   c: Context,
   disposition: "inline" | "attachment"
 ) {
   const id = c.req.param("id")
-  const result = await resourceModule.stream(id)
+  const result = await courseMaterialModule.stream(id)
 
   if (!result.ok) {
     return c.json({ error: result.error.message }, statusFor(result.error))
@@ -40,40 +43,39 @@ async function streamResourceFile(
   return c.body(result.data.stream)
 }
 
-const resources = new Hono()
-  .get("/", async (c) => {
-    const queryValidation = listResourcesQuerySchema.safeParse({
-      resourceType: c.req.query("resourceType")?.trim() || undefined,
-      departmentId: c.req.query("departmentId")?.trim() || undefined,
-      courseId: c.req.query("courseId")?.trim() || undefined,
-    })
+const courseMaterials = new Hono()
+  .get(
+    "/",
+    zValidator("query", listCourseMaterialsQuerySchema, (result, c) => {
+      if (!result.success) {
+        return c.json(
+          { error: result.error.issues[0]?.message ?? "Invalid query" },
+          400
+        )
+      }
+    }),
+    async (c) => {
+      const { courseMaterialType, departmentId, courseId } =
+        c.req.valid("query")
 
-    if (!queryValidation.success) {
-      return c.json(
-        { error: queryValidation.error.issues[0]?.message ?? "Invalid query" },
-        400
-      )
+      const result = await courseMaterialModule.list({
+        courseMaterialType,
+        departmentId,
+        courseId,
+      })
+
+      if (!result.ok) {
+        return c.json({ error: result.error.message }, statusFor(result.error))
+      }
+
+      return c.json(result.data)
     }
-
-    const { resourceType, departmentId, courseId } = queryValidation.data
-
-    const result = await resourceModule.list({
-      resourceType,
-      departmentId,
-      courseId,
-    })
-
-    if (!result.ok) {
-      return c.json({ error: result.error.message }, statusFor(result.error))
-    }
-
-    return c.json(result.data)
-  })
-  .get("/:id/download", async (c) => streamResourceFile(c, "attachment"))
-  .get("/:id/preview", async (c) => streamResourceFile(c, "inline"))
+  )
+  .get("/:id/download", async (c) => streamCourseMaterialFile(c, "attachment"))
+  .get("/:id/preview", async (c) => streamCourseMaterialFile(c, "inline"))
   .get("/:id", async (c) => {
     const id = c.req.param("id")
-    const result = await resourceModule.get(id)
+    const result = await courseMaterialModule.get(id)
 
     if (!result.ok) {
       return c.json({ error: result.error.message }, statusFor(result.error))
@@ -84,7 +86,7 @@ const resources = new Hono()
   .post(
     "/",
     requireAuth,
-    zValidator("form", uploadResourceSchema, (result, c) => {
+    zValidator("form", uploadCourseMaterialSchema, (result, c) => {
       if (!result.success) {
         return c.json(
           { error: result.error.issues[0]?.message ?? "Invalid upload" },
@@ -101,7 +103,7 @@ const resources = new Hono()
       const {
         title,
         courseId,
-        resourceType,
+        courseMaterialType,
         year,
         semester,
         description,
@@ -110,11 +112,11 @@ const resources = new Hono()
 
       const data = Buffer.from(await file.arrayBuffer())
 
-      const result = await resourceModule.upload({
+      const result = await courseMaterialModule.upload({
         student: { id: user.id, name: user.name },
         title,
         courseId,
-        resourceType,
+        courseMaterialType,
         year,
         semester,
         description,
@@ -129,4 +131,4 @@ const resources = new Hono()
     }
   )
 
-export { resources }
+export { courseMaterials }

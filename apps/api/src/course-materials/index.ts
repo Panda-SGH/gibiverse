@@ -2,7 +2,8 @@ import { randomUUID } from "node:crypto"
 import { and, desc, eq, type SQL } from "drizzle-orm"
 import { course } from "../db/schema/academic.js"
 import { user as studentTable } from "../db/schema/auth.js"
-import { resource } from "../db/schema/resource.js"
+import { courseMaterial } from "../db/schema/course-material.js"
+import type { CourseMaterialType, Semester } from "@gibiverse/shared/types"
 import {
   ok,
   err,
@@ -11,9 +12,13 @@ import {
   type Result,
 } from "../lib/result.js"
 import type { StorageProvider } from "../storage/types.js"
-import { isResourceType, isSemester, validateUploadFile } from "./validation.js"
+import {
+  isCourseMaterialType,
+  isSemester,
+  validateUploadFile,
+} from "./validation.js"
 
-export type ResourceFileInput = {
+export type CourseMaterialFileInput = {
   name: string
   size: number
   type: string
@@ -24,15 +29,15 @@ export type UploadInput = {
   student: StudentIdentity
   title: string
   courseId: string
-  resourceType: string
+  courseMaterialType: CourseMaterialType | string
   year: number
-  semester: string
+  semester: Semester | string
   description: string | null
-  file: ResourceFileInput
+  file: CourseMaterialFileInput
 }
 
 export type ListFilters = {
-  resourceType?: string
+  courseMaterialType?: CourseMaterialType | string
   departmentId?: string
   courseId?: string
 }
@@ -44,15 +49,18 @@ export type StreamResult = {
   size: number
 }
 
-export function createResources(deps: { db: Db; storage: StorageProvider }) {
+export function createCourseMaterials(deps: {
+  db: Db
+  storage: StorageProvider
+}) {
   const { db, storage } = deps
 
   async function upload(
     input: UploadInput
-  ): Promise<Result<typeof resource.$inferSelect>> {
+  ): Promise<Result<typeof courseMaterial.$inferSelect>> {
     const title = input.title.trim()
     const courseId = input.courseId.trim()
-    const { resourceType, semester } = input
+    const { courseMaterialType, semester } = input
 
     if (!title) {
       return err("validation", "Title is required")
@@ -60,8 +68,8 @@ export function createResources(deps: { db: Db; storage: StorageProvider }) {
     if (!courseId) {
       return err("validation", "Course is required")
     }
-    if (!isResourceType(resourceType)) {
-      return err("validation", "Invalid resource type")
+    if (!isCourseMaterialType(courseMaterialType)) {
+      return err("validation", "Invalid course material type")
     }
     if (!isSemester(semester)) {
       return err("validation", "Invalid semester")
@@ -95,7 +103,7 @@ export function createResources(deps: { db: Db; storage: StorageProvider }) {
 
     const id = randomUUID()
     const safeName = input.file.name.replace(/[^a-zA-Z0-9._-]/g, "_")
-    const storageKey = `resources/${id}/${safeName}`
+    const storageKey = `course-materials/${id}/${safeName}`
 
     const putResult = await storage.put(storageKey, input.file.data, {
       contentType: input.file.type || "application/octet-stream",
@@ -103,14 +111,14 @@ export function createResources(deps: { db: Db; storage: StorageProvider }) {
 
     try {
       const [created] = await db
-        .insert(resource)
+        .insert(courseMaterial)
         .values({
           id,
           title,
           description: input.description,
           courseId,
           userId: input.student.id,
-          resourceType,
+          courseMaterialType,
           year: input.year,
           semester,
           filePath: putResult.key,
@@ -128,37 +136,42 @@ export function createResources(deps: { db: Db; storage: StorageProvider }) {
   }
 
   async function list(filters: ListFilters = {}) {
-    if (filters.resourceType && !isResourceType(filters.resourceType)) {
-      return err("validation", "Invalid resource type")
+    if (
+      filters.courseMaterialType &&
+      !isCourseMaterialType(filters.courseMaterialType)
+    ) {
+      return err("validation", "Invalid course material type")
     }
 
     const conditions: SQL[] = []
-    if (filters.resourceType) {
-      conditions.push(eq(resource.resourceType, filters.resourceType))
+    if (filters.courseMaterialType) {
+      conditions.push(
+        eq(courseMaterial.courseMaterialType, filters.courseMaterialType)
+      )
     }
     if (filters.departmentId) {
       conditions.push(eq(course.departmentId, filters.departmentId))
     }
     if (filters.courseId) {
-      conditions.push(eq(resource.courseId, filters.courseId))
+      conditions.push(eq(courseMaterial.courseId, filters.courseId))
     }
 
     const query = db
       .select({
-        id: resource.id,
-        title: resource.title,
-        resourceType: resource.resourceType,
-        year: resource.year,
-        semester: resource.semester,
-        createdAt: resource.createdAt,
-        courseId: resource.courseId,
+        id: courseMaterial.id,
+        title: courseMaterial.title,
+        courseMaterialType: courseMaterial.courseMaterialType,
+        year: courseMaterial.year,
+        semester: courseMaterial.semester,
+        createdAt: courseMaterial.createdAt,
+        courseId: courseMaterial.courseId,
         courseCode: course.code,
         courseName: course.name,
         departmentId: course.departmentId,
       })
-      .from(resource)
-      .innerJoin(course, eq(resource.courseId, course.id))
-      .orderBy(desc(resource.createdAt))
+      .from(courseMaterial)
+      .innerJoin(course, eq(courseMaterial.courseId, course.id))
+      .orderBy(desc(courseMaterial.createdAt))
 
     const rows =
       conditions.length > 0
@@ -168,12 +181,12 @@ export function createResources(deps: { db: Db; storage: StorageProvider }) {
     return ok(rows)
   }
 
-  async function get(resourceId?: string): Promise<
+  async function get(courseMaterialId?: string): Promise<
     Result<{
       id: string
       title: string
       description: string | null
-      resourceType: string
+      courseMaterialType: string
       year: number
       semester: string
       fileName: string
@@ -187,63 +200,65 @@ export function createResources(deps: { db: Db; storage: StorageProvider }) {
       studentName: string
     }>
   > {
-    if (!resourceId) {
-      return err("not_found", "Resource not found")
+    if (!courseMaterialId) {
+      return err("not_found", "Course material not found")
     }
 
     const [row] = await db
       .select({
-        id: resource.id,
-        title: resource.title,
-        description: resource.description,
-        resourceType: resource.resourceType,
-        year: resource.year,
-        semester: resource.semester,
-        fileName: resource.fileName,
-        mimeType: resource.mimeType,
-        fileSize: resource.fileSize,
-        createdAt: resource.createdAt,
-        courseId: resource.courseId,
+        id: courseMaterial.id,
+        title: courseMaterial.title,
+        description: courseMaterial.description,
+        courseMaterialType: courseMaterial.courseMaterialType,
+        year: courseMaterial.year,
+        semester: courseMaterial.semester,
+        fileName: courseMaterial.fileName,
+        mimeType: courseMaterial.mimeType,
+        fileSize: courseMaterial.fileSize,
+        createdAt: courseMaterial.createdAt,
+        courseId: courseMaterial.courseId,
         courseCode: course.code,
         courseName: course.name,
-        studentId: resource.userId,
+        studentId: courseMaterial.userId,
         studentName: studentTable.name,
       })
-      .from(resource)
-      .innerJoin(course, eq(resource.courseId, course.id))
-      .innerJoin(studentTable, eq(resource.userId, studentTable.id))
-      .where(eq(resource.id, resourceId))
+      .from(courseMaterial)
+      .innerJoin(course, eq(courseMaterial.courseId, course.id))
+      .innerJoin(studentTable, eq(courseMaterial.userId, studentTable.id))
+      .where(eq(courseMaterial.id, courseMaterialId))
       .limit(1)
 
     if (!row) {
-      return err("not_found", "Resource not found")
+      return err("not_found", "Course material not found")
     }
 
     return ok(row)
   }
 
-  async function stream(resourceId?: string): Promise<Result<StreamResult>> {
-    if (!resourceId) {
-      return err("not_found", "Resource not found")
+  async function stream(
+    courseMaterialId?: string
+  ): Promise<Result<StreamResult>> {
+    if (!courseMaterialId) {
+      return err("not_found", "Course material not found")
     }
 
     const [row] = await db
       .select({
-        filePath: resource.filePath,
-        fileName: resource.fileName,
-        mimeType: resource.mimeType,
+        filePath: courseMaterial.filePath,
+        fileName: courseMaterial.fileName,
+        mimeType: courseMaterial.mimeType,
       })
-      .from(resource)
-      .where(eq(resource.id, resourceId))
+      .from(courseMaterial)
+      .where(eq(courseMaterial.id, courseMaterialId))
       .limit(1)
 
     if (!row) {
-      return err("not_found", "Resource not found")
+      return err("not_found", "Course material not found")
     }
 
     const stored = await storage.get(row.filePath)
     if (!stored) {
-      return err("not_found", "Resource content not found")
+      return err("not_found", "Course material content not found")
     }
 
     return ok({
@@ -262,4 +277,4 @@ export function createResources(deps: { db: Db; storage: StorageProvider }) {
   }
 }
 
-export type Resources = ReturnType<typeof createResources>
+export type CourseMaterials = ReturnType<typeof createCourseMaterials>
