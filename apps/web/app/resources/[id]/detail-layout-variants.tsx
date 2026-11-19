@@ -475,11 +475,11 @@ export function VariantD({ resource }: { resource: DetailResourceData }) {
 
         {/* Row 2: University, Department, Course, Academic Year in middle */}
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">{university}</span>
+          <span>{university}</span>
           <span className="text-muted-foreground/40">·</span>
           <span>{department}</span>
           <span className="text-muted-foreground/40">·</span>
-          <span className="font-medium text-foreground">
+          <span>
             {resource.courseCode} ({resource.courseName})
           </span>
           <span className="text-muted-foreground/40">·</span>
@@ -488,9 +488,7 @@ export function VariantD({ resource }: { resource: DetailResourceData }) {
 
         {/* Row 3: Uploader name, upload time at bottom */}
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-          <span>
-            Uploaded by <strong className="font-medium text-foreground">{resource.studentName}</strong>
-          </span>
+          <span>Uploaded by {resource.studentName}</span>
           <span className="text-muted-foreground/40">·</span>
           <span>
             {formatUploadDate(resource.createdAt)} ({formatRelativeUploadDate(resource.createdAt)})
