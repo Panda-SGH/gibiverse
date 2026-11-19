@@ -325,10 +325,17 @@ export function VariantD({
                 </h3>
 
                 {/* University name + Course code on the same line */}
-                <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                  <span className="truncate font-medium text-foreground/80">
-                    {universityName ?? ""}
-                  </span>
+                <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                  {universityName ? (
+                    <>
+                      <span className="truncate font-medium text-foreground/80">
+                        {universityName}
+                      </span>
+                      <span aria-hidden="true" className="text-muted-foreground/50">
+                        ·
+                      </span>
+                    </>
+                  ) : null}
                   <Badge variant="secondary" className="shrink-0 font-mono text-[11px]">
                     {r.courseCode}
                   </Badge>
