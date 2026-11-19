@@ -5,7 +5,6 @@ export type UploadCourseMaterialPayload = {
   title: string
   courseId: string
   courseMaterialType: CourseMaterialType | string
-  resourceType?: string
   year: number
   semester: string
   description?: string
@@ -25,10 +24,7 @@ export function uploadCourseMaterial(
     form.set("file", payload.file)
     form.set("title", payload.title)
     form.set("courseId", payload.courseId)
-    form.set(
-      "courseMaterialType",
-      (payload.courseMaterialType || payload.resourceType) as string
-    )
+    form.set("courseMaterialType", payload.courseMaterialType as string)
     form.set("year", String(payload.year))
     form.set("semester", payload.semester)
     if (payload.description?.trim()) {
@@ -64,8 +60,3 @@ export function uploadCourseMaterial(
     xhr.send(form)
   })
 }
-
-// Backwards compatibility aliases
-export const uploadResource = uploadCourseMaterial
-export type UploadResourcePayload = UploadCourseMaterialPayload
-export type UploadResourceResult = UploadCourseMaterialResult

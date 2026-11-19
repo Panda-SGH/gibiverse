@@ -5,27 +5,19 @@ export { formatAcademicPeriod, formatRelativeUploadDate }
 
 export type CourseMaterialFilters = {
   courseMaterialType?: CourseMaterialType | null
-  resourceType?: CourseMaterialType | null
   departmentId: string | null
   courseId: string | null
 }
-
-// Backwards compatibility alias
-export type CatalogFilters = CourseMaterialFilters
 
 export type CourseMaterialEmptyState = {
   title: string
   description: string
 }
 
-// Backwards compatibility alias
-export type CatalogEmptyState = CourseMaterialEmptyState
-
 export type CatalogCourseMaterial = {
   id: string
   title: string
   courseMaterialType: CourseMaterialType | string
-  resourceType?: CourseMaterialType | string
   year: number
   semester: Semester | string
   createdAt: string
@@ -36,13 +28,9 @@ export type CatalogCourseMaterial = {
   thumbnailPath?: string | null
 }
 
-// Backwards compatibility alias
-export type CatalogResource = CatalogCourseMaterial
-
 export function hasActiveCatalogFilters(filters: CourseMaterialFilters): boolean {
   return Boolean(
     filters.courseMaterialType ||
-      filters.resourceType ||
       filters.departmentId ||
       filters.courseId
   )
@@ -70,23 +58,20 @@ export function buildCourseMaterialsQuery(
   filters: CourseMaterialFilters
 ): string {
   const params = new URLSearchParams()
-  const type = filters.courseMaterialType || filters.resourceType
-  if (type) params.set("courseMaterialType", type)
+  if (filters.courseMaterialType) {
+    params.set("courseMaterialType", filters.courseMaterialType)
+  }
   if (filters.departmentId) params.set("departmentId", filters.departmentId)
   if (filters.courseId) params.set("courseId", filters.courseId)
   const qs = params.toString()
   return qs ? `/api/course-materials?${qs}` : "/api/course-materials"
 }
 
-// Backwards compatibility alias
-export const buildResourcesQuery = buildCourseMaterialsQuery
-
 export type CourseMaterialDetail = {
   id: string
   title: string
   description: string | null
   courseMaterialType: CourseMaterialType
-  resourceType?: CourseMaterialType
   year: number
   semester: Semester
   fileName: string
@@ -100,21 +85,13 @@ export type CourseMaterialDetail = {
   studentName: string
 }
 
-// Backwards compatibility alias
-export type ResourceDetail = CourseMaterialDetail
-
 export type CourseMaterialPreviewType =
   | "pdf"
   | "docx"
   | "image"
   | "download-only"
 
-// Backwards compatibility alias
-export type ResourcePreviewType = CourseMaterialPreviewType
-
 export const UPLOAD_COURSE_MATERIAL_PATH = "/course-materials/upload"
-// Backwards compatibility alias
-export const UPLOAD_RESOURCE_PATH = UPLOAD_COURSE_MATERIAL_PATH
 
 export function getUploadSignInHref(
   callbackPath: string = UPLOAD_COURSE_MATERIAL_PATH
@@ -127,15 +104,9 @@ export function courseMaterialPreviewUrl(id: string): string {
   return `/api/course-materials/${id}/preview`
 }
 
-// Backwards compatibility alias
-export const resourcePreviewUrl = courseMaterialPreviewUrl
-
 export function courseMaterialDownloadUrl(id: string): string {
   return `/api/course-materials/${id}/download`
 }
-
-// Backwards compatibility alias
-export const resourceDownloadUrl = courseMaterialDownloadUrl
 
 export function resolvePreviewType(
   fileName: string,

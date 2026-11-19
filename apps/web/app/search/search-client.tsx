@@ -149,7 +149,7 @@ export function SearchClient({
           <TabButton
             active={activeTab === "resources"}
             onClick={() => handleTabChange("resources")}
-            label="Resources"
+            label="Course Materials"
             count={results.counts.resources}
             testId="tab-resources"
           />
@@ -218,23 +218,19 @@ export function SearchClient({
                             id="resources-section-heading"
                             className="text-lg font-bold text-foreground"
                           >
-                            Resources
+                            Course Materials
                           </h2>
                           <Badge variant="secondary">
                             {results.counts.resources}
                           </Badge>
                         </div>
-                        {results.counts.resources >
-                          results.resources.length && (
-                          <button
-                            type="button"
-                            onClick={() => handleTabChange("resources")}
-                            className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-                          >
-                            View all resources
-                            <ArrowRight className="size-4" />
-                          </button>
-                        )}
+                        <Link
+                          href="/course-materials"
+                          className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                        >
+                          View all course materials
+                          <ArrowRight className="size-4" />
+                        </Link>
                       </div>
                       <ResourceGrid resources={results.resources} />
                     </section>
@@ -277,12 +273,12 @@ export function SearchClient({
               {activeTab === "resources" && (
                 <section aria-labelledby="resources-tab-heading">
                   <h2 id="resources-tab-heading" className="sr-only">
-                    Resource search results
+                    Course material search results
                   </h2>
                   {results.resources.length === 0 ? (
                     <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-12 text-center">
                       <h3 className="text-base font-semibold text-foreground">
-                        No resources found
+                        No course materials found
                       </h3>
                       <p className="mt-1 text-sm text-muted-foreground">
                         {emptyState.description}

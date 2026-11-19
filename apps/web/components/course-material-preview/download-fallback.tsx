@@ -5,18 +5,15 @@ import { courseMaterialDownloadUrl } from "@/app/course-materials/presentation"
 
 export function DownloadFallback({
   courseMaterialId,
-  resourceId,
   fileName,
   fileSize,
   message = "This course material type can't be previewed in the browser",
 }: {
-  courseMaterialId?: string
-  resourceId?: string
+  courseMaterialId: string
   fileName: string
   fileSize: number
   message?: string
 }) {
-  const id = courseMaterialId || resourceId || ""
   return (
     <div
       className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-border bg-muted/30 px-6 py-12 text-center"
@@ -36,7 +33,10 @@ export function DownloadFallback({
       <Button
         nativeButton={false}
         render={
-          <a href={courseMaterialDownloadUrl(id)} download={fileName} />
+          <a
+            href={courseMaterialDownloadUrl(courseMaterialId)}
+            download={fileName}
+          />
         }
       >
         Download

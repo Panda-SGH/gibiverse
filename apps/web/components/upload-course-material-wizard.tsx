@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   AlertTriangle,
   ArrowLeft,
@@ -64,6 +65,7 @@ export function UploadCourseMaterialWizard({
   departments,
   courses,
 }: UploadCourseMaterialWizardProps) {
+  const router = useRouter()
   const [step, setStep] = React.useState<1 | 2>(1)
   const [phase, setPhase] = React.useState<UploadPhase>("form")
   const [isDragging, setIsDragging] = React.useState(false)
@@ -171,6 +173,8 @@ export function UploadCourseMaterialWizard({
       setCreatedMaterialId(result.id)
       setProgress(100)
       setPhase("success")
+      router.push(`/course-materials/${result.id}`)
+      onOpenChange(false)
     } catch (error) {
       setPhase("error")
       setUploadError(

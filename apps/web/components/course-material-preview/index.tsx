@@ -19,21 +19,18 @@ const PdfPreview = dynamic(
 
 export function CourseMaterialPreview({
   courseMaterialId,
-  resourceId,
   fileName,
   fileSize,
   previewType,
   title,
 }: {
-  courseMaterialId?: string
-  resourceId?: string
+  courseMaterialId: string
   fileName: string
   fileSize: number
   previewType: CourseMaterialPreviewType
   title: string
 }) {
-  const id = courseMaterialId || resourceId || ""
-  const previewUrl = courseMaterialPreviewUrl(id)
+  const previewUrl = courseMaterialPreviewUrl(courseMaterialId)
 
   if (previewType === "pdf") {
     return <PdfPreview fileUrl={previewUrl} />
@@ -49,13 +46,10 @@ export function CourseMaterialPreview({
 
   return (
     <DownloadFallback
-      courseMaterialId={id}
+      courseMaterialId={courseMaterialId}
       fileName={fileName}
       fileSize={fileSize}
       message="Presentations and unsupported course materials are download-only"
     />
   )
 }
-
-// Backwards compatibility alias
-export const ResourcePreview = CourseMaterialPreview

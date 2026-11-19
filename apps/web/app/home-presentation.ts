@@ -1,5 +1,5 @@
 export type PlatformStats = {
-  totalCourseMaterials?: number
+  totalCourseMaterials: number
   totalResources?: number
   totalQuestions: number
   activeCourses: number
@@ -13,7 +13,6 @@ export const DEFAULT_PLATFORM_OVERVIEW = {
     activeCourses: 0,
   },
   recentCourseMaterials: [],
-  recentResources: [],
   recentQuestions: [],
 }
 
@@ -59,9 +58,6 @@ export function getRecentCourseMaterialsEmptyState(): {
       "Share exam papers, notes, or slides with students from your courses.",
   }
 }
-
-// Backwards compatibility alias
-export const getRecentResourcesEmptyState = getRecentCourseMaterialsEmptyState
 
 export function getRecentQuestionsEmptyState(): {
   title: string

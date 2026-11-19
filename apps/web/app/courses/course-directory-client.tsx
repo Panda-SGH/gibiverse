@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { CoursePicker } from "@/components/course-picker"
 import {
   groupCoursesByDepartment,
@@ -44,15 +45,23 @@ export function CourseDirectoryClient({
           onCourseChange={setSelectedCourseId}
         />
         {selectedCourse ? (
-          <p
-            className="text-sm text-foreground"
-            data-testid="selected-course-summary"
-          >
-            Selected:{" "}
-            <span className="font-medium">
-              {selectedCourse.code} — {selectedCourse.name}
-            </span>
-          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <p
+              className="text-sm text-foreground"
+              data-testid="selected-course-summary"
+            >
+              Selected:{" "}
+              <span className="font-medium">
+                {selectedCourse.code} — {selectedCourse.name}
+              </span>
+            </p>
+            <Link
+              href={`/course-materials?courseId=${selectedCourse.id}`}
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              View Course Materials →
+            </Link>
+          </div>
         ) : null}
       </section>
 
@@ -92,9 +101,12 @@ export function CourseDirectoryClient({
                         className="flex flex-wrap items-baseline justify-between gap-2 px-4 py-3"
                         data-testid={`course-row-${course.code}`}
                       >
-                        <span className="font-mono text-sm font-semibold text-primary">
+                        <Link
+                          href={`/course-materials?courseId=${course.id}`}
+                          className="font-mono text-sm font-semibold text-primary hover:underline"
+                        >
                           {course.code}
-                        </span>
+                        </Link>
                         <span className="text-sm text-foreground">
                           {course.name}
                         </span>

@@ -1,6 +1,5 @@
 import type {
   CourseMaterialType,
-  CourseMaterialType as ResourceType,
   Semester,
 } from "@gibiverse/shared/types"
 import {
@@ -18,7 +17,6 @@ import {
   resolvePreviewType,
   resolveFormatLabel,
   type CourseMaterialPreviewType,
-  type ResourcePreviewType,
 } from "../app/course-materials/presentation"
 
 export {
@@ -28,11 +26,9 @@ export {
   ALLOWED_MIME_TYPES,
   formatBytes,
   type CourseMaterialType,
-  type ResourceType,
   type Semester,
   type FileLike,
   type CourseMaterialPreviewType,
-  type ResourcePreviewType,
 }
 
 export interface FileValidationResult {
@@ -79,6 +75,3 @@ export function detectCourseMaterialType(filename: string): CourseMaterialType {
   if (/lab|experiment|practical|worksheet/.test(lower)) return "lab"
   return "other"
 }
-
-// Backwards compatibility alias
-export const detectResourceType = detectCourseMaterialType

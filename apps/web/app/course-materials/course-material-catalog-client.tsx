@@ -105,8 +105,7 @@ export function CourseMaterialCatalogClient({
     client.api["course-materials"]
       .$get({
         query: {
-          courseMaterialType:
-            filters.courseMaterialType || filters.resourceType || undefined,
+          courseMaterialType: filters.courseMaterialType || undefined,
           departmentId: filters.departmentId || undefined,
           courseId: filters.courseId || undefined,
         },
@@ -212,9 +211,7 @@ export function CourseMaterialCatalogClient({
                       <div className="flex h-full w-full items-center justify-center transition-transform duration-300 group-hover:scale-105">
                         <FileTypeIcon
                           courseMaterialType={
-                            material.courseMaterialType ??
-                            material.resourceType ??
-                            "other"
+                            material.courseMaterialType ?? "other"
                           }
                         />
                       </div>
@@ -255,11 +252,8 @@ export function CourseMaterialCatalogClient({
                     <div className="mt-auto flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
                       <Badge variant="outline" className="text-xs">
                         {courseMaterialTypePillLabels[
-                          (material.courseMaterialType ??
-                            material.resourceType) as CourseMaterialType
-                        ] ??
-                          material.courseMaterialType ??
-                          material.resourceType}
+                          material.courseMaterialType as CourseMaterialType
+                        ] ?? material.courseMaterialType}
                       </Badge>
                       <time dateTime={material.createdAt}>
                         {formatRelativeUploadDate(material.createdAt)}
@@ -299,7 +293,7 @@ function CatalogFiltersBar({
     courses,
     filters.departmentId
   )
-  const activeType = filters.courseMaterialType || filters.resourceType
+  const activeType = filters.courseMaterialType
   const typeValue = activeType ? [activeType] : [ALL_TYPE_KEY]
 
   // Build course label for the dropdown button
@@ -365,7 +359,6 @@ function CatalogFiltersBar({
             onFiltersChange({
               ...filters,
               courseMaterialType: null,
-              resourceType: null,
             })
           } else {
             const match = courseMaterialTypeOptions.find(
@@ -374,7 +367,6 @@ function CatalogFiltersBar({
             onFiltersChange({
               ...filters,
               courseMaterialType: match?.value ?? null,
-              resourceType: match?.value ?? null,
             })
           }
         }}
@@ -513,6 +505,3 @@ function CatalogFiltersBar({
     </div>
   )
 }
-
-// Backwards compatibility alias
-export const ResourceCatalogClient = CourseMaterialCatalogClient

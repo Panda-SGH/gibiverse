@@ -100,8 +100,8 @@ export function getSearchEmptyState(
 
   if (type === "resources") {
     return {
-      title: "No resources found",
-      description: `We couldn't find any resources matching "${trimmed}". Try checking for typos or searching for a course code.`,
+      title: "No course materials found",
+      description: `We couldn't find any course materials matching "${trimmed}". Try checking for typos or searching for a course code.`,
     }
   }
 
