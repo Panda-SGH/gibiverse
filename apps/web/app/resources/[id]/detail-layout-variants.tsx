@@ -418,10 +418,10 @@ export function VariantC({ resource }: { resource: DetailResourceData }) {
 }
 
 /**
- * Variant D: Linear Uncarded Hierarchy (Left Download + Clean Typography)
- * - Title at top with Download button to its far left (with file type and size hint)
- * - Middle: University name, department name, course name, academic year
- * - Bottom: Uploader name, upload time
+ * Variant D: Linear Uncarded Hierarchy (Title + Right Download + Refined Meta)
+ * - Title at top with Download button to far right (with file type and size hint)
+ * - Middle: University name, department name, course name, academic year (smaller text)
+ * - Bottom: Uploader name, upload time (smaller text)
  * - No card wrapper: clean, open typography
  */
 export function VariantD({ resource }: { resource: DetailResourceData }) {
@@ -432,7 +432,7 @@ export function VariantD({ resource }: { resource: DetailResourceData }) {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Top back navigation */}
-      <div className="mb-8">
+      <div className="mb-6">
         <Button
           variant="ghost"
           size="sm"
@@ -446,9 +446,13 @@ export function VariantD({ resource }: { resource: DetailResourceData }) {
       </div>
 
       {/* Uncarded Header Section */}
-      <div className="mb-8 flex flex-col gap-4">
-        {/* Row 1: Download button to the far left of title */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+      <div className="mb-8 flex flex-col gap-3">
+        {/* Row 1: Title on left, Download button to far right */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground sm:max-w-2xl">
+            {resource.title}
+          </h1>
+
           <Button
             size="lg"
             className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shrink-0 shadow-sm"
@@ -467,14 +471,10 @@ export function VariantD({ resource }: { resource: DetailResourceData }) {
               {fileExt} · {formatBytes(resource.fileSize)}
             </span>
           </Button>
-
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            {resource.title}
-          </h1>
         </div>
 
         {/* Row 2: University, Department, Course, Academic Year in middle */}
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm sm:text-base text-muted-foreground pt-1">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm text-muted-foreground">
           <span className="font-medium text-foreground">{university}</span>
           <span className="text-muted-foreground/40">·</span>
           <span>{department}</span>
@@ -487,7 +487,7 @@ export function VariantD({ resource }: { resource: DetailResourceData }) {
         </div>
 
         {/* Row 3: Uploader name, upload time at bottom */}
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
           <span>
             Uploaded by <strong className="font-medium text-foreground">{resource.studentName}</strong>
           </span>
@@ -499,7 +499,7 @@ export function VariantD({ resource }: { resource: DetailResourceData }) {
 
         {/* Optional Description */}
         {resource.description ? (
-          <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-3xl">
+          <p className="mt-1 text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-3xl">
             {resource.description}
           </p>
         ) : null}

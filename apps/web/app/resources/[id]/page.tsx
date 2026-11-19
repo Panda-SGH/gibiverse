@@ -71,7 +71,7 @@ export default async function ResourceDetailPage({
     : "D"
 
   const variantsList = [
-    { key: "D", name: "Uncarded (Left Download)" },
+    { key: "D", name: "Uncarded (Right Download)" },
     { key: "A", name: "Split Reader" },
     { key: "B", name: "Academic Brief" },
     { key: "C", name: "Workspace Ribbon" },
