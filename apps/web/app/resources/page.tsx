@@ -3,7 +3,15 @@ import { UploadResourceButton } from "@/components/upload-resource-button"
 import { client } from "@gibiverse/api-client"
 import { ResourceCatalogClient } from "./resource-catalog-client"
 
-export default async function ResourcesPage() {
+export default async function ResourcesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const resolvedParams = await searchParams
+  const variant =
+    typeof resolvedParams.variant === "string" ? resolvedParams.variant : "A"
+
   const [univRes, deptRes, courseRes, resourcesRes] = await Promise.all([
     client.api.universities.$get(),
     client.api.departments.$get(),
@@ -48,6 +56,7 @@ export default async function ResourcesPage() {
         departments={scopedDepartments}
         courses={courses}
         initialResources={resources}
+        variant={variant}
       />
     </div>
   )

@@ -20,13 +20,13 @@ _Avoid_: Class, subject, module
 
 ### Content
 
-**Resource**:
-A file uploaded by a student and tied to a course — past exams, lecture notes, slides, assignments, or lab materials.
-_Avoid_: File, document, material, upload
+**Course Material**:
+An academic document uploaded by a student for a course — a past exam, lecture notes, slides, an assignment, or lab work.
+_Avoid_: Resource, file, document, upload, content
 
-**Resource Type**:
-A classification of what kind of academic material a resource is: exam, notes, slides, assignment, lab, or other.
-_Avoid_: Category, kind
+**Course Material Type**:
+A classification of what kind of academic material a course material is: exam, notes, slides, assignment, lab, or other.
+_Avoid_: Resource type, category, kind
 
 **Academic Period**:
 The year and semester (1, 2, or summer) a resource is associated with.

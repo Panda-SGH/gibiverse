@@ -1,10 +1,8 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
 import { ChevronDown, X } from "lucide-react"
 import { cn } from "@gibiverse/ui/lib/utils"
-import { Badge } from "@gibiverse/ui/components/badge"
 import { Button } from "@gibiverse/ui/components/button"
 import { Label } from "@gibiverse/ui/components/label"
 import {
@@ -22,7 +20,6 @@ import {
 import { client } from "@gibiverse/api-client"
 import type { Course, Department } from "@/app/courses/presentation"
 import { filterCoursesByDepartment } from "@/app/courses/presentation"
-import { formatAcademicPeriod, formatRelativeUploadDate } from "@/lib/formatters"
 import {
   catalogEmptyState,
   hasActiveCatalogFilters,
@@ -32,8 +29,9 @@ import {
 import {
   resourceTypeOptions,
   resourceTypePillLabels,
-  type ResourceType,
 } from "@gibiverse/shared/types"
+import { PrototypeSwitcher } from "@/components/prototype-switcher"
+import { VariantA, VariantB, VariantC } from "./catalog-card-variants"
 
 const ALL_VALUE = "__all__"
 const ALL_TYPE_KEY = "__all_types__"
@@ -41,14 +39,22 @@ const ALL_TYPE_KEY = "__all_types__"
 const ACTIVE_TOGGLE_CLASSES =
   "aria-pressed:bg-emerald-50 aria-pressed:text-emerald-700 aria-pressed:border-emerald-600/30 data-[state=on]:bg-emerald-50 data-[state=on]:text-emerald-700 data-[state=on]:border-emerald-600/30 dark:aria-pressed:bg-emerald-950/40 dark:aria-pressed:text-emerald-400 dark:aria-pressed:border-emerald-500/30 dark:data-[state=on]:bg-emerald-950/40 dark:data-[state=on]:text-emerald-400 dark:data-[state=on]:border-emerald-500/30"
 
+const CARD_VARIANTS = [
+  { key: "A", name: "Magazine" },
+  { key: "B", name: "Compact Row" },
+  { key: "C", name: "Overlay" },
+] as const
+
 export function ResourceCatalogClient({
   departments,
   courses,
   initialResources,
+  variant = "A",
 }: {
   departments: Department[]
   courses: Course[]
   initialResources: CatalogResource[]
+  variant?: string
 }) {
   const [filters, setFilters] = React.useState<CatalogFilters>({
     resourceType: null,
@@ -155,40 +161,19 @@ export function ResourceCatalogClient({
             ) : null}
           </div>
         ) : (
-          <ul
-            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
-            data-testid="resources-grid"
-          >
-            {resources.map((resource) => (
-              <li key={resource.id}>
-                <Link
-                  href={`/resources/${resource.id}`}
-                  className="flex h-full flex-col gap-3 rounded-lg border border-border bg-background p-4 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                  data-testid={`resource-card-${resource.id}`}
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary">{resource.courseCode}</Badge>
-                    <Badge variant="outline">
-                      {resourceTypePillLabels[resource.resourceType as ResourceType] ??
-                        resource.resourceType}
-                    </Badge>
-                  </div>
-                  <h3 className="text-base font-semibold text-foreground">
-                    {resource.title}
-                  </h3>
-                  <p className="mt-auto text-sm text-muted-foreground">
-                    {formatAcademicPeriod(resource.year, resource.semester)}
-                    <span aria-hidden="true"> · </span>
-                    <time dateTime={resource.createdAt}>
-                      {formatRelativeUploadDate(resource.createdAt)}
-                    </time>
-                  </p>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <>
+            {variant === "B" ? (
+              <VariantB resources={resources} />
+            ) : variant === "C" ? (
+              <VariantC resources={resources} />
+            ) : (
+              <VariantA resources={resources} />
+            )}
+          </>
         )}
       </section>
+
+      <PrototypeSwitcher variants={[...CARD_VARIANTS]} current={variant} />
     </div>
   )
 }
