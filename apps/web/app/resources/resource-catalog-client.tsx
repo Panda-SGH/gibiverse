@@ -31,7 +31,7 @@ import {
   resourceTypePillLabels,
 } from "@gibiverse/shared/types"
 import { PrototypeSwitcher } from "@/components/prototype-switcher"
-import { VariantA, VariantB, VariantC } from "./catalog-card-variants"
+import { VariantA, VariantB, VariantC, VariantD } from "./catalog-card-variants"
 
 const ALL_VALUE = "__all__"
 const ALL_TYPE_KEY = "__all_types__"
@@ -43,6 +43,7 @@ const CARD_VARIANTS = [
   { key: "A", name: "Magazine" },
   { key: "B", name: "Compact Row" },
   { key: "C", name: "Overlay" },
+  { key: "D", name: "Detailed" },
 ] as const
 
 export function ResourceCatalogClient({
@@ -50,11 +51,13 @@ export function ResourceCatalogClient({
   courses,
   initialResources,
   variant = "A",
+  universityName = null,
 }: {
   departments: Department[]
   courses: Course[]
   initialResources: CatalogResource[]
   variant?: string
+  universityName?: string | null
 }) {
   const [filters, setFilters] = React.useState<CatalogFilters>({
     resourceType: null,
@@ -166,6 +169,12 @@ export function ResourceCatalogClient({
               <VariantB resources={resources} />
             ) : variant === "C" ? (
               <VariantC resources={resources} />
+            ) : variant === "D" ? (
+              <VariantD
+                resources={resources}
+                departments={departments}
+                universityName={universityName}
+              />
             ) : (
               <VariantA resources={resources} />
             )}

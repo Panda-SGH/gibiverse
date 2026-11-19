@@ -27,6 +27,7 @@ import {
   type ResourceType,
 } from "@gibiverse/shared/types"
 import type { CatalogResource } from "./presentation"
+import type { Department } from "@/app/courses/presentation"
 import { simulateThumbnail, type SimulatedThumbnail } from "./prototype-thumbnail-sim"
 
 /* ------------------------------------------------------------------ */
@@ -279,3 +280,89 @@ export function VariantC({ resources }: { resources: CatalogResource[] }) {
 }
 
 VariantC.displayName = "Overlay"
+
+/* ================================================================== */
+/*  VARIANT D — Detailed (type on thumbnail, full hierarchy metadata)  */
+/* ================================================================== */
+
+export function VariantD({
+  resources,
+  departments,
+  universityName,
+}: {
+  resources: CatalogResource[]
+  departments: Department[]
+  universityName?: string | null
+}) {
+  const deptMap = React.useMemo(() => {
+    const map = new Map<string, string>()
+    for (const d of departments) {
+      map.set(d.id, d.name)
+    }
+    return map
+  }, [departments])
+
+  return (
+    <ul
+      className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+      data-testid="resources-grid"
+    >
+      {resources.map((r) => {
+        const sim = simulateThumbnail(r)
+        const deptName = deptMap.get(r.departmentId)
+
+        return (
+          <li key={r.id}>
+            <Link
+              href={`/resources/${r.id}`}
+              className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-background transition-all hover:border-foreground/20 hover:shadow-md focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              data-testid={`resource-card-${r.id}`}
+            >
+              {/* Thumbnail with type badge overlay */}
+              <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-muted">
+                <ThumbnailBlock
+                  sim={sim}
+                  resourceType={r.resourceType}
+                  className="h-full w-full transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="absolute left-3 top-3">
+                  <span className="inline-flex items-center rounded-md border border-border/40 bg-background/90 px-2 py-0.5 text-xs font-medium text-foreground shadow-sm backdrop-blur-md dark:bg-background/80">
+                    {resourceTypePillLabels[r.resourceType as ResourceType] ??
+                      r.resourceType}
+                  </span>
+                </div>
+              </div>
+
+              {/* Content: Title, University, Department, Course Code, Upload Date */}
+              <div className="flex flex-1 flex-col gap-2 p-4">
+                <h3 className="line-clamp-2 text-base font-semibold text-foreground transition-colors group-hover:text-primary">
+                  {r.title}
+                </h3>
+
+                <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+                  {universityName && (
+                    <span className="truncate font-medium text-foreground/80">
+                      {universityName}
+                    </span>
+                  )}
+                  {deptName && <span className="truncate">{deptName}</span>}
+                </div>
+
+                <div className="mt-auto flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
+                  <Badge variant="secondary" className="font-mono text-xs">
+                    {r.courseCode}
+                  </Badge>
+                  <time dateTime={r.createdAt}>
+                    {formatRelativeUploadDate(r.createdAt)}
+                  </time>
+                </div>
+              </div>
+            </Link>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+VariantD.displayName = "Detailed"

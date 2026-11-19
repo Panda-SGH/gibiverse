@@ -57,6 +57,7 @@ export default async function ResourcesPage({
         courses={courses}
         initialResources={resources}
         variant={variant}
+        universityName={primaryUniversity?.name ?? null}
       />
     </div>
   )
