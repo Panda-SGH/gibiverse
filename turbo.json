@@ -14,13 +14,17 @@
         "DATABASE_URL",
         "BETTER_AUTH_SECRET",
         "BETTER_AUTH_URL",
-        "BETTER_AUTH_TRUSTED_ORIGINS"
+        "BETTER_AUTH_TRUSTED_ORIGINS",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET"
       ],
       "passThroughEnv": [
         "DATABASE_URL",
         "BETTER_AUTH_SECRET",
         "BETTER_AUTH_URL",
-        "BETTER_AUTH_TRUSTED_ORIGINS"
+        "BETTER_AUTH_TRUSTED_ORIGINS",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET"
       ]
     },
     "format": {

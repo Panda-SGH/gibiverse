@@ -19,15 +19,21 @@ export const auth = betterAuth({
   trustedOrigins: [
     ...(process.env.BETTER_AUTH_TRUSTED_ORIGINS
       ? process.env.BETTER_AUTH_TRUSTED_ORIGINS.split(",").map((s) => s.trim())
-      : []),
+      : [
+          "http://localhost:3000",
+          "http://localhost:3001",
+          "http://localhost:8787",
+        ]),
   ],
-  baseURL: process.env.BETTER_AUTH_URL,
+  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
   socialProviders: {
     google: {
       clientId:
-        process.env.GOOGLE_CLIENT_ID as string,
+        (process.env.GOOGLE_CLIENT_ID as string) || "ci-test-google-client-id",
       clientSecret:
-        process.env.GOOGLE_CLIENT_SECRET as string,
+        (process.env.GOOGLE_CLIENT_SECRET as string) ||
+        "ci-test-google-client-secret",
     },
   },
+  secret: process.env.BETTER_AUTH_SECRET || "ci-test-secret-32-bytes-long-pad",
 })
