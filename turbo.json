@@ -9,7 +9,19 @@
     },
     "lint": {},
     "test": {
-      "dependsOn": ["@gibiverse/shared#build"]
+      "dependsOn": ["@gibiverse/shared#build"],
+      "env": [
+        "DATABASE_URL",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "BETTER_AUTH_TRUSTED_ORIGINS"
+      ],
+      "passThroughEnv": [
+        "DATABASE_URL",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "BETTER_AUTH_TRUSTED_ORIGINS"
+      ]
     },
     "format": {
       "cache": false
