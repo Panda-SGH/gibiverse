@@ -5,14 +5,11 @@ import {
   voteValueSchema,
   currentVoteSchema,
   castVoteSchema,
-  type VoteTargetType,
-  type VoteValue,
-  type CurrentVote,
-} from "@gibiverse/shared/types"
+} from "../src/types/index.js"
 import {
   calculateVoteTransition,
   type VoteTransition,
-} from "@gibiverse/shared/utils"
+} from "../src/utils/index.js"
 
 test("voteTargetTypeSchema validates question and answer, rejects invalid strings", () => {
   assert.equal(voteTargetTypeSchema.safeParse("question").success, true)

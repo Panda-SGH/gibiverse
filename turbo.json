@@ -8,7 +8,9 @@
       "outputs": ["dist/**"]
     },
     "lint": {},
-    "test": {},
+    "test": {
+      "dependsOn": ["@gibiverse/shared#build"]
+    },
     "format": {
       "cache": false
     },
