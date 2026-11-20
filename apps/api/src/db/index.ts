@@ -4,17 +4,18 @@ import { drizzle } from "drizzle-orm/node-postgres"
 
 const connectionString = process.env.DATABASE_URL
 
-// Prefer the standard PostgreSQL URL when supplied.  Use explicit Unix socket
-// parameters only for an actual URL-encoded Unix socket URL.
-export const pool =
-  connectionString && !connectionString.includes("%2F")
-    ? new pg.Pool({ connectionString })
-    : new pg.Pool({
-        host: process.env.PGHOST || "/tmp",
-        port: Number(process.env.PGPORT) || 5432,
-        user: process.env.PGUSER || "gibiverse_admin",
-        database: process.env.PGDATABASE || "gibiverse",
-      })
+// Prefer DATABASE_URL when supplied. Without it, use TCP so local/CI tests
+// can reach PostgreSQL services that are not exposed through this process's
+// Unix socket directory.
+export const pool = connectionString
+  ? new pg.Pool({ connectionString })
+  : new pg.Pool({
+      host: process.env.PGHOST || "localhost",
+      port: Number(process.env.PGPORT) || 5432,
+      user: process.env.PGUSER || "gibiverse_admin",
+      password: process.env.PGPASSWORD || "test",
+      database: process.env.PGDATABASE || "gibiverse",
+    })
 
 const db = drizzle({ client: pool })
 
