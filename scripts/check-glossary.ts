@@ -14,8 +14,6 @@ const rootDir = path.resolve(__dirname, "..")
 // High-confidence banned domain terms from GLOSSARY.md _Avoid_ directives:
 // Term pattern and the canonical replacement
 const domainRules = [
-  { pattern: /\bmaterials\b/i, avoid: "materials", preferred: "resources" },
-  { pattern: /\bmaterial\b/i, avoid: "material", preferred: "resource" },
   { pattern: /\bsolutions\b/i, avoid: "solutions", preferred: "answers" },
   { pattern: /\bsolution\b/i, avoid: "solution", preferred: "answer" },
   { pattern: /\bdiscussion threads?\b/i, avoid: "discussion thread(s)", preferred: "Q&A" },

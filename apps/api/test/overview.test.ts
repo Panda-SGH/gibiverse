@@ -5,7 +5,7 @@ import { app } from "../src/app.js"
 import db from "../src/db/index.js"
 import { university, department, course } from "../src/db/schema/academic.js"
 import { question } from "../src/db/schema/question.js"
-import { resource } from "../src/db/schema/resource.js"
+import { courseMaterial } from "../src/db/schema/course-material.js"
 import { user } from "../src/db/schema/auth.js"
 
 const suffix = Date.now()
@@ -94,7 +94,7 @@ before(async () => {
 })
 
 after(async () => {
-  await db.delete(resource).where(inArray(resource.id, [resource1Id, resource2Id]))
+  await db.delete(courseMaterial).where(inArray(courseMaterial.id, [resource1Id, resource2Id]))
   await db.delete(question).where(inArray(question.id, [question1Id]))
   await db.delete(course).where(inArray(course.id, [courseActive1Id, courseActive2Id, courseInactiveId]))
   await db.delete(user).where(eq(user.id, studentId))
@@ -131,12 +131,12 @@ test("GET /api/overview returns aggregated platform statistics and recent feeds"
   const prevQCount = initialData.stats.totalQuestions
   const prevActiveCourses = initialData.stats.activeCourses
 
-  // Insert 2 resources on courseActive1 and 1 question on courseActive2
-  await db.insert(resource).values([
+  // Insert 2 course materials on courseActive1 and 1 question on courseActive2
+  await db.insert(courseMaterial).values([
     {
       id: resource1Id,
       title: "Algorithms Midterm 2024",
-      resourceType: "exam",
+      courseMaterialType: "exam",
       year: 2024,
       semester: "1",
       fileName: "midterm.pdf",
@@ -150,7 +150,7 @@ test("GET /api/overview returns aggregated platform statistics and recent feeds"
     {
       id: resource2Id,
       title: "Algorithms Lecture 1 Notes",
-      resourceType: "notes",
+      courseMaterialType: "notes",
       year: 2024,
       semester: "1",
       fileName: "notes.pdf",

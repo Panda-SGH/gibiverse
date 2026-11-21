@@ -80,7 +80,7 @@ function SignInForm() {
           Sign in to Gibiverse
         </h1>
         <p className="text-sm text-muted-foreground">
-          Access your university academic resources and course Q&amp;A
+          Access your university academic course materials and course Q&amp;A
         </p>
       </div>
 

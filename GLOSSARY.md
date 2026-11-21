@@ -1,6 +1,6 @@
 # Gibiverse
 
-Academic resource-sharing and Q&A platform for university students.
+Academic course material-sharing and Q&A platform for university students.
 
 ## Language
 
@@ -20,22 +20,22 @@ _Avoid_: Class, subject, module
 
 ### Content
 
-**Resource**:
+**Course Material**:
 A file uploaded by a student and tied to a course — past exams, lecture notes, slides, assignments, or lab materials.
-_Avoid_: File, document, material, upload
+_Avoid_: Resource, file, document, upload, content
 
-**Resource Type**:
-A classification of what kind of academic material a resource is: exam, notes, slides, assignment, lab, or other.
-_Avoid_: Category, kind
+**Course Material Type**:
+A classification of what kind of academic material a course material is: exam, notes, slides, assignment, lab, or other.
+_Avoid_: Resource type, category, kind
 
 **Academic Period**:
-The year and semester (1, 2, or summer) a resource is associated with.
+The year and semester (1, 2, or summer) a course material is associated with.
 _Avoid_: Term, quarter
 
 ### People
 
 **Student**:
-A university learner using the platform. An authenticated user who can upload resources, ask questions, post answers, and vote.
+A university learner using the platform. An authenticated user who can upload course materials, ask questions, post answers, and vote.
 _Avoid_: User, member, account, profile
 
 ### Q&A

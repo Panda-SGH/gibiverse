@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { semesterSchema } from "../types/resource.js"
+import { semesterSchema } from "../types/course-material.js"
 
 /**
  * Shared validation schemas foundation for Gibiverse.
@@ -12,5 +12,5 @@ export const academicPeriodSchema = z.object({
 export * from "../types/vote.js"
 export * from "../types/qa.js"
 export * from "../types/search.js"
-export * from "../types/resource.js"
-export * from "./resource.js"
+export * from "../types/course-material.js"
+export * from "./course-material.js"

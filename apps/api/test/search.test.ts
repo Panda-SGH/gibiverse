@@ -5,7 +5,7 @@ import { app } from "../src/app.js"
 import db from "../src/db/index.js"
 import { university, department, course } from "../src/db/schema/academic.js"
 import { question } from "../src/db/schema/question.js"
-import { resource } from "../src/db/schema/resource.js"
+import { courseMaterial } from "../src/db/schema/course-material.js"
 import { user } from "../src/db/schema/auth.js"
 
 const suffix = Date.now()
@@ -82,13 +82,13 @@ before(async () => {
     fileSize: 256,
   }
 
-  await db.insert(resource).values([
+  await db.insert(courseMaterial).values([
     {
       id: resourceCsId,
       title: "Quantum Computing Guide",
       description: "Comprehensive introduction to qubits",
       courseId: courseCsId,
-      resourceType: "notes",
+      courseMaterialType: "notes",
       year: 2024,
       semester: "1",
       ...fileMeta,
@@ -98,7 +98,7 @@ before(async () => {
       title: "Matrix Decomposition Review",
       description: "Eigenvalues and spectral theorem practice",
       courseId: courseMathId,
-      resourceType: "exam",
+      courseMaterialType: "exam",
       year: 2024,
       semester: "2",
       ...fileMeta,
@@ -132,8 +132,8 @@ after(async () => {
     .delete(question)
     .where(inArray(question.id, [questionCsId, questionMathId]))
   await db
-    .delete(resource)
-    .where(inArray(resource.id, [resourceCsId, resourceMathId]))
+    .delete(courseMaterial)
+    .where(inArray(courseMaterial.id, [resourceCsId, resourceMathId]))
   await db.delete(user).where(eq(user.id, studentId))
   await db
     .delete(course)

@@ -6,7 +6,7 @@ import db from "../db/index.js"
 import { course } from "../db/schema/academic.js"
 import { user as student } from "../db/schema/auth.js"
 import { question } from "../db/schema/question.js"
-import { resource } from "../db/schema/resource.js"
+import { courseMaterial } from "../db/schema/course-material.js"
 
 export type { SearchType }
 
@@ -36,31 +36,32 @@ const search = new Hono().get(
 
     const searchPattern = `%${q}%`
 
-  // Resources search
-  const resourceConditions = or(
-    ilike(resource.title, searchPattern),
-    ilike(resource.description, searchPattern),
+  // Course Materials search
+  const materialConditions = or(
+    ilike(courseMaterial.title, searchPattern),
+    ilike(courseMaterial.description, searchPattern),
     ilike(course.code, searchPattern)
   )
 
-  const matchedResourcesPromise = db
+  const matchedMaterialsPromise = db
     .select({
-      id: resource.id,
-      title: resource.title,
-      description: resource.description,
-      resourceType: resource.resourceType,
-      year: resource.year,
-      semester: resource.semester,
-      createdAt: resource.createdAt,
-      courseId: resource.courseId,
+      id: courseMaterial.id,
+      title: courseMaterial.title,
+      description: courseMaterial.description,
+      courseMaterialType: courseMaterial.courseMaterialType,
+      resourceType: courseMaterial.courseMaterialType,
+      year: courseMaterial.year,
+      semester: courseMaterial.semester,
+      createdAt: courseMaterial.createdAt,
+      courseId: courseMaterial.courseId,
       courseCode: course.code,
       courseName: course.name,
       departmentId: course.departmentId,
     })
-    .from(resource)
-    .innerJoin(course, eq(resource.courseId, course.id))
-    .where(resourceConditions)
-    .orderBy(desc(resource.createdAt))
+    .from(courseMaterial)
+    .innerJoin(course, eq(courseMaterial.courseId, course.id))
+    .where(materialConditions)
+    .orderBy(desc(courseMaterial.createdAt))
 
   // Questions search
   const questionConditions = or(
@@ -89,25 +90,27 @@ const search = new Hono().get(
     .where(questionConditions)
     .orderBy(desc(question.createdAt))
 
-  const [allMatchedResources, allMatchedQuestions] = await Promise.all([
-    matchedResourcesPromise,
+  const [allMatchedMaterials, allMatchedQuestions] = await Promise.all([
+    matchedMaterialsPromise,
     matchedQuestionsPromise,
   ])
 
   const counts = {
-    all: allMatchedResources.length + allMatchedQuestions.length,
-    resources: allMatchedResources.length,
+    all: allMatchedMaterials.length + allMatchedQuestions.length,
+    resources: allMatchedMaterials.length,
     questions: allMatchedQuestions.length,
   }
 
-  const returnedResources = type === "questions" ? [] : allMatchedResources
-  const returnedQuestions = type === "resources" ? [] : allMatchedQuestions
+  const returnedMaterials =
+    type === "questions" ? [] : allMatchedMaterials
+  const returnedQuestions =
+    type === "resources" ? [] : allMatchedQuestions
 
   return c.json({
     query: q,
     type,
     counts,
-    resources: returnedResources,
+    resources: returnedMaterials,
     questions: returnedQuestions,
   })
 })

@@ -51,7 +51,7 @@ test("getSearchEmptyState handles empty and non-empty queries across tabs", () =
   assert.match(noMatchAll.description, /xyz123/)
 
   const noMatchResources = getSearchEmptyState("xyz123", "resources")
-  assert.equal(noMatchResources.title, 'No resources found')
+  assert.equal(noMatchResources.title, 'No course materials found')
   assert.match(noMatchResources.description, /xyz123/)
 
   const noMatchQuestions = getSearchEmptyState("xyz123", "questions")

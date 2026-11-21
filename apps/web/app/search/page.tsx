@@ -48,7 +48,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             Platform Search
           </h1>
           <p className="text-sm text-muted-foreground">
-            Search resources and questions across courses.
+            Search course materials and questions across courses.
           </p>
         </div>
       </div>

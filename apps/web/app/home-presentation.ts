@@ -1,16 +1,18 @@
 export type PlatformStats = {
-  totalResources: number
+  totalCourseMaterials: number
+  totalResources?: number
   totalQuestions: number
   activeCourses: number
 }
 
 export const DEFAULT_PLATFORM_OVERVIEW = {
   stats: {
+    totalCourseMaterials: 0,
     totalResources: 0,
     totalQuestions: 0,
     activeCourses: 0,
   },
-  recentResources: [],
+  recentCourseMaterials: [],
   recentQuestions: [],
 }
 
@@ -23,8 +25,9 @@ export function getOverviewEmptyState(stats: PlatformStats): {
   title: string
   description: string
 } {
+  const count = stats.totalCourseMaterials ?? stats.totalResources ?? 0
   const hasActivity =
-    stats.totalResources > 0 ||
+    count > 0 ||
     stats.totalQuestions > 0 ||
     stats.activeCourses > 0
 
@@ -33,24 +36,24 @@ export function getOverviewEmptyState(stats: PlatformStats): {
       hasActivity: false,
       title: "Welcome to the University Academic Hub",
       description:
-        "Be the first to share a course resource or ask an academic question to get the community started.",
+        "Be the first to share a course material or ask an academic question to get the community started.",
     }
   }
 
   return {
     hasActivity: true,
-    title: "Academic Resource Sharing &amp; Course Q&amp;A",
+    title: "Academic Course Material Sharing &amp; Course Q&amp;A",
     description:
-      "Explore academic resources, course questions, and peer answers across your university.",
+      "Explore academic course materials, course questions, and peer answers across your university.",
   }
 }
 
-export function getRecentResourcesEmptyState(): {
+export function getRecentCourseMaterialsEmptyState(): {
   title: string
   description: string
 } {
   return {
-    title: "No resources uploaded yet",
+    title: "No course materials uploaded yet",
     description:
       "Share exam papers, notes, or slides with students from your courses.",
   }

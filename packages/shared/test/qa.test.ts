@@ -5,7 +5,7 @@ import {
   askQuestionSchema,
   postAnswerSchema,
   acceptAnswerSchema,
-} from "@gibiverse/shared/types"
+} from "../src/types/index.js"
 
 test("questionSortSchema validates allowed sort options and rejects invalid", () => {
   assert.equal(questionSortSchema.safeParse("newest").success, true)

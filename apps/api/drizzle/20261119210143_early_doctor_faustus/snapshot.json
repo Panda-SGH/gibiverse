@@ -1,0 +1,67 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "e6be2814-3416-4c96-91a5-fd7f6dab513e",
+  "prevIds": [
+    "322c3560-62bf-44c9-8ddb-76622957e58c"
+  ],
+  "footprints": [
+    {
+      "statementType": "rename_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "resource"
+      ],
+      "writes": [
+        "s|tbl|public.resource",
+        "n|tbl|public.resource",
+        "n|rel|public.resource",
+        "n|type|public.resource",
+        "s|tbl|public.course_material",
+        "n|tbl|public.course_material",
+        "n|rel|public.course_material",
+        "n|type|public.course_material"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "rename_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "course_material",
+        "resource_type"
+      ],
+      "writes": [
+        "s|col|public.course_material.resource_type",
+        "n|col|public.course_material.resource_type",
+        "s|col|public.course_material.course_material_type",
+        "n|col|public.course_material.course_material_type"
+      ],
+      "reads": [
+        "n|tbl|public.course_material",
+        "n|sch|public"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "rename",
+      "key": "tables\u0000[\"public\",\"resource\"]",
+      "set": {
+        "name": "course_material"
+      }
+    },
+    {
+      "op": "rename",
+      "key": "columns\u0000[\"public\",\"course_material\",\"resource_type\"]",
+      "set": {
+        "name": "course_material_type"
+      }
+    }
+  ]
+}

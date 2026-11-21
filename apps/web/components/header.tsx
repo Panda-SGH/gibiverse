@@ -28,7 +28,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: "Home", href: "/", icon: GraduationCap },
   { label: "Courses", href: "/courses", icon: Library },
-  { label: "Resources", href: "/resources", icon: BookOpen },
+  { label: "Course Materials", href: "/course-materials", icon: BookOpen },
   { label: "Q&A", href: "/questions", icon: MessageSquareQuote },
   { label: "Search", href: "/search", icon: Search },
 ]
@@ -114,7 +114,7 @@ function HeaderSearchBar({
       <Input
         type="search"
         name="q"
-        placeholder="Search resources, questions, course codes..."
+        placeholder="Search course materials, questions, course codes..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         className="h-9 w-full rounded-md border border-input bg-muted/40 pl-9 pr-3 text-sm transition-colors hover:bg-muted/60 focus-visible:bg-background"

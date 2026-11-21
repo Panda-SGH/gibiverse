@@ -1,4 +1,4 @@
-import type { Semester } from "./resource.js"
+import type { Semester } from "./course-material.js"
 
 /**
  * Shared domain types foundation for Gibiverse.
@@ -11,4 +11,4 @@ export interface AcademicPeriod {
 export * from "./vote.js"
 export * from "./qa.js"
 export * from "./search.js"
-export * from "./resource.js"
+export * from "./course-material.js"

@@ -4,40 +4,41 @@ import db from "../db/index.js"
 import { course } from "../db/schema/academic.js"
 import { user as student } from "../db/schema/auth.js"
 import { question } from "../db/schema/question.js"
-import { resource } from "../db/schema/resource.js"
+import { courseMaterial } from "../db/schema/course-material.js"
 
 const overview = new Hono().get("/", async (c) => {
   const [
-    resourcesCountResult,
+    materialsCountResult,
     questionsCountResult,
     activeCoursesResult,
-    recentResources,
+    recentCourseMaterials,
     recentQuestions,
   ] = await Promise.all([
-    db.select({ count: count() }).from(resource),
+    db.select({ count: count() }).from(courseMaterial),
     db.select({ count: count() }).from(question),
     db.execute<{ count: string | number }>(
       sql`SELECT COUNT(DISTINCT active.course_id)::int AS count FROM (
-        SELECT ${resource.courseId} AS course_id FROM ${resource}
+        SELECT ${courseMaterial.courseId} AS course_id FROM ${courseMaterial}
         UNION
         SELECT ${question.courseId} AS course_id FROM ${question}
       ) AS active`
     ),
     db
       .select({
-        id: resource.id,
-        title: resource.title,
-        resourceType: resource.resourceType,
-        year: resource.year,
-        semester: resource.semester,
-        createdAt: resource.createdAt,
-        courseId: resource.courseId,
+        id: courseMaterial.id,
+        title: courseMaterial.title,
+        courseMaterialType: courseMaterial.courseMaterialType,
+        resourceType: courseMaterial.courseMaterialType,
+        year: courseMaterial.year,
+        semester: courseMaterial.semester,
+        createdAt: courseMaterial.createdAt,
+        courseId: courseMaterial.courseId,
         courseCode: course.code,
         courseName: course.name,
       })
-      .from(resource)
-      .innerJoin(course, eq(resource.courseId, course.id))
-      .orderBy(desc(resource.createdAt))
+      .from(courseMaterial)
+      .innerJoin(course, eq(courseMaterial.courseId, course.id))
+      .orderBy(desc(courseMaterial.createdAt))
       .limit(6),
     db
       .select({
@@ -64,7 +65,7 @@ const overview = new Hono().get("/", async (c) => {
       .limit(6),
   ])
 
-  const totalResources = Number(resourcesCountResult[0]?.count ?? 0)
+  const totalCourseMaterials = Number(materialsCountResult[0]?.count ?? 0)
   const totalQuestions = Number(questionsCountResult[0]?.count ?? 0)
   const activeCoursesRaw =
     (activeCoursesResult as { rows?: Array<{ count?: string | number }> })
@@ -75,11 +76,13 @@ const overview = new Hono().get("/", async (c) => {
 
   return c.json({
     stats: {
-      totalResources,
+      totalCourseMaterials,
+      totalResources: totalCourseMaterials,
       totalQuestions,
       activeCourses,
     },
-    recentResources,
+    recentCourseMaterials,
+    recentResources: recentCourseMaterials,
     recentQuestions,
   })
 })

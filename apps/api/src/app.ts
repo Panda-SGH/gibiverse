@@ -3,7 +3,7 @@ import { auth } from "./lib/auth.js"
 import { requireAuth, optionalAuth } from "./middleware/auth.js"
 import { academic } from "./routes/academic.js"
 import { questions } from "./routes/questions.js"
-import { resources } from "./routes/resources.js"
+import { courseMaterials } from "./routes/course-materials.js"
 import { search } from "./routes/search.js"
 import { votes } from "./routes/votes.js"
 import { overview } from "./routes/overview.js"
@@ -18,7 +18,7 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => {
 // Mount chained API routes for full RPC type inference
 const routes = app
   .route("/api", academic)
-  .route("/api/resources", resources)
+  .route("/api/course-materials", courseMaterials)
   .route("/api/questions", questions)
   .route("/api/votes", votes)
   .route("/api/search", search)

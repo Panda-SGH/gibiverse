@@ -4,7 +4,7 @@ import { client } from "../../../packages/api-client/src/index.js"
 import {
   formatActivityCounter,
   getOverviewEmptyState,
-  getRecentResourcesEmptyState,
+  getRecentCourseMaterialsEmptyState,
   getRecentQuestionsEmptyState,
   DEFAULT_PLATFORM_OVERVIEW,
 } from "../app/home-presentation.js"
@@ -18,7 +18,7 @@ test("formatActivityCounter formats numbers with localized grouping", () => {
 
 test("getOverviewEmptyState distinguishes empty platforms from active ones", () => {
   const emptyState = getOverviewEmptyState({
-    totalResources: 0,
+    totalCourseMaterials: 0,
     totalQuestions: 0,
     activeCourses: 0,
   })
@@ -26,16 +26,16 @@ test("getOverviewEmptyState distinguishes empty platforms from active ones", () 
   assert.match(emptyState.title, /welcome/i)
   assert.match(emptyState.description, /first to share|community/i)
   const activeState = getOverviewEmptyState({
-    totalResources: 12,
+    totalCourseMaterials: 12,
     totalQuestions: 5,
     activeCourses: 3,
   })
   assert.equal(activeState.hasActivity, true)
 })
 
-test("getRecentResourcesEmptyState and getRecentQuestionsEmptyState guide students", () => {
-  const resEmpty = getRecentResourcesEmptyState()
-  assert.match(resEmpty.title, /no resources/i)
+test("getRecentCourseMaterialsEmptyState and getRecentQuestionsEmptyState guide students", () => {
+  const resEmpty = getRecentCourseMaterialsEmptyState()
+  assert.match(resEmpty.title, /no course materials/i)
   assert.match(resEmpty.description, /share|upload/i)
 
   const qEmpty = getRecentQuestionsEmptyState()
@@ -52,11 +52,12 @@ test("overview falls back safely on network failure without throwing", async () 
     const res = await client.api.overview.$get().catch(() => null)
     const fallback = res && res.ok ? await res.json() : DEFAULT_PLATFORM_OVERVIEW
     assert.deepEqual(fallback.stats, {
+      totalCourseMaterials: 0,
       totalResources: 0,
       totalQuestions: 0,
       activeCourses: 0,
     })
-    assert.deepEqual(fallback.recentResources, [])
+    assert.deepEqual(fallback.recentCourseMaterials, [])
     assert.deepEqual(fallback.recentQuestions, [])
   } finally {
     globalThis.fetch = originalFetch
