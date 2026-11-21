@@ -30,16 +30,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@gibiverse/ui/components/select"
-import { Textarea } from "@gibiverse/ui/components/textarea"
 import { CoursePicker } from "@/components/course-picker"
-import type { Course, Department } from "@/app/courses/presentation"
+import type { Course, University } from "@/app/courses/presentation"
 import {
   MAX_FILE_SIZE_MB,
   courseMaterialTypeOptions,
-  semesterOptions,
-  yearOptions,
+  academicPeriodOptions,
   type CourseMaterialType,
-  type Semester,
 } from "@gibiverse/shared/types"
 import { formatBytes } from "@gibiverse/shared/utils"
 import { uploadCourseMaterialSchema } from "@gibiverse/shared/validation"
@@ -53,7 +50,7 @@ import { uploadCourseMaterial } from "@/app/course-materials/upload/upload-cours
 export type UploadCourseMaterialWizardProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  departments: Department[]
+  universities: University[]
   courses: Course[]
 }
 
@@ -62,7 +59,7 @@ export type UploadPhase = "form" | "uploading" | "error" | "success"
 export function UploadCourseMaterialWizard({
   open,
   onOpenChange,
-  departments,
+  universities,
   courses,
 }: UploadCourseMaterialWizardProps) {
   const router = useRouter()
@@ -75,12 +72,12 @@ export function UploadCourseMaterialWizard({
 
   const [title, setTitle] = React.useState("")
   const [courseId, setCourseId] = React.useState<string | null>(null)
-  const [departmentId, setDepartmentId] = React.useState<string | null>(null)
+  const [universityId, setUniversityId] = React.useState<string | null>(null)
   const [courseMaterialType, setCourseMaterialType] =
     React.useState<CourseMaterialType>("other")
-  const [year, setYear] = React.useState(() => new Date().getFullYear())
-  const [semester, setSemester] = React.useState<Semester>("1")
-  const [description, setDescription] = React.useState("")
+  const [academicPeriod, setAcademicPeriod] = React.useState(
+    () => academicPeriodOptions()[0]?.value ?? "2026/2027 semester 1"
+  )
 
   const [progress, setProgress] = React.useState(0)
   const [uploadError, setUploadError] = React.useState<string | null>(null)
@@ -89,7 +86,7 @@ export function UploadCourseMaterialWizard({
   )
 
   const fileInputRef = React.useRef<HTMLInputElement>(null)
-  const years = React.useMemo(() => yearOptions(), [])
+  const academicPeriods = React.useMemo(() => academicPeriodOptions(), [])
 
   function resetWizard() {
     setStep(1)
@@ -100,11 +97,11 @@ export function UploadCourseMaterialWizard({
     setFormatLabel(null)
     setTitle("")
     setCourseId(null)
-    setDepartmentId(null)
+    setUniversityId(null)
     setCourseMaterialType("other")
-    setYear(new Date().getFullYear())
-    setSemester("1")
-    setDescription("")
+    setAcademicPeriod(
+      academicPeriodOptions()[0]?.value ?? "2026/2027 semester 1"
+    )
     setProgress(0)
     setUploadError(null)
     setCreatedMaterialId(null)
@@ -140,9 +137,7 @@ export function UploadCourseMaterialWizard({
       title,
       courseId,
       courseMaterialType,
-      year,
-      semester,
-      description: description.trim() || null,
+      academicPeriod,
     })
 
     if (!validation.success) {
@@ -164,9 +159,7 @@ export function UploadCourseMaterialWizard({
           title: validation.data.title,
           courseId: validation.data.courseId,
           courseMaterialType: validation.data.courseMaterialType,
-          year: validation.data.year,
-          semester: validation.data.semester,
-          description: validation.data.description ?? "",
+          academicPeriod: validation.data.academicPeriod,
         },
         setProgress
       )
@@ -299,15 +292,15 @@ export function UploadCourseMaterialWizard({
               </div>
 
               <CoursePicker
-                departments={departments}
+                universities={universities}
                 courses={courses}
-                departmentId={departmentId}
+                universityId={universityId}
                 courseId={courseId}
-                onDepartmentChange={setDepartmentId}
+                onUniversityChange={setUniversityId}
                 onCourseChange={setCourseId}
               />
 
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-2">
                   <Label>Course Material Type</Label>
                   <Select
@@ -331,39 +324,18 @@ export function UploadCourseMaterialWizard({
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Label>Year</Label>
+                  <Label>Academic Period</Label>
                   <Select
-                    value={String(year)}
+                    value={academicPeriod}
                     onValueChange={(value) => {
-                      if (value) setYear(Number.parseInt(value, 10))
+                      if (value) setAcademicPeriod(value)
                     }}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {years.map((option) => (
-                        <SelectItem key={option} value={String(option)}>
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label>Semester</Label>
-                  <Select
-                    value={semester}
-                    onValueChange={(value) => {
-                      if (value) setSemester(value as Semester)
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {semesterOptions.map((option) => (
+                      {academicPeriods.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
                         </SelectItem>
@@ -371,20 +343,6 @@ export function UploadCourseMaterialWizard({
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="course-material-description">
-                  Description{" "}
-                  <span className="text-muted-foreground">(optional)</span>
-                </Label>
-                <Textarea
-                  id="course-material-description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Add context for other students"
-                  rows={3}
-                />
               </div>
 
               <div className="flex items-center justify-between gap-2">

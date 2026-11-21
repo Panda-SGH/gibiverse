@@ -17,26 +17,26 @@ import { Textarea } from "@gibiverse/ui/components/textarea"
 import { CoursePicker } from "@/components/course-picker"
 import { client } from "@gibiverse/api-client"
 import { askQuestionSchema } from "@gibiverse/shared/types"
-import type { Course, Department } from "@/app/courses/presentation"
+import type { Course, University } from "@/app/courses/presentation"
 
 type AskQuestionDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  departments: Department[]
+  universities: University[]
   courses: Course[]
 }
 
 export function AskQuestionDialog({
   open,
   onOpenChange,
-  departments,
+  universities,
   courses,
 }: AskQuestionDialogProps) {
   const router = useRouter()
   const [title, setTitle] = React.useState("")
   const [body, setBody] = React.useState("")
   const [courseId, setCourseId] = React.useState<string | null>(null)
-  const [departmentId, setDepartmentId] = React.useState<string | null>(null)
+  const [universityId, setUniversityId] = React.useState<string | null>(null)
   const [error, setError] = React.useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
@@ -44,7 +44,7 @@ export function AskQuestionDialog({
     setTitle("")
     setBody("")
     setCourseId(null)
-    setDepartmentId(null)
+    setUniversityId(null)
     setError(null)
     setIsSubmitting(false)
   }
@@ -103,12 +103,12 @@ export function AskQuestionDialog({
 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <CoursePicker
-            departments={departments}
+            universities={universities}
             courses={courses}
-            departmentId={departmentId}
+            universityId={universityId}
             courseId={courseId}
-            onDepartmentChange={(next) => {
-              setDepartmentId(next)
+            onUniversityChange={(next) => {
+              setUniversityId(next)
               setCourseId(null)
             }}
             onCourseChange={setCourseId}

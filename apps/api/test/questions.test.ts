@@ -30,6 +30,7 @@ before(async () => {
     id: courseId,
     name: "Question Course",
     code: courseCode,
+    universityId: uniId,
     departmentId: deptId,
   })
 

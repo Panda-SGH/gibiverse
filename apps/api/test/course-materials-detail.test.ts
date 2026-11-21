@@ -46,6 +46,7 @@ before(async () => {
     id: courseId,
     name: courseName,
     code: courseCode,
+    universityId: uniId,
     departmentId: deptId,
   })
 
@@ -79,9 +80,7 @@ before(async () => {
   form.set("title", "CS Midterm 2024")
   form.set("courseId", courseId)
   form.set("courseMaterialType", "exam")
-  form.set("year", "2024")
-  form.set("semester", "1")
-  form.set("description", "Practice midterm for preview")
+  form.set("academicPeriod", "2024/2025 semester 1")
   form.set(
     "file",
     new File([pdfBytes], originalFileName, {
@@ -122,10 +121,8 @@ test("GET /api/course-materials/:id returns course material detail metadata", as
   const body = (await res.json()) as {
     id: string
     title: string
-    description: string | null
     courseMaterialType: string
-    year: number
-    semester: string
+    academicPeriod: string
     fileName: string
     mimeType: string
     fileSize: number
@@ -133,16 +130,15 @@ test("GET /api/course-materials/:id returns course material detail metadata", as
     courseId: string
     courseCode: string
     courseName: string
+    universityId: string
     studentId: string
     studentName: string
   }
 
   assert.strictEqual(body.id, courseMaterialId)
   assert.strictEqual(body.title, "CS Midterm 2024")
-  assert.strictEqual(body.description, "Practice midterm for preview")
   assert.strictEqual(body.courseMaterialType, "exam")
-  assert.strictEqual(body.year, 2024)
-  assert.strictEqual(body.semester, "1")
+  assert.strictEqual(body.academicPeriod, "2024/2025 semester 1")
   assert.strictEqual(body.fileName, originalFileName)
   assert.strictEqual(body.mimeType, "application/pdf")
   assert.ok(body.fileSize > 0)
@@ -150,6 +146,7 @@ test("GET /api/course-materials/:id returns course material detail metadata", as
   assert.strictEqual(body.courseId, courseId)
   assert.strictEqual(body.courseCode, courseCode)
   assert.strictEqual(body.courseName, courseName)
+  assert.strictEqual(body.universityId, uniId)
   assert.strictEqual(body.studentId, studentId)
   assert.strictEqual(body.studentName, studentName)
 })

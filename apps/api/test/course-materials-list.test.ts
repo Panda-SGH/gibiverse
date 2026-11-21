@@ -25,12 +25,12 @@ type ListedCourseMaterial = {
   id: string
   title: string
   courseMaterialType: string
-  year: number
-  semester: string
+  academicPeriod: string
   createdAt: string
   courseId: string
   courseCode: string
   courseName: string
+  universityId: string
   departmentId: string
 }
 
@@ -56,12 +56,14 @@ before(async () => {
       id: courseCsId,
       name: "Algorithms",
       code: courseCsCode,
+      universityId: uniId,
       departmentId: deptCsId,
     },
     {
       id: courseMathId,
       name: "Linear Algebra",
       code: courseMathCode,
+      universityId: uniId,
       departmentId: deptMathId,
     },
   ])
@@ -86,8 +88,7 @@ before(async () => {
       title: "CS Midterm",
       courseId: courseCsId,
       courseMaterialType: "exam",
-      year: 2024,
-      semester: "1",
+      academicPeriod: "2024/2025 semester 1",
       ...fileMeta,
     },
     {
@@ -95,8 +96,7 @@ before(async () => {
       title: "CS Lecture Notes",
       courseId: courseCsId,
       courseMaterialType: "notes",
-      year: 2024,
-      semester: "2",
+      academicPeriod: "2024/2025 semester 2",
       ...fileMeta,
       filePath: `course-materials/${suffix}/notes.pdf`,
       fileName: "notes.pdf",
@@ -106,8 +106,7 @@ before(async () => {
       title: "Math Final",
       courseId: courseMathId,
       courseMaterialType: "exam",
-      year: 2023,
-      semester: "summer",
+      academicPeriod: "2023/2024 summer",
       ...fileMeta,
       filePath: `course-materials/${suffix}/math.pdf`,
       fileName: "math.pdf",
@@ -137,13 +136,26 @@ test("GET /api/course-materials lists catalog fields for each course material", 
   assert.ok(match, "Seeded exam should appear in listing")
   assert.strictEqual(match.title, "CS Midterm")
   assert.strictEqual(match.courseMaterialType, "exam")
-  assert.strictEqual(match.year, 2024)
-  assert.strictEqual(match.semester, "1")
+  assert.strictEqual(match.academicPeriod, "2024/2025 semester 1")
   assert.strictEqual(match.courseId, courseCsId)
   assert.strictEqual(match.courseCode, courseCsCode)
   assert.strictEqual(match.courseName, "Algorithms")
+  assert.strictEqual(match.universityId, uniId)
   assert.strictEqual(match.departmentId, deptCsId)
   assert.ok(typeof match.createdAt === "string" && match.createdAt.length > 0)
+})
+
+test("GET /api/course-materials filters by universityId", async () => {
+  const res = await app.request(
+    `/api/course-materials?universityId=${encodeURIComponent(uniId)}`
+  )
+  assert.strictEqual(res.status, 200)
+  const body = (await res.json()) as ListedCourseMaterial[]
+  const ids = body.map((row) => row.id)
+  assert.ok(ids.includes(examId))
+  assert.ok(ids.includes(notesId))
+  assert.ok(ids.includes(mathExamId))
+  assert.ok(body.every((row) => row.universityId === uniId))
 })
 
 test("GET /api/course-materials filters by courseMaterialType", async () => {

@@ -57,6 +57,7 @@ async function seed() {
           id: c.id,
           name: c.name,
           code: c.code,
+          universityId: UNIVERSITY_ID,
           departmentId: dept.id,
         })
         .onConflictDoNothing()

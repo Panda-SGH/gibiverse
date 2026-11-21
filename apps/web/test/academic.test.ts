@@ -2,6 +2,7 @@ import test from "node:test"
 import assert from "node:assert/strict"
 import {
   filterCoursesByDepartment,
+  filterCoursesByUniversity,
   groupCoursesByDepartment,
   type Course,
   type Department,
@@ -17,21 +18,37 @@ const courses: Course[] = [
     id: "c1",
     code: "CS201",
     name: "Data Structures",
+    universityId: "uni_1",
     departmentId: "dept_cs",
   },
   {
     id: "c2",
     code: "CS101",
     name: "Introduction to Programming",
+    universityId: "uni_1",
     departmentId: "dept_cs",
   },
   {
     id: "c3",
     code: "MA101",
     name: "Calculus I",
+    universityId: "uni_2",
     departmentId: "dept_math",
   },
 ]
+
+test("filterCoursesByUniversity returns only courses for the selected university", () => {
+  const filtered = filterCoursesByUniversity(courses, "uni_1")
+  assert.deepStrictEqual(
+    filtered.map((c) => c.code).sort(),
+    ["CS101", "CS201"]
+  )
+})
+
+test("filterCoursesByUniversity returns empty list when no university is selected", () => {
+  assert.deepStrictEqual(filterCoursesByUniversity(courses, null), [])
+  assert.deepStrictEqual(filterCoursesByUniversity(courses, undefined), [])
+})
 
 test("filterCoursesByDepartment returns only courses for the selected department", () => {
   const filtered = filterCoursesByDepartment(courses, "dept_cs")

@@ -127,6 +127,7 @@ before(async () => {
     id: courseId,
     name: "CmModule Course",
     code: courseCode,
+    universityId: uniId,
     departmentId: deptId,
   })
   await db.insert(studentTable).values({
@@ -157,9 +158,7 @@ test("upload stores a Course Material for a Course under course-materials/ stora
     title: "CS Midterm 2024",
     courseId,
     courseMaterialType: "exam",
-    year: 2024,
-    semester: "1",
-    description: "Practice questions with solutions",
+    academicPeriod: "2024/2025 semester 1",
     file: pdfFile("cs-midterm.pdf"),
   })
 
@@ -171,8 +170,7 @@ test("upload stores a Course Material for a Course under course-materials/ stora
   assert.equal(result.data.courseId, courseId)
   assert.equal(result.data.userId, student.id)
   assert.equal(result.data.courseMaterialType, "exam")
-  assert.equal(result.data.year, 2024)
-  assert.equal(result.data.semester, "1")
+  assert.equal(result.data.academicPeriod, "2024/2025 semester 1")
   assert.equal(result.data.fileName, "cs-midterm.pdf")
   assert.ok(result.data.filePath.startsWith("course-materials/"))
   assert.ok(storage.has(result.data.filePath))
@@ -184,9 +182,7 @@ test("upload rejects empty title", async () => {
     title: "   ",
     courseId,
     courseMaterialType: "exam",
-    year: 2024,
-    semester: "1",
-    description: null,
+    academicPeriod: "2024/2025 semester 1",
     file: pdfFile(),
   })
 
@@ -202,9 +198,7 @@ test("upload rejects unknown Course", async () => {
     title: "CS Midterm",
     courseId: "nonexistent_course",
     courseMaterialType: "exam",
-    year: 2024,
-    semester: "1",
-    description: null,
+    academicPeriod: "2024/2025 semester 1",
     file: pdfFile(),
   })
 
@@ -220,9 +214,7 @@ test("upload rejects invalid Course Material Type", async () => {
     title: "CS Midterm",
     courseId,
     courseMaterialType: "invalid-type",
-    year: 2024,
-    semester: "1",
-    description: null,
+    academicPeriod: "2024/2025 semester 1",
     file: pdfFile(),
   })
 
@@ -238,9 +230,7 @@ test("upload rejects invalid file extension", async () => {
     title: "Executable file",
     courseId,
     courseMaterialType: "other",
-    year: 2024,
-    semester: "1",
-    description: null,
+    academicPeriod: "2024/2025 semester 1",
     file: {
       name: "danger.exe",
       size: 1024,
@@ -254,22 +244,20 @@ test("upload rejects invalid file extension", async () => {
   assert.equal(result.error.code, "validation")
 })
 
-test("upload rejects invalid academic year", async () => {
+test("upload rejects invalid academic period", async () => {
   const result = await courseMaterials.upload({
     student,
     title: "Old Exam",
     courseId,
     courseMaterialType: "exam",
-    year: 1990,
-    semester: "1",
-    description: null,
+    academicPeriod: "invalid-period",
     file: pdfFile(),
   })
 
   assert.equal(result.ok, false)
   if (result.ok) return
   assert.equal(result.error.code, "validation")
-  assert.match(result.error.message, /year/i)
+  assert.match(result.error.message, /academic period/i)
 })
 
 // ---------------------------------------------------------------------------
@@ -282,9 +270,7 @@ test("list returns Course Materials and filters by Course", async () => {
     title: "List Test Exam",
     courseId,
     courseMaterialType: "exam",
-    year: 2024,
-    semester: "1",
-    description: null,
+    academicPeriod: "2024/2025 semester 1",
     file: pdfFile("exam1.pdf"),
   })
   assert.equal(up1.ok, true)
@@ -295,9 +281,7 @@ test("list returns Course Materials and filters by Course", async () => {
     title: "List Test Notes",
     courseId,
     courseMaterialType: "notes",
-    year: 2024,
-    semester: "1",
-    description: null,
+    academicPeriod: "2024/2025 semester 1",
     file: pdfFile("notes1.pdf"),
   })
   assert.equal(up2.ok, true)
@@ -339,9 +323,7 @@ test("get returns Course Material detail with Course and Student", async () => {
     title: "Get Detail Test",
     courseId,
     courseMaterialType: "slides",
-    year: 2024,
-    semester: "2",
-    description: "Lecture 01 slides",
+    academicPeriod: "2024/2025 semester 2",
     file: pdfFile("lecture01.pdf"),
   })
   assert.equal(uploaded.ok, true)
@@ -354,6 +336,7 @@ test("get returns Course Material detail with Course and Student", async () => {
 
   assert.equal(detail.data.title, "Get Detail Test")
   assert.equal(detail.data.courseMaterialType, "slides")
+  assert.equal(detail.data.academicPeriod, "2024/2025 semester 2")
   assert.equal(detail.data.courseId, courseId)
   assert.equal(detail.data.courseCode, courseCode)
   assert.equal(detail.data.studentId, student.id)
@@ -377,9 +360,7 @@ test("stream returns file content from storage for new course-materials path", a
     title: "Stream Test Course Material",
     courseId,
     courseMaterialType: "exam",
-    year: 2024,
-    semester: "1",
-    description: null,
+    academicPeriod: "2024/2025 semester 1",
     file: pdfFile("stream-test.pdf"),
   })
   assert.equal(uploaded.ok, true)
@@ -408,12 +389,10 @@ test("stream resolves existing legacy resources/ storage paths with zero data lo
   await db.insert(courseMaterial).values({
     id: legacyId,
     title: "Legacy Stored Resource",
-    description: "Pre-migration file",
     courseId,
     userId: studentId,
     courseMaterialType: "notes",
-    year: 2023,
-    semester: "1",
+    academicPeriod: "2023/2024 semester 1",
     filePath: legacyPath,
     fileName: "legacy.pdf",
     mimeType: "application/pdf",

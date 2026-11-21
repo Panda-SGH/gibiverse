@@ -11,19 +11,19 @@ import {
 } from "@gibiverse/ui/components/select"
 import { Label } from "@gibiverse/ui/components/label"
 import {
-  filterCoursesByDepartment,
+  filterCoursesByUniversity,
   type Course,
-  type Department,
+  type University,
 } from "@/app/courses/presentation"
 
 const ALL_VALUE = "__all__"
 
 export type CoursePickerProps = {
-  departments: Department[]
+  universities: University[]
   courses: Course[]
-  departmentId?: string | null
+  universityId?: string | null
   courseId?: string | null
-  onDepartmentChange?: (departmentId: string | null) => void
+  onUniversityChange?: (universityId: string | null) => void
   onCourseChange?: (courseId: string | null) => void
   disabled?: boolean
   /** When true, include All options so filters can be cleared. */
@@ -31,27 +31,27 @@ export type CoursePickerProps = {
 }
 
 export function CoursePicker({
-  departments,
+  universities,
   courses,
-  departmentId: controlledDepartmentId,
+  universityId: controlledUniversityId,
   courseId: controlledCourseId,
-  onDepartmentChange,
+  onUniversityChange,
   onCourseChange,
   disabled = false,
   allowClear = false,
 }: CoursePickerProps) {
-  const [departmentId, setDepartmentId] = React.useState<string | null>(
-    controlledDepartmentId ?? null
+  const [universityId, setUniversityId] = React.useState<string | null>(
+    controlledUniversityId ?? null
   )
   const [courseId, setCourseId] = React.useState<string | null>(
     controlledCourseId ?? null
   )
 
   React.useEffect(() => {
-    if (controlledDepartmentId !== undefined) {
-      setDepartmentId(controlledDepartmentId)
+    if (controlledUniversityId !== undefined) {
+      setUniversityId(controlledUniversityId)
     }
-  }, [controlledDepartmentId])
+  }, [controlledUniversityId])
 
   React.useEffect(() => {
     if (controlledCourseId !== undefined) {
@@ -59,13 +59,13 @@ export function CoursePicker({
     }
   }, [controlledCourseId])
 
-  const filteredCourses = filterCoursesByDepartment(courses, departmentId)
+  const filteredCourses = filterCoursesByUniversity(courses, universityId)
 
-  const handleDepartmentChange = (value: string | null) => {
+  const handleUniversityChange = (value: string | null) => {
     const next = !value || value === ALL_VALUE ? null : value
-    setDepartmentId(next)
+    setUniversityId(next)
     setCourseId(null)
-    onDepartmentChange?.(next)
+    onUniversityChange?.(next)
     onCourseChange?.(null)
   }
 
@@ -81,31 +81,31 @@ export function CoursePicker({
       data-testid="course-picker"
     >
       <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <Label htmlFor="department-picker">Department</Label>
+        <Label htmlFor="university-picker">University</Label>
         <Select
-          value={allowClear ? (departmentId ?? ALL_VALUE) : departmentId}
-          onValueChange={handleDepartmentChange}
+          value={allowClear ? (universityId ?? ALL_VALUE) : universityId}
+          onValueChange={handleUniversityChange}
           disabled={disabled}
         >
           <SelectTrigger
-            id="department-picker"
+            id="university-picker"
             className="w-full"
-            data-testid="department-picker-trigger"
+            data-testid="university-picker-trigger"
           >
             <SelectValue
               placeholder={
-                allowClear ? "All departments" : "Select a department"
+                allowClear ? "All universities" : "Select a university"
               }
             />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
               {allowClear ? (
-                <SelectItem value={ALL_VALUE}>All departments</SelectItem>
+                <SelectItem value={ALL_VALUE}>All universities</SelectItem>
               ) : null}
-              {departments.map((department) => (
-                <SelectItem key={department.id} value={department.id}>
-                  {department.name}
+              {universities.map((uni) => (
+                <SelectItem key={uni.id} value={uni.id}>
+                  {uni.name}
                 </SelectItem>
               ))}
             </SelectGroup>
@@ -118,7 +118,7 @@ export function CoursePicker({
         <Select
           value={allowClear ? (courseId ?? ALL_VALUE) : courseId}
           onValueChange={handleCourseChange}
-          disabled={disabled || !departmentId}
+          disabled={disabled || !universityId}
         >
           <SelectTrigger
             id="course-picker"
@@ -127,17 +127,17 @@ export function CoursePicker({
           >
             <SelectValue
               placeholder={
-                departmentId
+                universityId
                   ? allowClear
                     ? "All courses"
                     : "Select a course"
-                  : "Choose a department first"
+                  : "Choose a university first"
               }
             />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              {allowClear && departmentId ? (
+              {allowClear && universityId ? (
                 <SelectItem value={ALL_VALUE}>All courses</SelectItem>
               ) : null}
               {filteredCourses.map((course) => (

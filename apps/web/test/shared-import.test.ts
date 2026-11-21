@@ -5,12 +5,12 @@ import { academicPeriodSchema, searchTypeSchema } from "@gibiverse/shared/valida
 import type { AcademicPeriod, SearchType } from "@gibiverse/shared/types"
 
 test("apps/web can import and use @gibiverse/shared subpaths", () => {
-  const period: AcademicPeriod = { year: 2026, semester: 2 }
+  const period: AcademicPeriod = "2026/2027 semester 2"
   const parsed = academicPeriodSchema.parse(period)
-  assert.equal(parsed.year, 2026)
+  assert.equal(parsed, "2026/2027 semester 2")
   assert.equal(
-    formatAcademicPeriod(parsed.year, parsed.semester),
-    "2026 - Semester 2"
+    formatAcademicPeriod(parsed),
+    "2026/2027 Semester 2"
   )
 
   const searchType: SearchType = "resources"

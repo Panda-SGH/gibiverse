@@ -97,18 +97,30 @@ export const courseMaterialTypeOptions: Array<{
 ]
 
 /**
- * Select options for Semester.
+ * Academic period regex: e.g. '2026/2027 semester 1', '2026/2027 semester 2', '2026/2027 summer'.
  */
-export const semesterOptions: Array<{ value: Semester; label: string }> = [
-  { value: "1", label: "Semester 1" },
-  { value: "2", label: "Semester 2" },
-  { value: "summer", label: "Summer" },
-]
+export const ACADEMIC_PERIOD_REGEX = /^\d{4}\/\d{4} (semester [12]|summer)$/
+
+export type AcademicPeriodOption = {
+  value: string
+  label: string
+}
 
 /**
- * Generates academic year choices (defaults to current year and 7 years prior).
+ * Generates curated rolling academic period choices (defaults to current academic cycle and 5 prior cycles).
  */
-export function yearOptions(now = new Date()): number[] {
+export function academicPeriodOptions(now = new Date()): AcademicPeriodOption[] {
   const current = now.getFullYear()
-  return Array.from({ length: 8 }, (_, i) => current - i)
+  const options: AcademicPeriodOption[] = []
+  for (let i = 0; i < 6; i++) {
+    const startYear = current - i
+    const endYear = startYear + 1
+    const prefix = `${startYear}/${endYear}`
+    options.push(
+      { value: `${prefix} semester 1`, label: `${prefix} Semester 1` },
+      { value: `${prefix} semester 2`, label: `${prefix} Semester 2` },
+      { value: `${prefix} summer`, label: `${prefix} Summer` }
+    )
+  }
+  return options
 }

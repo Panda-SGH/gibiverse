@@ -30,8 +30,9 @@ type OverviewResponse = {
     id: string
     title: string
     resourceType: string
-    year: number
-    semester: string
+    year?: number
+    semester?: string
+    academicPeriod?: string
     createdAt: string
     courseId: string
     courseCode: string
@@ -69,18 +70,21 @@ before(async () => {
       id: courseActive1Id,
       name: "Algorithms and Data Structures",
       code: `CS${String(suffix).slice(-4)}A`,
+      universityId: uniId,
       departmentId: deptId,
     },
     {
       id: courseActive2Id,
       name: "Linear Algebra",
       code: `MA${String(suffix).slice(-4)}B`,
+      universityId: uniId,
       departmentId: deptId,
     },
     {
       id: courseInactiveId,
       name: "Empty Course",
       code: `EC${String(suffix).slice(-4)}C`,
+      universityId: uniId,
       departmentId: deptId,
     },
   ])
@@ -137,8 +141,7 @@ test("GET /api/overview returns aggregated platform statistics and recent feeds"
       id: resource1Id,
       title: "Algorithms Midterm 2024",
       courseMaterialType: "exam",
-      year: 2024,
-      semester: "1",
+      academicPeriod: "2024/2025 semester 1",
       fileName: "midterm.pdf",
       filePath: "uploads/midterm.pdf",
       fileSize: 1024,
@@ -151,8 +154,7 @@ test("GET /api/overview returns aggregated platform statistics and recent feeds"
       id: resource2Id,
       title: "Algorithms Lecture 1 Notes",
       courseMaterialType: "notes",
-      year: 2024,
-      semester: "1",
+      academicPeriod: "2024/2025 semester 1",
       fileName: "notes.pdf",
       filePath: "uploads/notes.pdf",
       fileSize: 2048,
@@ -189,8 +191,7 @@ test("GET /api/overview returns aggregated platform statistics and recent feeds"
   assert.equal(foundRes2.title, "Algorithms Lecture 1 Notes")
   assert.equal(foundRes2.courseCode, `CS${String(suffix).slice(-4)}A`)
   assert.equal(foundRes2.resourceType, "notes")
-  assert.equal(foundRes2.year, 2024)
-  assert.equal(foundRes2.semester, "1")
+  assert.equal(foundRes2.academicPeriod, "2024/2025 semester 1")
 
   // Recent/active questions should include question1
   const foundQ1 = updatedData.recentQuestions.find((q) => q.id === question1Id)

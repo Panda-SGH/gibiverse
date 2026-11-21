@@ -20,6 +20,9 @@ export const course = pgTable("course", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   code: text("code").notNull().unique(),
+  universityId: text("university_id")
+    .notNull()
+    .references(() => university.id),
   departmentId: text("department_id")
     .notNull()
     .references(() => department.id),
@@ -28,6 +31,7 @@ export const course = pgTable("course", {
 
 export const universityRelations = relations(university, ({ many }) => ({
   departments: many(department),
+  courses: many(course),
 }))
 
 export const departmentRelations = relations(department, ({ one, many }) => ({
@@ -39,6 +43,10 @@ export const departmentRelations = relations(department, ({ one, many }) => ({
 }))
 
 export const courseRelations = relations(course, ({ one }) => ({
+  university: one(university, {
+    fields: [course.universityId],
+    references: [university.id],
+  }),
   department: one(department, {
     fields: [course.departmentId],
     references: [department.id],

@@ -35,13 +35,14 @@ test("subpath export ./types resolves and provides type definitions", async () =
     typesModule.courseMaterialTypeSchema,
     "courseMaterialTypeSchema should be exported"
   )
-  assert.ok(typesModule.semesterSchema, "semesterSchema should be exported")
+  assert.ok(
+    typesModule.academicPeriodOptions,
+    "academicPeriodOptions should be exported"
+  )
   assert.ok(
     typesModule.courseMaterialTypeOptions,
     "courseMaterialTypeOptions should be exported"
   )
-  assert.ok(typesModule.semesterOptions, "semesterOptions should be exported")
-  assert.ok(typesModule.yearOptions, "yearOptions should be exported")
   assert.ok(
     typesModule.courseMaterialTypePillLabels,
     "courseMaterialTypePillLabels should be exported"
@@ -121,15 +122,11 @@ test("subpath export ./validation resolves and provides validation schemas", asy
   )
 
   // Verify runtime schema behavior
-  const valid = validationModule.academicPeriodSchema.safeParse({
-    year: 2026,
-    semester: 1,
-  })
+  const valid = validationModule.academicPeriodSchema.safeParse(
+    "2026/2027 semester 1"
+  )
   assert.equal(valid.success, true)
-  const invalid = validationModule.academicPeriodSchema.safeParse({
-    year: 1990,
-    semester: "invalid",
-  })
+  const invalid = validationModule.academicPeriodSchema.safeParse("invalid")
   assert.equal(invalid.success, false)
 })
 
@@ -140,15 +137,13 @@ test("subpath export ./utils resolves and provides domain utilities", async () =
   assert.equal(typeof utilsModule.calculateVoteTransition, "function")
   assert.equal(typeof utilsModule.formatBytes, "function")
 
-  // Test with object parameter (Data Clump refactored)
   assert.equal(
-    utilsModule.formatAcademicPeriod({ year: 2026, semester: 1 }),
-    "2026 - Semester 1"
+    utilsModule.formatAcademicPeriod("2026/2027 semester 1"),
+    "2026/2027 Semester 1"
   )
-  // Test with separate arguments overload
   assert.equal(
-    utilsModule.formatAcademicPeriod(2026, "summer"),
-    "2026 - Summer"
+    utilsModule.formatAcademicPeriod("2026/2027 summer"),
+    "2026/2027 Summer"
   )
 
   // Test calculateVoteTransition

@@ -1,0 +1,5 @@
+# University-first course selection, description removal, and unified academic period
+
+Course material and question workflows now use direct University-to-Course filtering, description has been removed from course materials, and separate academic year and semester fields are unified into an academic period.
+
+Instead of navigating academic departments in user-facing pickers, students select a University and then their Course directly across upload, filtering, and Q&A dialogs. The database schema retains `department_id` on courses as an internal grouping hierarchy while adding a first-class `university_id` column to `course` with foreign key integrity. Course materials no longer store or display optional descriptions, streamlining the upload dialog and metadata presentation. The separate `year` (integer) and `semester` (varchar) columns are combined into a single `academic_period` field formatted as `<YYYY>/<YYYY> semester <1|2>` (or `<YYYY>/<YYYY> summer`), validated via strict regex and selected via curated options.

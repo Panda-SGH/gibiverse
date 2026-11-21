@@ -1,6 +1,6 @@
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
-import { and, desc, eq, ilike, or } from "drizzle-orm"
+import { desc, eq, ilike, or } from "drizzle-orm"
 import { searchQuerySchema, type SearchType } from "@gibiverse/shared/types"
 import db from "../db/index.js"
 import { course } from "../db/schema/academic.js"
@@ -39,7 +39,6 @@ const search = new Hono().get(
   // Course Materials search
   const materialConditions = or(
     ilike(courseMaterial.title, searchPattern),
-    ilike(courseMaterial.description, searchPattern),
     ilike(course.code, searchPattern)
   )
 
@@ -47,15 +46,14 @@ const search = new Hono().get(
     .select({
       id: courseMaterial.id,
       title: courseMaterial.title,
-      description: courseMaterial.description,
       courseMaterialType: courseMaterial.courseMaterialType,
       resourceType: courseMaterial.courseMaterialType,
-      year: courseMaterial.year,
-      semester: courseMaterial.semester,
+      academicPeriod: courseMaterial.academicPeriod,
       createdAt: courseMaterial.createdAt,
       courseId: courseMaterial.courseId,
       courseCode: course.code,
       courseName: course.name,
+      universityId: course.universityId,
       departmentId: course.departmentId,
     })
     .from(courseMaterial)

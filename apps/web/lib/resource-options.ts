@@ -3,6 +3,5 @@ export {
   courseMaterialTypeOptions as resourceTypeOptions,
   courseMaterialTypePillLabels,
   courseMaterialTypeOptions,
-  semesterOptions,
-  yearOptions,
+  academicPeriodOptions,
 } from "@gibiverse/shared/types"

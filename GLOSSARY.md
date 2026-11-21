@@ -11,7 +11,7 @@ An institution of higher education. The top of the academic hierarchy.
 _Avoid_: School, institution, college
 
 **Department**:
-An academic unit within a university that groups related courses.
+An internal academic unit within a university that groups related courses. Retained in the data model for administrative grouping, while student-facing workflows use University directly.
 _Avoid_: Faculty, school, division
 
 **Course**:
@@ -21,7 +21,7 @@ _Avoid_: Class, subject, module
 ### Content
 
 **Course Material**:
-A file uploaded by a student and tied to a course — past exams, lecture notes, slides, assignments, or lab materials.
+A file uploaded by a student and tied to a course — past exams, lecture notes, slides, assignments, or lab materials. Identified by title, course, academic period, and course material type (without description).
 _Avoid_: Resource, file, document, upload, content
 
 **Course Material Type**:
@@ -29,8 +29,8 @@ A classification of what kind of academic material a course material is: exam, n
 _Avoid_: Resource type, category, kind
 
 **Academic Period**:
-The year and semester (1, 2, or summer) a course material is associated with.
-_Avoid_: Term, quarter
+The combined academic year and session (e.g., "2026/2027 semester 1", "2026/2027 semester 2", "2026/2027 summer") a course material is associated with.
+_Avoid_: Term, quarter, separate year/semester
 
 ### People
 

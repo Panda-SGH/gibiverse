@@ -11,7 +11,6 @@ import { user } from "./auth.js"
 export const courseMaterial = pgTable("course_material", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
-  description: text("description"),
   courseId: text("course_id")
     .notNull()
     .references(() => course.id),
@@ -19,8 +18,7 @@ export const courseMaterial = pgTable("course_material", {
     .notNull()
     .references(() => user.id),
   courseMaterialType: text("course_material_type").notNull(),
-  year: integer("year").notNull(),
-  semester: text("semester").notNull(),
+  academicPeriod: text("academic_period").notNull(),
   filePath: text("file_path").notNull(),
   fileName: text("file_name").notNull(),
   mimeType: text("mime_type").notNull(),

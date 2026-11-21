@@ -1,20 +1,11 @@
-import type { AcademicPeriod, Semester } from "../types/index.js"
-
 /**
  * Shared domain utilities foundation for Gibiverse.
  */
-export function formatAcademicPeriod(period: AcademicPeriod): string
-export function formatAcademicPeriod(year: number, semester: Semester): string
-export function formatAcademicPeriod(
-  yearOrPeriod: number | AcademicPeriod,
-  semester?: Semester
-): string {
-  const year =
-    typeof yearOrPeriod === "object" ? yearOrPeriod.year : yearOrPeriod
-  const sem =
-    typeof yearOrPeriod === "object" ? yearOrPeriod.semester : semester!
-  const semesterLabel = sem === "summer" ? "Summer" : `Semester ${sem}`
-  return `${year} - ${semesterLabel}`
+export function formatAcademicPeriod(period: string): string {
+  if (!period) return ""
+  return period
+    .replace(/\bsemester (\d)\b/i, "Semester $1")
+    .replace(/\bsummer\b/i, "Summer")
 }
 
 export * from "./vote.js"

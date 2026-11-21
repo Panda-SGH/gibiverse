@@ -4,22 +4,17 @@ import { client } from "@gibiverse/api-client"
 import { CourseMaterialCatalogClient } from "./course-material-catalog-client"
 
 export default async function CourseMaterialsPage() {
-  const [univRes, deptRes, courseRes, materialsRes] = await Promise.all([
+  const [univRes, courseRes, materialsRes] = await Promise.all([
     client.api.universities.$get(),
-    client.api.departments.$get(),
     client.api.courses.$get(),
     client.api["course-materials"].$get({ query: {} }),
   ])
 
   const universities = univRes.ok ? await univRes.json() : []
-  const departments = deptRes.ok ? await deptRes.json() : []
   const courses = courseRes.ok ? await courseRes.json() : []
   const courseMaterials = materialsRes.ok ? await materialsRes.json() : []
 
   const primaryUniversity = universities[0] ?? null
-  const scopedDepartments = primaryUniversity
-    ? departments.filter((d) => d.universityId === primaryUniversity.id)
-    : departments
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -39,13 +34,13 @@ export default async function CourseMaterialsPage() {
           </div>
         </div>
         <UploadCourseMaterialButton
-          departments={scopedDepartments}
+          universities={universities}
           courses={courses}
         />
       </div>
 
       <CourseMaterialCatalogClient
-        departments={scopedDepartments}
+        universities={universities}
         courses={courses}
         initialCourseMaterials={courseMaterials}
         universityName={primaryUniversity?.name ?? null}

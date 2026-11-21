@@ -5,7 +5,6 @@ import {
   buildSearchQuery,
   getSearchEmptyState,
   emptySearchResponse,
-  type SearchType,
 } from "../app/search/presentation.js"
 
 test("buildSearchQuery formats url and query params correctly", () => {

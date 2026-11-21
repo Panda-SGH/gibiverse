@@ -10,7 +10,7 @@ test("buildQuestionsQuery includes course and non-default sort", () => {
   assert.strictEqual(
     buildQuestionsQuery({
       courseId: null,
-      departmentId: null,
+      universityId: null,
       sort: "newest",
     }),
     "/api/questions"
@@ -18,10 +18,10 @@ test("buildQuestionsQuery includes course and non-default sort", () => {
   assert.strictEqual(
     buildQuestionsQuery({
       courseId: "course_1",
-      departmentId: "dept_1",
+      universityId: "uni_1",
       sort: "most_voted",
     }),
-    "/api/questions?courseId=course_1&departmentId=dept_1&sort=most_voted"
+    "/api/questions?courseId=course_1&universityId=uni_1&sort=most_voted"
   )
 })
 
@@ -29,7 +29,7 @@ test("questionCatalogEmptyState distinguishes filtered vs empty catalog", () => 
   assert.deepStrictEqual(
     questionCatalogEmptyState({
       courseId: null,
-      departmentId: null,
+      universityId: null,
       sort: "newest",
     }),
     {
@@ -41,14 +41,14 @@ test("questionCatalogEmptyState distinguishes filtered vs empty catalog", () => 
   assert.ok(
     hasActiveQuestionFilters({
       courseId: "course_1",
-      departmentId: null,
+      universityId: null,
       sort: "newest",
     })
   )
   assert.match(
     questionCatalogEmptyState({
       courseId: "course_1",
-      departmentId: null,
+      universityId: null,
       sort: "newest",
     }).title,
     /match/i

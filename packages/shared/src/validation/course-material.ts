@@ -4,12 +4,18 @@ import {
   ALLOWED_MIME_TYPES,
   MAX_FILE_SIZE_BYTES,
   MAX_FILE_SIZE_MB,
-  MIN_ACADEMIC_YEAR,
-  MAX_ACADEMIC_YEAR,
+  ACADEMIC_PERIOD_REGEX,
   courseMaterialTypeSchema,
-  semesterSchema,
 } from "../types/course-material.js"
 import { formatBytes } from "../utils/course-material.js"
+
+export const academicPeriodSchema = z
+  .string()
+  .trim()
+  .regex(
+    ACADEMIC_PERIOD_REGEX,
+    "Invalid academic period format (expected e.g. '2026/2027 semester 1' or '2026/2027 summer')"
+  )
 
 export type FileLike = {
   name: string
@@ -66,6 +72,7 @@ export const listCourseMaterialsQuerySchema = z.object({
     .optional()
     .transform((val) => (val && val.length > 0 ? val : undefined))
     .pipe(courseMaterialTypeSchema.optional()),
+  universityId: optionalString,
   departmentId: optionalString,
   courseId: optionalString,
 })
@@ -79,18 +86,7 @@ export const uploadCourseMaterialSchema = z
     title: z.string().trim().min(1, "Title is required"),
     courseId: z.string().trim().min(1, "Course is required"),
     courseMaterialType: courseMaterialTypeSchema,
-    year: z.coerce
-      .number({ message: "Invalid academic year" })
-      .int("Invalid academic year")
-      .min(MIN_ACADEMIC_YEAR, "Invalid academic year")
-      .max(MAX_ACADEMIC_YEAR, "Invalid academic year"),
-    semester: semesterSchema,
-    description: z
-      .string()
-      .trim()
-      .optional()
-      .nullable()
-      .transform((val) => (val ? val : null)),
+    academicPeriod: academicPeriodSchema,
     file: z.custom<File>(
       (val) => typeof File !== "undefined" && val instanceof File,
       "File is required"

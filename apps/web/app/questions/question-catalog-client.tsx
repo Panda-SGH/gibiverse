@@ -12,7 +12,7 @@ import {
 import { CoursePicker } from "@/components/course-picker"
 import { VoteControls } from "@/components/vote-controls"
 import { client } from "@gibiverse/api-client"
-import type { Course, Department } from "@/app/courses/presentation"
+import type { Course, University } from "@/app/courses/presentation"
 import { formatRelativeUploadDate } from "@/lib/formatters"
 import {
   hasActiveQuestionFilters,
@@ -29,17 +29,17 @@ const SORT_OPTIONS: { value: QuestionSort; label: string }[] = [
 ]
 
 export function QuestionCatalogClient({
-  departments,
+  universities,
   courses,
   initialQuestions,
 }: {
-  departments: Department[]
+  universities: University[]
   courses: Course[]
   initialQuestions: CatalogQuestion[]
 }) {
   const [filters, setFilters] = React.useState<QuestionCatalogFilters>({
     courseId: null,
-    departmentId: null,
+    universityId: null,
     sort: "newest",
   })
   const [questions, setQuestions] =
@@ -62,6 +62,7 @@ export function QuestionCatalogClient({
       .$get({
         query: {
           courseId: filters.courseId || undefined,
+          universityId: filters.universityId || undefined,
           departmentId: filters.departmentId || undefined,
           sort: filters.sort,
         },
@@ -139,15 +140,15 @@ export function QuestionCatalogClient({
         </div>
 
         <CoursePicker
-          departments={departments}
+          universities={universities}
           courses={courses}
-          departmentId={filters.departmentId}
+          universityId={filters.universityId}
           courseId={filters.courseId}
           allowClear
-          onDepartmentChange={(departmentId) =>
+          onUniversityChange={(universityId) =>
             setFilters((prev) => ({
               ...prev,
-              departmentId,
+              universityId,
               courseId: null,
             }))
           }

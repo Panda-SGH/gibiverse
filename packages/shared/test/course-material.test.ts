@@ -2,28 +2,24 @@ import test from "node:test"
 import assert from "node:assert/strict"
 import {
   COURSE_MATERIAL_TYPES,
-  SEMESTERS,
   courseMaterialTypeSchema,
-  semesterSchema,
   MAX_FILE_SIZE_BYTES,
   MAX_FILE_SIZE_MB,
   ALLOWED_EXTENSIONS,
   ALLOWED_MIME_TYPES,
-  MIN_ACADEMIC_YEAR,
-  MAX_ACADEMIC_YEAR,
   courseMaterialTypePillLabels,
   courseMaterialTypeOptions,
-  semesterOptions,
-  yearOptions,
+  academicPeriodOptions,
 } from "../src/types/course-material.js"
 import { formatBytes } from "../src/utils/course-material.js"
 import {
   validateFile,
+  academicPeriodSchema,
   listCourseMaterialsQuerySchema,
   uploadCourseMaterialSchema,
 } from "../src/validation/course-material.js"
 
-test("COURSE_MATERIAL_TYPES and SEMESTERS contain domain values", () => {
+test("COURSE_MATERIAL_TYPES contains domain values", () => {
   assert.deepEqual(COURSE_MATERIAL_TYPES, [
     "exam",
     "notes",
@@ -32,7 +28,6 @@ test("COURSE_MATERIAL_TYPES and SEMESTERS contain domain values", () => {
     "lab",
     "other",
   ])
-  assert.deepEqual(SEMESTERS, ["1", "2", "summer"])
 })
 
 test("courseMaterialTypeSchema validates valid course material types and rejects invalid", () => {
@@ -44,20 +39,46 @@ test("courseMaterialTypeSchema validates valid course material types and rejects
   assert.equal(invalid.success, false)
 })
 
-test("semesterSchema validates valid semesters and rejects invalid", () => {
-  for (const sem of SEMESTERS) {
-    const parsed = semesterSchema.safeParse(sem)
-    assert.equal(parsed.success, true)
+test("academicPeriodSchema validates combined academic period strings and rejects invalid", () => {
+  const validPeriods = [
+    "2026/2027 semester 1",
+    "2026/2027 semester 2",
+    "2026/2027 summer",
+    "2025/2026 semester 1",
+  ]
+  for (const period of validPeriods) {
+    const parsed = academicPeriodSchema.safeParse(period)
+    assert.equal(parsed.success, true, `Expected ${period} to be valid`)
   }
-  const invalid = semesterSchema.safeParse("fall")
-  assert.equal(invalid.success, false)
+
+  const invalidPeriods = [
+    "2026",
+    "2026/2027",
+    "2026/2027 semester 3",
+    "2026/2027 fall",
+    "2026/2027 spring",
+    "",
+    "invalid",
+  ]
+  for (const invalid of invalidPeriods) {
+    const parsed = academicPeriodSchema.safeParse(invalid)
+    assert.equal(parsed.success, false, `Expected ${invalid} to be invalid`)
+  }
 })
 
-test("file constants and academic year limits have expected values", () => {
+test("academicPeriodOptions generates curated rolling academic periods", () => {
+  const fixedDate = new Date(2026, 0, 1)
+  const options = academicPeriodOptions(fixedDate)
+  assert.equal(options.length, 18) // 6 years * 3 terms
+  assert.equal(options[0]?.value, "2026/2027 semester 1")
+  assert.equal(options[1]?.value, "2026/2027 semester 2")
+  assert.equal(options[2]?.value, "2026/2027 summer")
+  assert.equal(options[options.length - 1]?.value, "2021/2022 summer")
+})
+
+test("file constants have expected values", () => {
   assert.equal(MAX_FILE_SIZE_MB, 50)
   assert.equal(MAX_FILE_SIZE_BYTES, 50 * 1024 * 1024)
-  assert.equal(MIN_ACADEMIC_YEAR, 2000)
-  assert.equal(MAX_ACADEMIC_YEAR, 2100)
   assert.ok(ALLOWED_EXTENSIONS.includes(".pdf"))
   assert.ok(ALLOWED_EXTENSIONS.includes(".docx"))
   assert.ok(ALLOWED_EXTENSIONS.includes(".pptx"))
@@ -86,18 +107,6 @@ test("course material options and labels are defined correctly", () => {
     courseMaterialTypeOptions.map((o) => o.value),
     [...COURSE_MATERIAL_TYPES]
   )
-
-  assert.equal(semesterOptions.length, 3)
-  assert.deepEqual(
-    semesterOptions.map((o) => o.value),
-    [...SEMESTERS]
-  )
-
-  const fixedDate = new Date(2026, 0, 1)
-  const years = yearOptions(fixedDate)
-  assert.equal(years.length, 8)
-  assert.equal(years[0], 2026)
-  assert.equal(years[7], 2019)
 })
 
 test("formatBytes formats byte numbers accurately", () => {
@@ -142,15 +151,17 @@ test("validateFile validates file size, empty files, and allowed formats", () =>
   assert.equal(allowed.valid, true)
 })
 
-test("listCourseMaterialsQuerySchema validates queries with courseMaterialType", () => {
+test("listCourseMaterialsQuerySchema validates queries with universityId, departmentId, and courseMaterialType", () => {
   const valid = listCourseMaterialsQuerySchema.safeParse({
     courseMaterialType: "exam",
+    universityId: "uni_1",
     departmentId: "dept_cs",
     courseId: "course_1",
   })
   assert.equal(valid.success, true)
   if (valid.success) {
     assert.equal(valid.data.courseMaterialType, "exam")
+    assert.equal(valid.data.universityId, "uni_1")
     assert.equal(valid.data.departmentId, "dept_cs")
     assert.equal(valid.data.courseId, "course_1")
   }
@@ -161,18 +172,29 @@ test("listCourseMaterialsQuerySchema validates queries with courseMaterialType",
   assert.equal(invalid.success, false)
 })
 
-test("uploadCourseMaterialSchema validates valid metadata and rejects invalid", () => {
+test("uploadCourseMaterialSchema requires academicPeriod and file, without description field", () => {
   const result = uploadCourseMaterialSchema.safeParse({
     title: "Midterm Exam 2024",
     courseId: "course_1",
     courseMaterialType: "exam",
-    year: 2024,
-    semester: "1",
-    description: "Sample exam with answers",
+    academicPeriod: "2024/2025 semester 1",
   })
   // file is missing in this test
   assert.equal(result.success, false)
   if (!result.success) {
     assert.equal(result.error.issues[0]?.path[0], "file")
+  }
+
+  const invalidPeriod = uploadCourseMaterialSchema.safeParse({
+    title: "Midterm Exam 2024",
+    courseId: "course_1",
+    courseMaterialType: "exam",
+    academicPeriod: "invalid-period",
+  })
+  assert.equal(invalidPeriod.success, false)
+  if (!invalidPeriod.success) {
+    assert.ok(
+      invalidPeriod.error.issues.some((i) => i.path[0] === "academicPeriod")
+    )
   }
 })

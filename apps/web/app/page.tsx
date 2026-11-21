@@ -292,7 +292,9 @@ export default async function HomePage() {
                           </p>
                         </div>
                         <div className="shrink-0 text-xs text-muted-foreground sm:text-right">
-                          <p>{formatAcademicPeriod(res.year, res.semester)}</p>
+                          <p>
+                            {formatAcademicPeriod(res.academicPeriod ?? "")}
+                          </p>
                           <time dateTime={res.createdAt} className="text-muted-foreground/80">
                             {formatRelativeUploadDate(res.createdAt)}
                           </time>

@@ -5,9 +5,7 @@ export type UploadCourseMaterialPayload = {
   title: string
   courseId: string
   courseMaterialType: CourseMaterialType | string
-  year: number
-  semester: string
-  description?: string
+  academicPeriod: string
 }
 
 export type UploadCourseMaterialResult = {
@@ -25,11 +23,7 @@ export function uploadCourseMaterial(
     form.set("title", payload.title)
     form.set("courseId", payload.courseId)
     form.set("courseMaterialType", payload.courseMaterialType as string)
-    form.set("year", String(payload.year))
-    form.set("semester", payload.semester)
-    if (payload.description?.trim()) {
-      form.set("description", payload.description.trim())
-    }
+    form.set("academicPeriod", payload.academicPeriod)
 
     const xhr = new XMLHttpRequest()
     xhr.open("POST", "/api/course-materials")

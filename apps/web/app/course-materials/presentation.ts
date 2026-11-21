@@ -5,7 +5,8 @@ export { formatAcademicPeriod, formatRelativeUploadDate }
 
 export type CourseMaterialFilters = {
   courseMaterialType?: CourseMaterialType | null
-  departmentId: string | null
+  universityId: string | null
+  departmentId?: string | null
   courseId: string | null
 }
 
@@ -18,19 +19,20 @@ export type CatalogCourseMaterial = {
   id: string
   title: string
   courseMaterialType: CourseMaterialType | string
-  year: number
-  semester: Semester | string
+  academicPeriod: string
   createdAt: string
   courseId: string
   courseCode: string
   courseName: string
-  departmentId: string
+  universityId?: string
+  departmentId?: string
   thumbnailPath?: string | null
 }
 
 export function hasActiveCatalogFilters(filters: CourseMaterialFilters): boolean {
   return Boolean(
     filters.courseMaterialType ||
+      filters.universityId ||
       filters.departmentId ||
       filters.courseId
   )
@@ -43,7 +45,7 @@ export function catalogEmptyState(
     return {
       title: "No course materials match these filters",
       description:
-        "Try clearing or adjusting the course material type, department, or course filters.",
+        "Try clearing or adjusting the course material type, university, or course filters.",
     }
   }
 
@@ -61,6 +63,7 @@ export function buildCourseMaterialsQuery(
   if (filters.courseMaterialType) {
     params.set("courseMaterialType", filters.courseMaterialType)
   }
+  if (filters.universityId) params.set("universityId", filters.universityId)
   if (filters.departmentId) params.set("departmentId", filters.departmentId)
   if (filters.courseId) params.set("courseId", filters.courseId)
   const qs = params.toString()
@@ -70,10 +73,8 @@ export function buildCourseMaterialsQuery(
 export type CourseMaterialDetail = {
   id: string
   title: string
-  description: string | null
   courseMaterialType: CourseMaterialType
-  year: number
-  semester: Semester
+  academicPeriod: string
   fileName: string
   mimeType: string
   fileSize: number
@@ -81,6 +82,7 @@ export type CourseMaterialDetail = {
   courseId: string
   courseCode: string
   courseName: string
+  universityId?: string
   studentId: string
   studentName: string
 }

@@ -1,0 +1,190 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "d620ecc6-2ade-409b-b9cd-a375b29781e7",
+  "prevIds": [
+    "e6be2814-3416-4c96-91a5-fd7f6dab513e"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "course",
+        "university_id"
+      ],
+      "writes": [
+        "s|col|public.course.university_id",
+        "n|col|public.course.university_id",
+        "e|col|public.course.university_id"
+      ],
+      "reads": [
+        "n|tbl|public.course",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "course_material",
+        "academic_period"
+      ],
+      "writes": [
+        "s|col|public.course_material.academic_period",
+        "n|col|public.course_material.academic_period",
+        "e|col|public.course_material.academic_period"
+      ],
+      "reads": [
+        "n|tbl|public.course_material",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "course_material",
+        "description"
+      ],
+      "writes": [
+        "s|col|public.course_material.description",
+        "n|col|public.course_material.description",
+        "e|col|public.course_material.description"
+      ],
+      "reads": [
+        "n|tbl|public.course_material",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "course_material",
+        "year"
+      ],
+      "writes": [
+        "s|col|public.course_material.year",
+        "n|col|public.course_material.year",
+        "e|col|public.course_material.year"
+      ],
+      "reads": [
+        "n|tbl|public.course_material",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "course_material",
+        "semester"
+      ],
+      "writes": [
+        "s|col|public.course_material.semester",
+        "n|col|public.course_material.semester",
+        "e|col|public.course_material.semester"
+      ],
+      "reads": [
+        "n|tbl|public.course_material",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "course"
+      ],
+      "writes": [
+        "s|fk|public.course.course_university_id_university_id_fkey",
+        "n|fk|public.course.course_university_id_university_id_fkey",
+        "e|fk|public.course.course_university_id_university_id_fkey",
+        "n|con|public.course.course_university_id_university_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.course",
+        "n|sch|public",
+        "n|tbl|public.university",
+        "n|sch|public",
+        "n|col|public.course.university_id",
+        "n|col|public.university.id",
+        "e|uniqueness|public.university.id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "course",
+        "name": "university_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "course_material",
+        "name": "academic_period",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "course",
+        "name": "course_university_id_university_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "university_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "university",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"course_material\",\"description\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"course_material\",\"year\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"course_material\",\"semester\"]"
+    }
+  ]
+}

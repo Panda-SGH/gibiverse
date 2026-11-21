@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Upload } from "lucide-react"
 import { Button } from "@gibiverse/ui/components/button"
 import { UploadCourseMaterialWizard } from "@/components/upload-course-material-wizard"
-import type { Course, Department } from "@/app/courses/presentation"
+import type { Course, University } from "@/app/courses/presentation"
 import { useSession } from "@/lib/auth-client"
 import {
   getUploadSignInHref,
@@ -13,14 +13,14 @@ import {
 } from "@/app/course-materials/presentation"
 
 export type UploadCourseMaterialButtonProps = {
-  departments: Department[]
+  universities: University[]
   courses: Course[]
   /** When true, open the wizard immediately (authenticated deep link). */
   autoOpen?: boolean
 }
 
 export function UploadCourseMaterialButton({
-  departments,
+  universities,
   courses,
   autoOpen = false,
 }: UploadCourseMaterialButtonProps) {
@@ -57,7 +57,7 @@ export function UploadCourseMaterialButton({
       <UploadCourseMaterialWizard
         open={open}
         onOpenChange={setOpen}
-        departments={departments}
+        universities={universities}
         courses={courses}
       />
     </>
