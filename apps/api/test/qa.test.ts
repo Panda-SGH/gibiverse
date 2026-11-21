@@ -36,6 +36,7 @@ before(async () => {
     id: courseId,
     name: "QA Course",
     code: courseCode,
+    universityId: uniId,
     departmentId: deptId,
   })
   await db.insert(studentTable).values([

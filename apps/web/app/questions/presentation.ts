@@ -4,7 +4,8 @@ export type { QuestionSort }
 
 export type QuestionCatalogFilters = {
   courseId: string | null
-  departmentId: string | null
+  universityId: string | null
+  departmentId?: string | null
   sort: QuestionSort
 }
 
@@ -32,7 +33,9 @@ export type QuestionCatalogEmptyState = {
 export function hasActiveQuestionFilters(
   filters: QuestionCatalogFilters
 ): boolean {
-  return Boolean(filters.courseId || filters.departmentId)
+  return Boolean(
+    filters.courseId || filters.universityId || filters.departmentId
+  )
 }
 
 export function questionCatalogEmptyState(
@@ -42,7 +45,7 @@ export function questionCatalogEmptyState(
     return {
       title: "No questions match these filters",
       description:
-        "Try clearing or adjusting the department or course filters.",
+        "Try clearing or adjusting the university or course filters.",
     }
   }
 
@@ -55,6 +58,7 @@ export function questionCatalogEmptyState(
 export function buildQuestionsQuery(filters: QuestionCatalogFilters): string {
   const params = new URLSearchParams()
   if (filters.courseId) params.set("courseId", filters.courseId)
+  if (filters.universityId) params.set("universityId", filters.universityId)
   if (filters.departmentId) params.set("departmentId", filters.departmentId)
   if (filters.sort && filters.sort !== "newest") {
     params.set("sort", filters.sort)

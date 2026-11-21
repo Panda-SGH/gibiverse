@@ -6,10 +6,8 @@ export type SearchTab = SearchType
 export type SearchResultResource = {
   id: string
   title: string
-  description?: string | null
   resourceType: string
-  year: number
-  semester: string
+  academicPeriod: string
   createdAt: string
   courseId: string
   courseCode: string

@@ -373,13 +373,8 @@ function ResourceGrid({ resources }: { resources: SearchResultResource[] }) {
             <h3 className="text-base font-semibold text-foreground">
               {item.title}
             </h3>
-            {item.description && (
-              <p className="line-clamp-2 text-sm text-muted-foreground">
-                {item.description}
-              </p>
-            )}
             <p className="mt-auto text-sm text-muted-foreground">
-              {formatAcademicPeriod(item.year, item.semester)}
+              {formatAcademicPeriod(item.academicPeriod)}
               <span aria-hidden="true"> · </span>
               <time dateTime={item.createdAt}>
                 {formatRelativeUploadDate(item.createdAt)}

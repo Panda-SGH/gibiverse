@@ -37,6 +37,7 @@ export default async function CoursesPage() {
       </div>
 
       <CourseDirectoryClient
+        universities={universities}
         departments={scopedDepartments}
         courses={courses}
       />

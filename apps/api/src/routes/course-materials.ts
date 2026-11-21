@@ -55,11 +55,12 @@ const courseMaterials = new Hono()
       }
     }),
     async (c) => {
-      const { courseMaterialType, departmentId, courseId } =
+      const { courseMaterialType, universityId, departmentId, courseId } =
         c.req.valid("query")
 
       const result = await courseMaterialModule.list({
         courseMaterialType,
+        universityId,
         departmentId,
         courseId,
       })
@@ -104,9 +105,7 @@ const courseMaterials = new Hono()
         title,
         courseId,
         courseMaterialType,
-        year,
-        semester,
-        description,
+        academicPeriod,
         file,
       } = c.req.valid("form")
 
@@ -117,9 +116,7 @@ const courseMaterials = new Hono()
         title,
         courseId,
         courseMaterialType,
-        year,
-        semester,
-        description,
+        academicPeriod,
         file: { name: file.name, size: file.size, type: file.type, data },
       })
 

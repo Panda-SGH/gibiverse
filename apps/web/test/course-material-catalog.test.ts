@@ -8,10 +8,19 @@ import {
   type CourseMaterialFilters,
 } from "../app/course-materials/presentation.js"
 
-test("formatAcademicPeriod renders year and semester label", () => {
-  assert.strictEqual(formatAcademicPeriod(2024, "1"), "2024 · Semester 1")
-  assert.strictEqual(formatAcademicPeriod(2023, "2"), "2023 · Semester 2")
-  assert.strictEqual(formatAcademicPeriod(2025, "summer"), "2025 · Summer")
+test("formatAcademicPeriod renders formatted academic period label", () => {
+  assert.strictEqual(
+    formatAcademicPeriod("2024/2025 semester 1"),
+    "2024/2025 Semester 1"
+  )
+  assert.strictEqual(
+    formatAcademicPeriod("2023/2024 semester 2"),
+    "2023/2024 Semester 2"
+  )
+  assert.strictEqual(
+    formatAcademicPeriod("2025/2026 summer"),
+    "2025/2026 Summer"
+  )
 })
 
 test("formatRelativeUploadDate uses relative phrasing from a fixed now", () => {
@@ -33,7 +42,7 @@ test("formatRelativeUploadDate uses relative phrasing from a fixed now", () => {
 test("catalogEmptyState guides clearing filters when filters are active", () => {
   const filters: CourseMaterialFilters = {
     courseMaterialType: "exam",
-    departmentId: null,
+    universityId: null,
     courseId: null,
   }
   const state = catalogEmptyState(filters)
@@ -44,7 +53,7 @@ test("catalogEmptyState guides clearing filters when filters are active", () => 
 test("catalogEmptyState prompts upload when catalog is empty without filters", () => {
   const filters: CourseMaterialFilters = {
     courseMaterialType: null,
-    departmentId: null,
+    universityId: null,
     courseId: null,
   }
   const state = catalogEmptyState(filters)
@@ -56,7 +65,7 @@ test("buildCourseMaterialsQuery encodes active catalog filters", () => {
   assert.strictEqual(
     buildCourseMaterialsQuery({
       courseMaterialType: null,
-      departmentId: null,
+      universityId: null,
       courseId: null,
     }),
     "/api/course-materials"
@@ -64,9 +73,9 @@ test("buildCourseMaterialsQuery encodes active catalog filters", () => {
   assert.strictEqual(
     buildCourseMaterialsQuery({
       courseMaterialType: "exam",
-      departmentId: "dept_cs",
+      universityId: "uni_1",
       courseId: "course_1",
     }),
-    "/api/course-materials?courseMaterialType=exam&departmentId=dept_cs&courseId=course_1"
+    "/api/course-materials?courseMaterialType=exam&universityId=uni_1&courseId=course_1"
   )
 })

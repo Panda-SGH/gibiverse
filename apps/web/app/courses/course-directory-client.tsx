@@ -7,12 +7,15 @@ import {
   groupCoursesByDepartment,
   type Course,
   type Department,
+  type University,
 } from "./presentation"
 
 export function CourseDirectoryClient({
+  universities = [],
   departments,
   courses,
 }: {
+  universities?: University[]
   departments: Department[]
   courses: Course[]
 }) {
@@ -34,12 +37,12 @@ export function CourseDirectoryClient({
             Find a course
           </h2>
           <p className="text-sm text-muted-foreground">
-            Filter by department, then select a course. This picker is reused
+            Filter by university, then select a course. This picker is reused
             when uploading course materials or posting questions.
           </p>
         </div>
         <CoursePicker
-          departments={departments}
+          universities={universities}
           courses={courses}
           courseId={selectedCourseId}
           onCourseChange={setSelectedCourseId}

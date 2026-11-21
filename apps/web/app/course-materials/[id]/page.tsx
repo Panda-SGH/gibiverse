@@ -121,12 +121,7 @@ export default async function CourseMaterialDetailPage({
             {courseMaterial.courseCode} ({courseMaterial.courseName})
           </span>
           <span className="text-muted-foreground/40">·</span>
-          <span>
-            {formatAcademicPeriod(
-              courseMaterial.year,
-              courseMaterial.semester
-            )}
-          </span>
+          <span>{formatAcademicPeriod(courseMaterial.academicPeriod)}</span>
         </div>
 
         {/* Row 3: Uploader name, upload time at bottom */}
@@ -138,13 +133,6 @@ export default async function CourseMaterialDetailPage({
             {formatRelativeUploadDate(courseMaterial.createdAt)})
           </span>
         </div>
-
-        {/* Optional Description */}
-        {courseMaterial.description ? (
-          <p className="mt-1 text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-3xl">
-            {courseMaterial.description}
-          </p>
-        ) : null}
       </div>
 
       {/* Document Preview Section */}

@@ -50,12 +50,14 @@ before(async () => {
       id: courseCsId,
       name: "Algorithms",
       code: courseCsCode,
+      universityId: uniId,
       departmentId: deptId,
     },
     {
       id: courseMathId,
       name: "Linear Algebra",
       code: courseMathCode,
+      universityId: uniId,
       departmentId: deptId,
     },
   ])

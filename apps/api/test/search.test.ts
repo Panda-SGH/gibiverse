@@ -29,8 +29,8 @@ type SearchResponse = {
   resources: Array<{
     id: string
     title: string
-    description?: string | null
     courseCode: string
+    academicPeriod?: string
   }>
   questions: Array<{
     id: string
@@ -57,12 +57,14 @@ before(async () => {
       id: courseCsId,
       name: "Quantum Systems",
       code: courseCsCode,
+      universityId: uniId,
       departmentId: deptId,
     },
     {
       id: courseMathId,
       name: "Matrix Algebra",
       code: courseMathCode,
+      universityId: uniId,
       departmentId: deptId,
     },
   ])
@@ -86,21 +88,17 @@ before(async () => {
     {
       id: resourceCsId,
       title: "Quantum Computing Guide",
-      description: "Comprehensive introduction to qubits",
       courseId: courseCsId,
       courseMaterialType: "notes",
-      year: 2024,
-      semester: "1",
+      academicPeriod: "2024/2025 semester 1",
       ...fileMeta,
     },
     {
       id: resourceMathId,
       title: "Matrix Decomposition Review",
-      description: "Eigenvalues and spectral theorem practice",
       courseId: courseMathId,
       courseMaterialType: "exam",
-      year: 2024,
-      semester: "2",
+      academicPeriod: "2024/2025 semester 2",
       ...fileMeta,
     },
   ])
@@ -160,9 +158,9 @@ test("GET /api/search with empty query returns 0 counts and empty results", asyn
   assert.deepEqual(body.questions, [])
 })
 
-test("GET /api/search matches resource description and question body case-insensitively", async () => {
-  // "qubits" is in resourceCs description ("Comprehensive introduction to qubits")
-  const resRes = await app.request("/api/search?q=QUBITS")
+test("GET /api/search matches resource title and question body case-insensitively", async () => {
+  // "quantum" is in resourceCs title ("Quantum Computing Guide")
+  const resRes = await app.request("/api/search?q=QUANTUM")
   assert.equal(resRes.status, 200)
   const resBody = (await resRes.json()) as SearchResponse
   assert.equal(resBody.counts.resources, 1)

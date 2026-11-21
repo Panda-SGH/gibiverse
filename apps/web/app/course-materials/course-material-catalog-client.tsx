@@ -27,8 +27,8 @@ import {
   ToggleGroupItem,
 } from "@gibiverse/ui/components/toggle-group"
 import { client } from "@gibiverse/api-client"
-import type { Course, Department } from "@/app/courses/presentation"
-import { filterCoursesByDepartment } from "@/app/courses/presentation"
+import type { Course, University } from "@/app/courses/presentation"
+import { filterCoursesByUniversity } from "@/app/courses/presentation"
 import { formatRelativeUploadDate } from "@/lib/formatters"
 import {
   catalogEmptyState,
@@ -71,19 +71,19 @@ function FileTypeIcon({
 }
 
 export function CourseMaterialCatalogClient({
-  departments,
+  universities,
   courses,
   initialCourseMaterials,
   universityName = null,
 }: {
-  departments: Department[]
+  universities: University[]
   courses: Course[]
   initialCourseMaterials: CatalogCourseMaterial[]
   universityName?: string | null
 }) {
   const [filters, setFilters] = React.useState<CourseMaterialFilters>({
     courseMaterialType: null,
-    departmentId: null,
+    universityId: null,
     courseId: null,
   })
   const [courseMaterials, setCourseMaterials] =
@@ -106,6 +106,7 @@ export function CourseMaterialCatalogClient({
       .$get({
         query: {
           courseMaterialType: filters.courseMaterialType || undefined,
+          universityId: filters.universityId || undefined,
           departmentId: filters.departmentId || undefined,
           courseId: filters.courseId || undefined,
         },
@@ -137,7 +138,7 @@ export function CourseMaterialCatalogClient({
   return (
     <div className="flex flex-col gap-8">
       <CatalogFiltersBar
-        departments={departments}
+        universities={universities}
         courses={courses}
         filters={filters}
         onFiltersChange={setFilters}
@@ -177,7 +178,7 @@ export function CourseMaterialCatalogClient({
                 onClick={() =>
                   setFilters({
                     courseMaterialType: null,
-                    departmentId: null,
+                    universityId: null,
                     courseId: null,
                   })
                 }
@@ -275,12 +276,12 @@ export function CourseMaterialCatalogClient({
 /* ------------------------------------------------------------------ */
 
 function CatalogFiltersBar({
-  departments,
+  universities,
   courses,
   filters,
   onFiltersChange,
 }: {
-  departments: Department[]
+  universities: University[]
   courses: Course[]
   filters: CourseMaterialFilters
   onFiltersChange: (filters: CourseMaterialFilters) => void
@@ -289,19 +290,19 @@ function CatalogFiltersBar({
   const dropdownRef = React.useRef<HTMLDivElement>(null)
   const buttonRef = React.useRef<HTMLButtonElement>(null)
 
-  const filteredCourses = filterCoursesByDepartment(
+  const filteredCourses = filterCoursesByUniversity(
     courses,
-    filters.departmentId
+    filters.universityId
   )
   const activeType = filters.courseMaterialType
   const typeValue = activeType ? [activeType] : [ALL_TYPE_KEY]
 
   // Build course label for the dropdown button
-  const hasCourseFilter = Boolean(filters.departmentId || filters.courseId)
+  const hasCourseFilter = Boolean(filters.universityId || filters.courseId)
   const courseButtonParts: string[] = []
-  if (filters.departmentId) {
-    const dept = departments.find((d) => d.id === filters.departmentId)
-    if (dept) courseButtonParts.push(dept.name)
+  if (filters.universityId) {
+    const uni = universities.find((u) => u.id === filters.universityId)
+    if (uni) courseButtonParts.push(uni.name)
   }
   if (filters.courseId) {
     const course = courses.find((c) => c.id === filters.courseId)
@@ -413,7 +414,7 @@ function CatalogFiltersBar({
                 e.stopPropagation()
                 onFiltersChange({
                   ...filters,
-                  departmentId: null,
+                  universityId: null,
                   courseId: null,
                 })
               }}
@@ -435,27 +436,27 @@ function CatalogFiltersBar({
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-1.5">
                 <Label className="text-xs text-muted-foreground">
-                  Department
+                  University
                 </Label>
                 <Select
-                  value={filters.departmentId ?? ALL_VALUE}
+                  value={filters.universityId ?? ALL_VALUE}
                   onValueChange={(v) =>
                     onFiltersChange({
                       ...filters,
-                      departmentId: v === ALL_VALUE ? null : v,
+                      universityId: v === ALL_VALUE ? null : v,
                       courseId: null,
                     })
                   }
                 >
                   <SelectTrigger className="h-9 text-sm">
-                    <SelectValue placeholder="All departments" />
+                    <SelectValue placeholder="All universities" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectItem value={ALL_VALUE}>All departments</SelectItem>
-                      {departments.map((d) => (
-                        <SelectItem key={d.id} value={d.id}>
-                          {d.name}
+                      <SelectItem value={ALL_VALUE}>All universities</SelectItem>
+                      {universities.map((u) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {u.name}
                         </SelectItem>
                       ))}
                     </SelectGroup>
@@ -473,20 +474,20 @@ function CatalogFiltersBar({
                       courseId: v === ALL_VALUE ? null : v,
                     })
                   }
-                  disabled={!filters.departmentId}
+                  disabled={!filters.universityId}
                 >
                   <SelectTrigger className="h-9 text-sm">
                     <SelectValue
                       placeholder={
-                        filters.departmentId
+                        filters.universityId
                           ? "All courses"
-                          : "Pick department first"
+                          : "Pick university first"
                       }
                     />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      {filters.departmentId ? (
+                      {filters.universityId ? (
                         <SelectItem value={ALL_VALUE}>All courses</SelectItem>
                       ) : null}
                       {filteredCourses.map((c) => (

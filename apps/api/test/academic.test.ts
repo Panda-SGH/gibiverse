@@ -37,12 +37,14 @@ before(async () => {
       id: courseId,
       name: "Data Structures",
       code: courseCode,
+      universityId: uniId,
       departmentId: deptId,
     },
     {
       id: otherCourseId,
       name: "Calculus I",
       code: otherCourseCode,
+      universityId: otherUniId,
       departmentId: otherDeptId,
     },
   ])
@@ -80,18 +82,32 @@ test("GET /api/departments filters by universityId", async () => {
   assert.ok(!body.some((d) => d.id === otherDeptId))
 })
 
-test("GET /api/courses filters by departmentId", async () => {
-  const res = await app.request(`/api/courses?departmentId=${deptId}`)
-  assert.strictEqual(res.status, 200)
-  const body = (await res.json()) as Array<{
+test("GET /api/courses filters by departmentId and universityId", async () => {
+  const deptRes = await app.request(`/api/courses?departmentId=${deptId}`)
+  assert.strictEqual(deptRes.status, 200)
+  const deptBody = (await deptRes.json()) as Array<{
     id: string
     name: string
     code: string
+    universityId: string
     departmentId: string
   }>
-  assert.ok(body.some((c) => c.id === courseId && c.code === courseCode))
-  assert.ok(body.every((c) => c.departmentId === deptId))
-  assert.ok(!body.some((c) => c.id === otherCourseId))
+  assert.ok(deptBody.some((c) => c.id === courseId && c.code === courseCode))
+  assert.ok(deptBody.every((c) => c.departmentId === deptId))
+  assert.ok(!deptBody.some((c) => c.id === otherCourseId))
+
+  const uniRes = await app.request(`/api/courses?universityId=${uniId}`)
+  assert.strictEqual(uniRes.status, 200)
+  const uniBody = (await uniRes.json()) as Array<{
+    id: string
+    name: string
+    code: string
+    universityId: string
+    departmentId: string
+  }>
+  assert.ok(uniBody.some((c) => c.id === courseId && c.code === courseCode))
+  assert.ok(uniBody.every((c) => c.universityId === uniId))
+  assert.ok(!uniBody.some((c) => c.id === otherCourseId))
 })
 
 function pgErrorMessage(err: unknown): string {
@@ -108,6 +124,7 @@ test("course code must be unique", async () => {
         id: `course_dup_${suffix}`,
         name: "Duplicate Code Course",
         code: courseCode,
+        universityId: uniId,
         departmentId: deptId,
       }),
     (err: unknown) => /unique|duplicate/i.test(pgErrorMessage(err))
@@ -126,6 +143,20 @@ test("department requires a valid university foreign key", async () => {
   )
 })
 
+test("course requires a valid university foreign key", async () => {
+  await assert.rejects(
+    () =>
+      db.insert(course).values({
+        id: `course_uni_orphan_${suffix}`,
+        name: "Orphan Course Uni",
+        code: `OU${String(suffix).slice(-3)}`,
+        universityId: `missing_uni_${suffix}`,
+        departmentId: deptId,
+      }),
+    (err: unknown) => /foreign key|violates/i.test(pgErrorMessage(err))
+  )
+})
+
 test("course requires a valid department foreign key", async () => {
   await assert.rejects(
     () =>
@@ -133,6 +164,7 @@ test("course requires a valid department foreign key", async () => {
         id: `course_orphan_${suffix}`,
         name: "Orphan Course",
         code: `OR${String(suffix).slice(-3)}`,
+        universityId: uniId,
         departmentId: `missing_dept_${suffix}`,
       }),
     (err: unknown) => /foreign key|violates/i.test(pgErrorMessage(err))

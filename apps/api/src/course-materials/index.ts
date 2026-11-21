@@ -3,7 +3,7 @@ import { and, desc, eq, type SQL } from "drizzle-orm"
 import { course } from "../db/schema/academic.js"
 import { user as studentTable } from "../db/schema/auth.js"
 import { courseMaterial } from "../db/schema/course-material.js"
-import type { CourseMaterialType, Semester } from "@gibiverse/shared/types"
+import type { CourseMaterialType } from "@gibiverse/shared/types"
 import {
   ok,
   err,
@@ -14,7 +14,7 @@ import {
 import type { StorageProvider } from "../storage/types.js"
 import {
   isCourseMaterialType,
-  isSemester,
+  isAcademicPeriod,
   validateUploadFile,
 } from "./validation.js"
 
@@ -30,14 +30,13 @@ export type UploadInput = {
   title: string
   courseId: string
   courseMaterialType: CourseMaterialType | string
-  year: number
-  semester: Semester | string
-  description: string | null
+  academicPeriod: string
   file: CourseMaterialFileInput
 }
 
 export type ListFilters = {
   courseMaterialType?: CourseMaterialType | string
+  universityId?: string
   departmentId?: string
   courseId?: string
 }
@@ -60,7 +59,7 @@ export function createCourseMaterials(deps: {
   ): Promise<Result<typeof courseMaterial.$inferSelect>> {
     const title = input.title.trim()
     const courseId = input.courseId.trim()
-    const { courseMaterialType, semester } = input
+    const { courseMaterialType, academicPeriod } = input
 
     if (!title) {
       return err("validation", "Title is required")
@@ -71,15 +70,8 @@ export function createCourseMaterials(deps: {
     if (!isCourseMaterialType(courseMaterialType)) {
       return err("validation", "Invalid course material type")
     }
-    if (!isSemester(semester)) {
-      return err("validation", "Invalid semester")
-    }
-    if (
-      !Number.isInteger(input.year) ||
-      input.year < 2000 ||
-      input.year > 2100
-    ) {
-      return err("validation", "Invalid academic year")
+    if (!isAcademicPeriod(academicPeriod)) {
+      return err("validation", "Invalid academic period")
     }
 
     const fileValidation = validateUploadFile({
@@ -115,12 +107,10 @@ export function createCourseMaterials(deps: {
         .values({
           id,
           title,
-          description: input.description,
           courseId,
           userId: input.student.id,
           courseMaterialType,
-          year: input.year,
-          semester,
+          academicPeriod,
           filePath: putResult.key,
           fileName: input.file.name,
           mimeType: input.file.type || "application/octet-stream",
@@ -149,6 +139,9 @@ export function createCourseMaterials(deps: {
         eq(courseMaterial.courseMaterialType, filters.courseMaterialType)
       )
     }
+    if (filters.universityId) {
+      conditions.push(eq(course.universityId, filters.universityId))
+    }
     if (filters.departmentId) {
       conditions.push(eq(course.departmentId, filters.departmentId))
     }
@@ -161,12 +154,12 @@ export function createCourseMaterials(deps: {
         id: courseMaterial.id,
         title: courseMaterial.title,
         courseMaterialType: courseMaterial.courseMaterialType,
-        year: courseMaterial.year,
-        semester: courseMaterial.semester,
+        academicPeriod: courseMaterial.academicPeriod,
         createdAt: courseMaterial.createdAt,
         courseId: courseMaterial.courseId,
         courseCode: course.code,
         courseName: course.name,
+        universityId: course.universityId,
         departmentId: course.departmentId,
       })
       .from(courseMaterial)
@@ -185,10 +178,8 @@ export function createCourseMaterials(deps: {
     Result<{
       id: string
       title: string
-      description: string | null
       courseMaterialType: string
-      year: number
-      semester: string
+      academicPeriod: string
       fileName: string
       mimeType: string
       fileSize: number
@@ -196,6 +187,7 @@ export function createCourseMaterials(deps: {
       courseId: string
       courseCode: string
       courseName: string
+      universityId: string
       studentId: string
       studentName: string
     }>
@@ -208,10 +200,8 @@ export function createCourseMaterials(deps: {
       .select({
         id: courseMaterial.id,
         title: courseMaterial.title,
-        description: courseMaterial.description,
         courseMaterialType: courseMaterial.courseMaterialType,
-        year: courseMaterial.year,
-        semester: courseMaterial.semester,
+        academicPeriod: courseMaterial.academicPeriod,
         fileName: courseMaterial.fileName,
         mimeType: courseMaterial.mimeType,
         fileSize: courseMaterial.fileSize,
@@ -219,6 +209,7 @@ export function createCourseMaterials(deps: {
         courseId: courseMaterial.courseId,
         courseCode: course.code,
         courseName: course.name,
+        universityId: course.universityId,
         studentId: courseMaterial.userId,
         studentName: studentTable.name,
       })

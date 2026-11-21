@@ -13,7 +13,17 @@ export type Course = {
   id: string
   name: string
   code: string
+  universityId: string
   departmentId: string
+}
+
+/** Pure helper: courses belonging to a university (empty when no university). */
+export function filterCoursesByUniversity(
+  courses: Course[],
+  universityId: string | null | undefined
+): Course[] {
+  if (!universityId) return []
+  return courses.filter((course) => course.universityId === universityId)
 }
 
 /** Pure helper: courses belonging to a department (empty when no department). */

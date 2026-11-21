@@ -5,19 +5,19 @@ import { useRouter } from "next/navigation"
 import { MessageSquarePlus } from "lucide-react"
 import { Button } from "@gibiverse/ui/components/button"
 import { AskQuestionDialog } from "@/components/ask-question-dialog"
-import type { Course, Department } from "@/app/courses/presentation"
+import type { Course, University } from "@/app/courses/presentation"
 import { ASK_QUESTION_PATH, getAskSignInHref } from "@/app/questions/presentation"
 import { useSession } from "@/lib/auth-client"
 
 type AskQuestionButtonProps = {
-  departments: Department[]
+  universities: University[]
   courses: Course[]
   /** When true, open the dialog immediately (authenticated deep link). */
   autoOpen?: boolean
 }
 
 export function AskQuestionButton({
-  departments,
+  universities,
   courses,
   autoOpen = false,
 }: AskQuestionButtonProps) {
@@ -54,7 +54,7 @@ export function AskQuestionButton({
       <AskQuestionDialog
         open={open}
         onOpenChange={setOpen}
-        departments={departments}
+        universities={universities}
         courses={courses}
       />
     </>

@@ -2,20 +2,13 @@ import { UploadCourseMaterialButton } from "@/components/upload-course-material-
 import { client } from "@gibiverse/api-client"
 
 export default async function CourseMaterialsUploadPage() {
-  const [univRes, deptRes, courseRes] = await Promise.all([
+  const [univRes, courseRes] = await Promise.all([
     client.api.universities.$get(),
-    client.api.departments.$get(),
     client.api.courses.$get(),
   ])
 
   const universities = univRes.ok ? await univRes.json() : []
-  const departments = deptRes.ok ? await deptRes.json() : []
   const courses = courseRes.ok ? await courseRes.json() : []
-
-  const primaryUniversity = universities[0] ?? null
-  const scopedDepartments = primaryUniversity
-    ? departments.filter((d) => d.universityId === primaryUniversity.id)
-    : departments
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col items-start gap-4 px-4 py-12 sm:px-6 lg:px-8">
@@ -28,7 +21,7 @@ export default async function CourseMaterialsUploadPage() {
         </p>
       </div>
       <UploadCourseMaterialButton
-        departments={scopedDepartments}
+        universities={universities}
         courses={courses}
         autoOpen
       />

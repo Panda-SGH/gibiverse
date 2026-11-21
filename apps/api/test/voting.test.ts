@@ -41,6 +41,7 @@ before(async () => {
     id: courseId,
     name: "Voting Domain Course",
     code: courseCode,
+    universityId: uniId,
     departmentId: deptId,
   })
 

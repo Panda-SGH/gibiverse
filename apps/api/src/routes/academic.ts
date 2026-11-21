@@ -1,5 +1,5 @@
 import { Hono } from "hono"
-import { eq } from "drizzle-orm"
+import { and, eq, type SQL } from "drizzle-orm"
 import db from "../db/index.js"
 import { university, department, course } from "../db/schema/academic.js"
 
@@ -34,21 +34,32 @@ const academic = new Hono()
     return c.json(rows)
   })
   .get("/courses", async (c) => {
+    const universityId = c.req.query("universityId")
     const departmentId = c.req.query("departmentId")
+
+    const conditions: SQL[] = []
+    if (universityId) {
+      conditions.push(eq(course.universityId, universityId))
+    }
+    if (departmentId) {
+      conditions.push(eq(course.departmentId, departmentId))
+    }
 
     const query = db
       .select({
         id: course.id,
         name: course.name,
         code: course.code,
+        universityId: course.universityId,
         departmentId: course.departmentId,
       })
       .from(course)
       .orderBy(course.code)
 
-    const rows = departmentId
-      ? await query.where(eq(course.departmentId, departmentId))
-      : await query
+    const rows =
+      conditions.length > 0
+        ? await query.where(and(...conditions))
+        : await query
 
     return c.json(rows)
   })

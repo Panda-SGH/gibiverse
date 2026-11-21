@@ -1,10 +1,8 @@
-import { semesterOptions } from "@gibiverse/shared/types"
-
-export function formatAcademicPeriod(year: number, semester: string): string {
-  const label =
-    semesterOptions.find((option) => option.value === semester)?.label ??
-    semester
-  return `${year} · ${label}`
+export function formatAcademicPeriod(period: string): string {
+  if (!period) return ""
+  return period
+    .replace(/\bsemester (\d)\b/i, "Semester $1")
+    .replace(/\bsummer\b/i, "Summer")
 }
 
 export function formatRelativeUploadDate(

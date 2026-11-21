@@ -42,6 +42,7 @@ before(async () => {
     id: courseId,
     name: "Course Material Course",
     code: courseCode,
+    universityId: uniId,
     departmentId: deptId,
   })
 
@@ -93,8 +94,7 @@ test("POST /api/course-materials requires authentication", async () => {
   form.set("title", "Midterm Exam")
   form.set("courseId", courseId)
   form.set("courseMaterialType", "exam")
-  form.set("year", "2024")
-  form.set("semester", "1")
+  form.set("academicPeriod", "2024/2025 semester 1")
   form.set(
     "file",
     new File([Buffer.from("%PDF-1.4")], "midterm.pdf", {
@@ -114,9 +114,7 @@ test("POST /api/course-materials stores file and creates course material record"
   form.set("title", "CS Midterm 2024")
   form.set("courseId", courseId)
   form.set("courseMaterialType", "exam")
-  form.set("year", "2024")
-  form.set("semester", "1")
-  form.set("description", "Practice midterm")
+  form.set("academicPeriod", "2024/2025 semester 1")
   form.set(
     "file",
     new File([Buffer.from("%PDF-1.4 midterm")], "cs-midterm.pdf", {
@@ -136,8 +134,7 @@ test("POST /api/course-materials stores file and creates course material record"
     courseId: string
     userId: string
     courseMaterialType: string
-    year: number
-    semester: string
+    academicPeriod: string
     fileName: string
     mimeType: string
     fileSize: number
@@ -149,8 +146,7 @@ test("POST /api/course-materials stores file and creates course material record"
   assert.strictEqual(body.courseId, courseId)
   assert.strictEqual(body.userId, studentId)
   assert.strictEqual(body.courseMaterialType, "exam")
-  assert.strictEqual(body.year, 2024)
-  assert.strictEqual(body.semester, "1")
+  assert.strictEqual(body.academicPeriod, "2024/2025 semester 1")
   assert.strictEqual(body.fileName, "cs-midterm.pdf")
   assert.strictEqual(body.mimeType, "application/pdf")
   assert.ok(body.fileSize > 0)
@@ -164,6 +160,7 @@ test("POST /api/course-materials stores file and creates course material record"
   assert.strictEqual(row.title, "CS Midterm 2024")
   assert.strictEqual(row.userId, studentId)
   assert.strictEqual(row.courseMaterialType, "exam")
+  assert.strictEqual(row.academicPeriod, "2024/2025 semester 1")
 })
 
 test("POST /api/course-materials rejects invalid files", async () => {
@@ -171,8 +168,7 @@ test("POST /api/course-materials rejects invalid files", async () => {
   form.set("title", "Bad File")
   form.set("courseId", courseId)
   form.set("courseMaterialType", "other")
-  form.set("year", "2024")
-  form.set("semester", "2")
+  form.set("academicPeriod", "2024/2025 semester 2")
   form.set(
     "file",
     new File([Buffer.from("MZ")], "virus.exe", {
@@ -191,59 +187,34 @@ test("POST /api/course-materials rejects invalid files", async () => {
 })
 
 test("POST /api/course-materials validates inputs at route boundary with Zod", async () => {
-  // Invalid year
-  const formYear = new FormData()
-  formYear.set("title", "Year Test")
-  formYear.set("courseId", courseId)
-  formYear.set("courseMaterialType", "exam")
-  formYear.set("year", "1990")
-  formYear.set("semester", "1")
-  formYear.set(
+  // Invalid academic period
+  const formPeriod = new FormData()
+  formPeriod.set("title", "Period Test")
+  formPeriod.set("courseId", courseId)
+  formPeriod.set("courseMaterialType", "exam")
+  formPeriod.set("academicPeriod", "1990")
+  formPeriod.set(
     "file",
     new File([Buffer.from("%PDF-1.4")], "test.pdf", {
       type: "application/pdf",
     })
   )
 
-  const resYear = await app.request("/api/course-materials", {
+  const resPeriod = await app.request("/api/course-materials", {
     method: "POST",
     headers: { cookie: sessionCookie },
-    body: formYear,
+    body: formPeriod,
   })
-  assert.strictEqual(resYear.status, 400)
-  const bodyYear = (await resYear.json()) as { error: string }
-  assert.match(bodyYear.error, /academic year/i)
-
-  // Invalid semester
-  const formSem = new FormData()
-  formSem.set("title", "Sem Test")
-  formSem.set("courseId", courseId)
-  formSem.set("courseMaterialType", "exam")
-  formSem.set("year", "2024")
-  formSem.set("semester", "spring")
-  formSem.set(
-    "file",
-    new File([Buffer.from("%PDF-1.4")], "test.pdf", {
-      type: "application/pdf",
-    })
-  )
-
-  const resSem = await app.request("/api/course-materials", {
-    method: "POST",
-    headers: { cookie: sessionCookie },
-    body: formSem,
-  })
-  assert.strictEqual(resSem.status, 400)
-  const bodySem = (await resSem.json()) as { error: string }
-  assert.match(bodySem.error, /semester/i)
+  assert.strictEqual(resPeriod.status, 400)
+  const bodyPeriod = (await resPeriod.json()) as { error: string }
+  assert.match(bodyPeriod.error, /academic period/i)
 
   // Invalid courseMaterialType
   const formType = new FormData()
   formType.set("title", "Type Test")
   formType.set("courseId", courseId)
   formType.set("courseMaterialType", "handout")
-  formType.set("year", "2024")
-  formType.set("semester", "1")
+  formType.set("academicPeriod", "2024/2025 semester 1")
   formType.set(
     "file",
     new File([Buffer.from("%PDF-1.4")], "test.pdf", {
